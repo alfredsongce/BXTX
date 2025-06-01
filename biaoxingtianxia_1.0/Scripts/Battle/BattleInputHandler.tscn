@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqxvn8y7g8kcr"]
+
+[ext_resource type="Script" path="res://Scripts/Battle/BattleInputHandler.gd" id="1_battle_input_handler"]
+
+[node name="BattleInputHandler" type="Node"]
+script = ExtResource("1_battle_input_handler")

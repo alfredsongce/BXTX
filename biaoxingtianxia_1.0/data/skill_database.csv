@@ -1,0 +1,13 @@
+id,name,description,mp_cost,cooldown,cast_time,targeting_type,targeting_range,range_type,range_distance,target_type,effect_ids,damage_formula,base_damage,animation_id,sound_id
+技能ID,技能名称,技能描述,MP消耗,冷却时间,施法时间,目标选择类型,目标选择范围,范围类型,范围距离,目标类型,效果ID列表,伤害公式,基础伤害,动画ID,音效ID
+1001,普通攻击,基础物理攻击,0,0,0.5,NORMAL,150,SINGLE,0,ENEMY,damage_physical,,15,attack_melee,sword_hit
+1002,重击,威力强大的物理攻击,5,2,1.0,NORMAL,150,SINGLE,0,ENEMY,damage_heavy,,25,heavy_attack,heavy_hit
+1003,治疗术,恢复友方生命值,8,1,1.5,NORMAL,200,SINGLE,0,ALLY,heal_light,,20,heal_cast,heal_sound
+1004,自我治疗,恢复自身生命值,6,2,1.0,SELF,0,SINGLE,0,SELF,heal_self,,15,self_heal,heal_self_sound
+1005,火球术,发射火球攻击敌人,10,3,1.2,PROJECTILE_SINGLE,300,SINGLE,0,ENEMY,damage_fire,,30,fireball_cast,fire_explosion
+1006,群体治疗,治疗目标周围的所有友方,15,4,2.0,NORMAL,250,RANGE,200,ALLY,heal_area,,18,area_heal,heal_area_sound
+1007,冰霜新星,冰霜爆炸攻击周围所有敌人,12,3,1.5,SELF,0,RANGE,300,ENEMY,damage_ice,,22,frost_nova,ice_explosion
+1008,闪电链,穿透直线上所有敌人的雷电攻击,18,5,1.8,PROJECTILE_PIERCE,400,SINGLE,0,ENEMY,damage_lightning,,28,lightning_chain,thunder_sound
+1009,陨石术,召唤陨石攻击指定区域,25,8,3.0,FREE,600,RANGE,250,ALL,damage_meteor,,35,meteor_cast,meteor_explosion
+1010,群体祝福,为目标区域的友方提供增益,20,6,2.5,FREE,400,RANGE,300,ALLY,buff_blessing,,0,blessing_cast,blessing_sound
+1011,队友激励,为队友提供强化buff但无法对自己使用,12,4,1.8,NORMAL,300,SINGLE,0,ALLYONLY,buff_inspire,,25,inspire_cast,inspire_sound 

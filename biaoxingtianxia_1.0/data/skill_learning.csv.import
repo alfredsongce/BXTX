@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c033r0qobn0g7"
+
+[deps]
+
+files=["res://data/skill_learning.skill.translation", "res://data/skill_learning.learn.translation", "res://data/skill_learning.learn.translation", "res://data/skill_learning.description.translation"]
+
+source_file="res://data/skill_learning.csv"
+dest_files=["res://data/skill_learning.skill.translation", "res://data/skill_learning.learn.translation", "res://data/skill_learning.learn.translation", "res://data/skill_learning.description.translation"]
+
+[params]
+
+compress=true
+delimiter=0

@@ -1,0 +1,79 @@
+﻿=== 游戏脚本分析报告 ===
+生成时间: 05/25/2025 23:50:55
+
+被引用的脚本 (52个):
+✓ addons/gamedev_assistant/scripts/actions/action_manager.gd
+✓ addons/gamedev_assistant/scripts/actions/action_parser_utils.gd
+✓ addons/gamedev_assistant/scripts/actions/add_existing_scene_action.gd
+✓ addons/gamedev_assistant/scripts/actions/add_subresource_action.gd
+✓ addons/gamedev_assistant/scripts/actions/assign_script_action.gd
+✓ addons/gamedev_assistant/scripts/actions/create_file_action.gd
+✓ addons/gamedev_assistant/scripts/actions/create_node_action.gd
+✓ addons/gamedev_assistant/scripts/actions/create_scene_action.gd
+✓ addons/gamedev_assistant/scripts/actions/edit_node_action.gd
+✓ addons/gamedev_assistant/scripts/actions/edit_subresource_action.gd
+✓ addons/gamedev_assistant/scripts/api_manager.gd
+✓ addons/gamedev_assistant/scripts/chat/add_context.gd
+✓ addons/gamedev_assistant/scripts/chat/chat_button.gd
+✓ addons/gamedev_assistant/scripts/chat/chat_screen.gd
+✓ addons/gamedev_assistant/scripts/chat/copy_button.gd
+✓ addons/gamedev_assistant/scripts/chat/markdown_to_bbcode.gd
+✓ addons/gamedev_assistant/scripts/chat/message_tagger.gd
+✓ addons/gamedev_assistant/scripts/chat/prompt_input.gd
+✓ addons/gamedev_assistant/scripts/chat/reasoning_toggle.gd
+✓ addons/gamedev_assistant/scripts/chat/switch_mode.gd
+✓ addons/gamedev_assistant/scripts/code_editor/CodeContextMenuPlugin.gd
+✓ addons/gamedev_assistant/scripts/conversation/conversation_manager.gd
+✓ addons/gamedev_assistant/scripts/conversation/conversation_slot.gd
+✓ addons/gamedev_assistant/scripts/conversation/conversations_screen.gd
+✓ addons/gamedev_assistant/scripts/conversation/delete_button.gd
+✓ addons/gamedev_assistant/scripts/conversation/favourite_button.gd
+✓ addons/gamedev_assistant/scripts/dock/conversations_button.gd
+✓ addons/gamedev_assistant/scripts/dock/custom_instructions.gd
+✓ addons/gamedev_assistant/scripts/dock/gamedev_assistant_dock.gd
+✓ addons/gamedev_assistant/scripts/dock/settings_button.gd
+✓ addons/gamedev_assistant/scripts/dock/settings_screen.gd
+✓ char_data.gd
+✓ player_new.gd
+✓ plugin.gd
+✓ Scripts/ActionSystemNew.gd
+✓ Scripts/AutoLoad.gd
+✓ Scripts/BattleManager.gd
+✓ Scripts/BattleScene.gd
+✓ Scripts/CollisionShapeDrawer.gd
+✓ Scripts/Components/PlayerInputComponent.gd
+✓ Scripts/Components/PlayerMovementComponent.gd
+✓ Scripts/Components/PlayerUIComponent.gd
+✓ Scripts/Components/PlayerVisualsComponent.gd
+✓ Scripts/Managers/DataManager.gd
+✓ Scripts/MenuHelper.gd
+✓ Scripts/MoveRangeDisplay/MoveRangeCache.gd
+✓ Scripts/MoveRangeDisplay/MoveRangeConfig.gd
+✓ Scripts/MoveRangeDisplay/MoveRangeController.gd
+✓ Scripts/MoveRangeDisplay/MoveRangeInput.gd
+✓ Scripts/MoveRangeDisplay/MoveRangeRenderer.gd
+✓ Scripts/MoveRangeDisplay/MoveRangeValidator.gd
+✓ UI/ActionMenu.gd
+
+
+未被引用的插件脚本 (3个):
+⚠️ addons/gamedev_assistant/plugin.gd
+⚠️ addons/gamedev_assistant/scripts/conversation/conversation.gd
+⚠️ addons/gamedev_assistant/scripts/dock/screen_base.gd
+
+
+未被引用的游戏脚本 (7个):
+❌ temp_test.gd
+❌ 测试连续绘制.gd
+❌ Scripts/MoveRangeDisplay.gd
+❌ Scripts/TerrainStruct.gd
+❌ Scripts/BattlePhrase/BattleContext.gd
+❌ Scripts/Character/GameCharacter.gd
+❌ Scripts/Character/GameParty.gd
+
+
+统计摘要:
+- 总脚本文件数: 61
+- 被引用的脚本: 52
+- 未引用的插件脚本: 3
+- 未引用的游戏脚本: 7

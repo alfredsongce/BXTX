@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d1hfk67lie5y6"]
+
+[ext_resource type="Script" uid="uid://dutb7qwvb0g2o" path="res://Scripts/TestSceneSwitch.gd" id="1_test_switch"]
+
+[node name="测试场景" type="Node"]
+script = ExtResource("1_test_switch")

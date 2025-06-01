@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://boee8himchqe4"
+
+[deps]
+
+files=["res://data/skill_database.mp.translation", "res://data/skill_database.description.translation", "res://data/skill_database.mp.translation", "res://data/skill_database.cooldown.translation", "res://data/skill_database.cast.translation", "res://data/skill_database.targeting.translation", "res://data/skill_database.targeting.translation", "res://data/skill_database.range.translation", "res://data/skill_database.range.translation", "res://data/skill_database.target.translation", "res://data/skill_database.effect.translation", "res://data/skill_database.damage.translation", "res://data/skill_database.base.translation", "res://data/skill_database.animation.translation", "res://data/skill_database.sound.translation"]
+
+source_file="res://data/skill_database.csv"
+dest_files=["res://data/skill_database.mp.translation", "res://data/skill_database.description.translation", "res://data/skill_database.mp.translation", "res://data/skill_database.cooldown.translation", "res://data/skill_database.cast.translation", "res://data/skill_database.targeting.translation", "res://data/skill_database.targeting.translation", "res://data/skill_database.range.translation", "res://data/skill_database.range.translation", "res://data/skill_database.target.translation", "res://data/skill_database.effect.translation", "res://data/skill_database.damage.translation", "res://data/skill_database.base.translation", "res://data/skill_database.animation.translation", "res://data/skill_database.sound.translation"]
+
+[params]
+
+compress=true
+delimiter=0

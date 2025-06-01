@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4n5m6p7q8sas"]
+
+[ext_resource type="Script" path="res://Scripts/Battle/BattleAIManager.gd" id="1_1y9z0"]
+
+[node name="BattleAIManager" type="Node"]
+script = ExtResource("1_1y9z0")
