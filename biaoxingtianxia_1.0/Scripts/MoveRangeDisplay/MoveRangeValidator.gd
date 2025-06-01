@@ -76,6 +76,13 @@ func validate_position_comprehensive(
 		validation_completed.emit(false, result.reason)
 		return result
 	
+	# 检查5：静态障碍物碰撞检查
+	if not _check_static_obstacles(target_position):
+		var result = {"is_valid": false, "reason": "目标位置有静态障碍物"}
+		print("❌ [Validator] %s" % result.reason)
+		validation_completed.emit(false, result.reason)
+		return result
+	
 	var result = {"is_valid": true, "reason": ""}
 	# 🚀 减少成功验证的输出频率
 	# print("✅ [Validator] 位置验证通过")
@@ -120,6 +127,30 @@ func _get_obstacle_characters_cached(exclude_character_id: String) -> Array:
 	
 	obstacle_cache_updated.emit(_cached_obstacles.size())
 	return _cached_obstacles
+
+# 🔍 检查5：静态障碍物检查
+func _check_static_obstacles(world_pos: Vector2) -> bool:
+	# 获取BattleScene来查找ObstacleManager
+	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+	if not battle_scene:
+		print("⚠️ [Validator] 无法找到battle_scene组")
+		return true  # 如果找不到场景，假设没有障碍物
+	
+	# 获取ObstacleManager
+	var obstacle_manager = battle_scene.get_node_or_null("TheLevel/ObstacleManager")
+	if not obstacle_manager:
+		print("⚠️ [Validator] 无法找到ObstacleManager")
+		return true  # 如果找不到障碍物管理器，假设没有障碍物
+	
+	# 检查位置是否被静态障碍物阻挡
+	if obstacle_manager.has_method("is_position_blocked"):
+		var is_blocked = obstacle_manager.is_position_blocked(world_pos)
+		if is_blocked:
+			print("🔍 [Validator] 位置 %s 被静态障碍物阻挡" % str(world_pos))
+		return not is_blocked
+	else:
+		print("⚠️ [Validator] ObstacleManager没有is_position_blocked方法")
+		return true
 
 # 🔧 获取所有障碍物角色数据
 func _get_obstacle_characters(exclude_character_id: String) -> Array:

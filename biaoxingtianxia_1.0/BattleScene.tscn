@@ -1,7 +1,6 @@
 [gd_scene load_steps=25 format=3 uid="uid://b52xgjrbhdaid"]
 
 [ext_resource type="Script" uid="uid://t8vo420x2ral" path="res://Scripts/BattleScene.gd" id="1_ttbo7"]
-[ext_resource type="PackedScene" uid="uid://du3ukqo80vmxx" path="res://level_1_序幕.tscn" id="2_hvnqj"]
 [ext_resource type="Script" uid="uid://cb1pjbgdf4lc6" path="res://Scripts/MoveRangeDisplay/MoveRangeConfig.gd" id="3_config"]
 [ext_resource type="Script" uid="uid://bfa3v18im6o2q" path="res://Scripts/MoveRangeDisplay/MoveRangeCache.gd" id="4_cache"]
 [ext_resource type="Script" uid="uid://bie8uws4ucn30" path="res://Scripts/MoveRangeDisplay/MoveRangeRenderer.gd" id="5_renderer"]
@@ -24,13 +23,16 @@
 [ext_resource type="Script" uid="uid://c37wpjwowes76" path="res://Scripts/Battle/BattleCombatManager.gd" id="22_battle_combat_manager"]
 [ext_resource type="Script" uid="uid://cqeyji86etbuj" path="res://Scripts/Battle/BattleAIManager.gd" id="23_battle_ai_manager"]
 [ext_resource type="Script" uid="uid://73e3mc0sdlbw" path="res://Scripts/Battle/BattleEventManager.gd" id="24_battle_event_manager"]
+[ext_resource type="Script" uid="uid://73ell8m44daj" path="res://Scripts/ObstacleManager.gd" id="25_obstacle_manager"]
 
 [node name="战斗场景" type="Node2D"]
 texture_filter = 1
 script = ExtResource("1_ttbo7")
 
-[node name="Level_1_序幕" parent="." instance=ExtResource("2_hvnqj")]
-visible = false
+[node name="TheLevel" type="Node" parent="."]
+
+[node name="ObstacleManager" type="Node2D" parent="TheLevel"]
+script = ExtResource("25_obstacle_manager")
 
 [node name="Players" type="Node" parent="."]
 

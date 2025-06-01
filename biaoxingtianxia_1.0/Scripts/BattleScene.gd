@@ -10,6 +10,9 @@ const CollisionShapeDrawer = preload("res://Scripts/CollisionShapeDrawer.gd")
 # 🚀 预加载技能范围显示组件
 const SkillRangeDisplayScript = preload("res://Scripts/SkillRangeDisplay.gd")
 
+# 🚀 障碍物管理器引用
+@onready var obstacle_manager: Node2D = $TheLevel/ObstacleManager
+
 # 🌍 统一的地面高度定义
 const GROUND_LEVEL: float = 1000.0  # 地面的Y坐标值
 
@@ -107,6 +110,8 @@ func _ready() -> void:
 	_setup_battle_combat_manager()
 	# 🚀 初始化BattleAIManager
 	_setup_battle_ai_manager()
+	# 🚀 初始化障碍物管理器
+	_setup_obstacle_manager()
 	# 显示游戏操作提示
 	_show_gameplay_tips()
 
@@ -275,8 +280,31 @@ func _on_ai_decision_made(ai_character: GameCharacter, decision: Dictionary) -> 
 	print("🧠 [BattleScene] AI决策制定: %s - %s" % [ai_character.name, decision.get("description", "未知决策")])
 	# 可以在这里添加AI决策的可视化提示
 
+func _setup_obstacle_manager() -> void:
+	print("🚀 [BattleScene] 初始化障碍物管理器")
+	
+	if obstacle_manager:
+		# 连接障碍物管理器信号
+		obstacle_manager.obstacle_added.connect(_on_obstacle_added)
+		obstacle_manager.obstacle_removed.connect(_on_obstacle_removed)
+		obstacle_manager.obstacles_cleared.connect(_on_obstacles_cleared)
+		
+		print("✅ [BattleScene] 障碍物管理器初始化完成")
+	else:
+		print("❌ [BattleScene] 未找到障碍物管理器节点")
+
+func _on_obstacle_added(obstacle) -> void:
+	print("🪨 [BattleScene] 障碍物已添加: %s" % obstacle.global_position)
+
+func _on_obstacle_removed(obstacle) -> void:
+	print("🗑️ [BattleScene] 障碍物已移除: %s" % obstacle.global_position)
+
+func _on_obstacles_cleared() -> void:
+	print("🧹 [BattleScene] 所有障碍物已清除")
+
 func _show_gameplay_tips() -> void:
 	print("游戏已启动 - 按F11开始战斗，F10切换碰撞体积显示")
+	print("按F12可以重新生成障碍物（调试功能）")
 
 func _get_character_at_position(pos: Vector2, height_tolerance: float = 30.0) -> Node2D:
 	for node in get_children():
@@ -402,6 +430,15 @@ func _input(event):
 	# 🚀 委托给BattleInputHandler处理输入
 	if battle_input_handler.handle_input(event):
 		return
+	
+	# 🚀 障碍物调试功能
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F12:
+			if obstacle_manager:
+				print("🔄 [调试] 重新生成障碍物")
+				obstacle_manager.regenerate_obstacles()
+			else:
+				print("❌ [调试] 障碍物管理器未找到")
 	
 func _check_and_fix_character_heights() -> void:
 	character_manager.check_and_fix_character_heights()
@@ -794,6 +831,10 @@ func _open_character_action_menu(character_node: Node2D) -> void:
 		battle_manager_node = get_node("/root/BattleScene/BattleManager")
 	
 	var current_character = battle_manager_node.turn_manager.get_current_character()
+	if current_character == null:
+		print("🚫 [BattleScene] 无法获取当前回合角色，可能回合队列为空或索引越界")
+		return
+	
 	if current_character.id != character_data.id:
 		print("🚫 [BattleScene] 非当前回合角色请求打开行动菜单被拒绝：%s (当前回合：%s)" % [character_data.name, current_character.name])
 		return

@@ -295,6 +295,11 @@ func move_character_direct(character: GameCharacter, target_position: Vector2) -
 		print("❌ [MovementCoordinator] 目标位置在地面以下: %.1f > %.1f" % [target_position.y, GROUND_LEVEL])
 		return false
 	
+	# 🚀 修复：添加碰撞检测，防止敌人重叠
+	if _has_character_collision_at(target_position, character.id):
+		print("❌ [MovementCoordinator] 目标位置被其他角色占用，AI移动取消")
+		return false
+	
 	# 执行移动并等待完成
 	_execute_movement(character, character_node, target_position, 0.0, distance)
 	
