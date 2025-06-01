@@ -53,7 +53,7 @@ func _ready():
 	# 添加到技能释放组
 	add_to_group("visual_skill_caster")
 	print("🎯 [可视化技能] VisualSkillCaster系统初始化完成")
-	print("🎯 [可视化技能] 按F4键输出调试信息")
+	
 	
 	# 设置输入处理
 	set_process_input(true)
@@ -83,7 +83,7 @@ func _input(event):
 	if current_state == CastingState.INACTIVE:
 		# 🧪 在非激活状态也允许调试信息输出
 		if event is InputEventKey and event.pressed and event.keycode == KEY_F4:
-			print("ℹ️ [调试] 当前未在技能释放状态")
+			pass
 		return
 	
 	if event is InputEventMouseButton:
@@ -666,7 +666,7 @@ func _get_targets_in_mouse_range() -> Array:
 
 # 🧪 输出完整的调试信息
 func _output_debug_info() -> void:
-	print("\n🧪 ==================== 调试信息 ====================")
+	
 	
 	if not active_skill or not active_caster:
 		print("❌ 技能或施法者为空")

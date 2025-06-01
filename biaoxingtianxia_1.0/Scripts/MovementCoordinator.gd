@@ -133,30 +133,27 @@ func _on_movement_animation_completed(character: GameCharacter, final_position: 
 	print("🏁 [MovementCoordinator] 移动动画完成: %s -> %s" % [character.name, str(final_position)])
 	
 	# 🔍 调试：记录修正前的状态
-	print("🔍 [调试] 修正前 - 角色当前位置: %s" % str(character.position))
-	print("🔍 [调试] 修正前 - 角色地面位置: %s" % str(character.ground_position))
-	print("🔍 [调试] 修正前 - 动画最终位置: %s" % str(final_position))
+	
 	
 	# 获取移动数据中的目标高度
 	var move_data = characters_moving.get(character.id, {})
 	var target_height = move_data.get("target_height", 0.0)
-	print("🔍 [调试] 移动数据: %s" % str(move_data))
-	print("🔍 [调试] 目标高度: %.1f" % target_height)
+	
 	
 	# 计算新的地面位置
 	var old_ground_position = character.ground_position
 	var new_ground_position = Vector2(final_position.x, character.ground_position.y)
-	print("🔍 [调试] 地面位置变化: %s -> %s" % [str(old_ground_position), str(new_ground_position)])
+	
 	character.ground_position = new_ground_position
 	
 	# 根据目标高度正确设置角色位置
 	var correct_y_position = new_ground_position.y - target_height
 	var correct_position = Vector2(final_position.x, correct_y_position)
-	print("🔍 [调试] 位置计算: 地面Y(%.1f) - 目标高度(%.1f) = 最终Y(%.1f)" % [new_ground_position.y, target_height, correct_y_position])
+	
 	character.position = correct_position
 	
 	print("🔧 [MovementCoordinator] 位置修正: 目标高度=%.1f, 地面Y=%.1f, 最终Y=%.1f" % [target_height, new_ground_position.y, correct_y_position])
-	print("🔍 [调试] 修正后 - 角色最终位置: %s" % str(character.position))
+	
 	
 	# 清理移动状态
 	characters_moving.erase(character.id)

@@ -133,7 +133,7 @@ func _validate_target_position_async():
 	
 	# 🚀 移除频繁的调试信息，避免鼠标移动时的干扰
 	# if OS.is_debug_build():
-	#     print("🔍 [Input调试] 位置计算详情:")
+	
 	#     print("   角色数据位置: %s" % str(_current_character.position))
 	#     print("   节点实际位置: %s" % str(actual_character_position))
 	#     print("   使用fallback: %s" % str(fallback_used))
@@ -410,26 +410,10 @@ func _quick_collision_precheck(position: Vector2, character: GameCharacter) -> b
 	_cached_query.exclude = exclude_rids
 	
 	# 执行查询
-	var results = _physics_space.intersect_shape(_cached_query, 10)  # 增加检测数量以获取更多信息
+	var results = _physics_space.intersect_shape(_cached_query, 10)
 	
-	print_rich("[color=cyan]🔍 [快速预检测] 开始检测位置: %s[/color]" % str(position))
-	print_rich("[color=cyan]📋 [快速预检测] 碰撞掩码: %d (二进制: %s)[/color]" % [_cached_query.collision_mask, String.num(_cached_query.collision_mask, 2)])
-	print_rich("[color=cyan]🎯 [快速预检测] 检测Areas: %s, Bodies: %s[/color]" % [_cached_query.collide_with_areas, _cached_query.collide_with_bodies])
-	
-	if results.size() > 0:
-		print_rich("[color=red]🚫 [快速预检测] 检测到 %d 个碰撞对象，位置: %s[/color]" % [results.size(), str(position)])
-		for i in range(results.size()):
-			var result = results[i]
-			var collider = result.get("collider")
-			if collider:
-				var collision_layer = collider.collision_layer if collider.has_method("get") or "collision_layer" in collider else "未知"
-				var node_name = collider.name if collider.has_method("get") or "name" in collider else "未知节点"
-				var node_type = collider.get_class() if collider.has_method("get_class") else "未知类型"
-				print_rich("[color=yellow]  - 碰撞对象 %d: %s (%s), 碰撞层: %s[/color]" % [i+1, node_name, node_type, str(collision_layer)])
-		return false
-	else:
-		print_rich("[color=green]✅ [快速预检测] 位置有效，无碰撞: %s[/color]" % str(position))
-		return true
+	# 返回检测结果
+	return results.size() == 0
 
 # 🔧 获取角色碰撞形状
 func _get_character_collision_shape(character: GameCharacter):

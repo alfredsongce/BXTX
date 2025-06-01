@@ -46,7 +46,7 @@ func _debug_print(message: String) -> void:
 
 func toggle_debug_logging() -> void:
 	debug_logging_enabled = not debug_logging_enabled
-	print("🔧 [BattleManager] 调试日志: %s" % ("开启" if debug_logging_enabled else "关闭"))
+	
 #endregion
 
 #region 子系统初始化

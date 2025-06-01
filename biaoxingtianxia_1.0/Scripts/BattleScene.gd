@@ -304,7 +304,7 @@ func _on_obstacles_cleared() -> void:
 
 func _show_gameplay_tips() -> void:
 	print("游戏已启动 - 按F11开始战斗，F10切换碰撞体积显示")
-	print("按F12可以重新生成障碍物（调试功能）")
+	
 
 func _get_character_at_position(pos: Vector2, height_tolerance: float = 30.0) -> Node2D:
 	for node in get_children():
@@ -435,10 +435,9 @@ func _input(event):
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_F12:
 			if obstacle_manager:
-				print("🔄 [调试] 重新生成障碍物")
 				obstacle_manager.regenerate_obstacles()
 			else:
-				print("❌ [调试] 障碍物管理器未找到")
+				pass
 	
 func _check_and_fix_character_heights() -> void:
 	character_manager.check_and_fix_character_heights()
@@ -451,14 +450,12 @@ func _on_move_completed(character: GameCharacter, final_position: Vector2):
 	print("🏁 [BattleScene] 移动完成回调: %s -> %s" % [character.name, str(final_position)])
 	
 	# 🔍 调试：记录移动完成前的状态
-	print("🔍 [BattleScene调试] 移动完成前 - 角色位置: %s" % str(character.position))
-	print("🔍 [BattleScene调试] 移动完成前 - 地面位置: %s" % str(character.ground_position))
-	print("🔍 [BattleScene调试] 最终位置参数: %s" % str(final_position))
+	
 	
 	# ⚠️ 注意：不要直接设置character.position，因为这会触发GameCharacter的set_position方法
 	# 该方法会错误地更新ground_position.y，导致位置修正问题
 	# 位置应该已经在MovementCoordinator中正确设置了
-	print("🔍 [BattleScene调试] 跳过位置设置，使用MovementCoordinator已设置的位置")
+	
 	
 	# 检查是否还有行动点数
 	var still_has_actions = not action_system.is_character_turn_finished(character)
@@ -1159,32 +1156,15 @@ func _test_damage_numbers() -> void:
 		var test_node = enemy_nodes[first_enemy_id]
 		var test_character = test_node.get_character_data()
 	
-		print("✅ [测试] 找到测试角色: %s (节点: %s)" % [test_character.name, test_node.name])
-		print("🔍 [测试] 角色节点位置: %s" % test_node.global_position)
-		print("🔍 [测试] 角色节点可见性: %s" % test_node.visible)
-		print("🔍 [测试] 角色节点z_index: %s" % test_node.z_index)
-		
-		# 获取Camera信息
-		var camera = get_viewport().get_camera_2d()
-		if camera:
-			print("🔍 [测试] Camera位置: %s" % camera.global_position)
-			print("🔍 [测试] Camera缩放: %s" % camera.zoom)
-		else:
-			print("⚠️ [测试] 没有找到Camera2D")
-		
-		# 测试伤害数字
-		print("💥 [测试] 创建普通伤害数字: 50")
 		var skill_effects = get_node("SkillEffects")
 		skill_effects.create_damage_numbers(test_character, 50, false)
 		
 		# 等待0.5秒后创建暴击伤害
 		await get_tree().create_timer(0.5).timeout
-		print("💥 [测试] 创建暴击伤害数字: 100")
 		skill_effects.create_damage_numbers(test_character, 100, true)
 		
 		# 等待0.5秒后创建治疗数字
 		await get_tree().create_timer(0.5).timeout
-		print("💚 [测试] 创建治疗数字: 30")
 		skill_effects.create_healing_numbers(test_character, 30)
 
 # 🚀 处理BattleUIManager的战斗按钮信号

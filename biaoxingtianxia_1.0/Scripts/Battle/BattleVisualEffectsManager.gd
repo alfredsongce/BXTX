@@ -361,15 +361,10 @@ func set_visual_config(config: Dictionary) -> void:
 
 # 🧪 测试伤害跳字（从BattleScene迁移）
 func test_damage_numbers() -> void:
-	print("🧪 [测试] 开始测试伤害跳字功能")
-	
 	# 获取SkillEffects节点
 	var skill_effects = battle_scene.get_node_or_null("SkillEffects") if battle_scene else null
 	if not skill_effects:
-		print("❌ [测试] 找不到SkillEffects节点")
 		return
-	
-	print("✅ [测试] 找到SkillEffects节点")
 	
 	# 获取第一个敌人来测试
 	var test_character = null
@@ -384,34 +379,17 @@ func test_damage_numbers() -> void:
 				test_character = test_node.get_character_data()
 	
 	if not test_character or not test_node:
-		print("❌ [测试] 找不到测试角色")
 		return
 	
-	print("✅ [测试] 找到测试角色: %s (节点: %s)" % [test_character.name, test_node.name])
-	print("🔍 [测试] 角色节点位置: %s" % test_node.global_position)
-	print("🔍 [测试] 角色节点可见性: %s" % test_node.visible)
-	print("🔍 [测试] 角色节点z_index: %s" % test_node.z_index)
-	
-	# 获取Camera信息
-	var camera = battle_scene.get_viewport().get_camera_2d() if battle_scene else null
-	if camera:
-		print("🔍 [测试] Camera位置: %s" % camera.global_position)
-		print("🔍 [测试] Camera缩放: %s" % camera.zoom)
-	else:
-		print("⚠️ [测试] 没有找到Camera2D")
-	
 	# 测试伤害数字
-	print("💥 [测试] 创建普通伤害数字: 50")
 	skill_effects.create_damage_numbers(test_character, 50, false)
 	
 	# 等待0.5秒后创建暴击伤害
 	await battle_scene.get_tree().create_timer(0.5).timeout
-	print("💥 [测试] 创建暴击伤害数字: 100")
 	skill_effects.create_damage_numbers(test_character, 100, true)
 	
 	# 等待0.5秒后创建治疗数字
 	await battle_scene.get_tree().create_timer(0.5).timeout
-	print("💚 [测试] 创建治疗数字: 30")
 	skill_effects.create_healing_numbers(test_character, 30)
 
 
@@ -483,6 +461,4 @@ class _DeathMarkerDrawer extends Node2D:
 
 # 🧪 测试视觉效果
 func test_visual_effects() -> void:
-	print("🧪 [视觉效果管理器] 测试视觉效果功能")
-	# 调用伤害跳字测试
-	await test_damage_numbers()
+	pass

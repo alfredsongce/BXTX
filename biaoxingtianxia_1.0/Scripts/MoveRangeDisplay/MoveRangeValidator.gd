@@ -138,7 +138,6 @@ func _check_capsule_obstacles_with_physics_query(world_pos: Vector2, character) 
 	# 获取物理空间
 	var space_state = get_world_2d().direct_space_state
 	if not space_state:
-		print("⚠️ [Validator] 无法获取物理空间状态")
 		return true
 	
 	# 创建查询参数
@@ -219,7 +218,6 @@ func _check_static_obstacles(world_pos: Vector2, character = null) -> bool:
 	# 🚀 统一使用物理空间查询（与快速预检测保持一致）
 	var space_state = get_world_2d().direct_space_state
 	if not space_state:
-		print("⚠️ [Validator] 无法获取物理空间状态")
 		return true
 	
 	# 创建查询参数
@@ -231,10 +229,9 @@ func _check_static_obstacles(world_pos: Vector2, character = null) -> bool:
 		# 如果无法获取角色形状，使用默认圆形
 		shape = CircleShape2D.new()
 		shape.radius = 20.0  # 使用更大的半径，接近角色实际大小
-		print("⚠️ [Validator] 使用默认圆形形状，半径: %s" % shape.radius)
+
 	else:
-		print("✅ [Validator] 使用角色实际碰撞形状: %s" % shape.get_class())
-	
+		pass
 	query.shape = shape
 	query.transform = Transform2D(0, world_pos)
 	query.collision_mask = 14  # 检测静态障碍物(2)、角色(4)和障碍物(8) = 2+4+8=14（与快速预检测完全一致）
@@ -253,42 +250,8 @@ func _check_static_obstacles(world_pos: Vector2, character = null) -> bool:
 	# 执行物理查询
 	var results = space_state.intersect_shape(query, 10)
 	
-	print("📋 [Validator] 物理查询参数详情:")
-	print("  - 位置: %s" % str(world_pos))
-	if shape is CircleShape2D:
-		print("  - 查询形状: %s, 半径: %.1f" % [shape.get_class(), shape.radius])
-	elif shape is CapsuleShape2D:
-		print("  - 查询形状: %s, 半径: %.1f, 高度: %.1f" % [shape.get_class(), shape.radius, shape.height])
-	else:
-		print("  - 查询形状: %s" % shape.get_class())
-	print("  - 碰撞掩码: %d (二进制: %s)" % [query.collision_mask, String.num(query.collision_mask, 2)])
-	print("  - 检测Areas: %s, Bodies: %s" % [query.collide_with_areas, query.collide_with_bodies])
-	print("  - 变换矩阵: %s" % str(query.transform))
-	print("📊 [Validator] 查询结果数量: %d" % results.size())
-	
-	if results.size() > 0:
-		print("🚫 [Validator] 检测到 %d 个障碍物碰撞" % results.size())
-		for i in range(results.size()):
-			var result = results[i]
-			var collider = result.get("collider")
-			if collider:
-				var collision_layer = collider.collision_layer if "collision_layer" in collider else "未知"
-				var node_name = collider.name if "name" in collider else "未知节点"
-				var node_type = collider.get_class() if collider.has_method("get_class") else "未知类型"
-				var node_position = collider.global_position if "global_position" in collider else "未知位置"
-				print("  - 障碍物 %d: %s (%s)" % [i+1, node_name, node_type])
-				print("    碰撞层: %s, 位置: %s" % [str(collision_layer), str(node_position)])
-				if "collision_mask" in collider:
-					print("    碰撞掩码: %s" % str(collider.collision_mask))
-		return false  # 有障碍物，位置被阻挡
-	else:
-		print("✅ [Validator] 位置无障碍物阻挡 - 查询返回空结果")
-		print("🔍 [Validator] 可能原因分析:")
-		print("  1. 查询位置确实无障碍物")
-		print("  2. 碰撞掩码不匹配")
-		print("  3. 查询形状与快速预检测不同")
-		print("  4. 物理空间状态不同步")
-		return true  # 无障碍物，位置可用
+	# 返回检测结果
+	return results.size() == 0
 
 # 🚀 新增：基于PhysicsShapeQueryParameters2D的静态障碍物检测
 func _check_static_obstacles_with_physics_query(world_pos: Vector2, character) -> bool:
@@ -301,7 +264,6 @@ func _check_static_obstacles_with_physics_query(world_pos: Vector2, character) -
 	# 获取物理空间
 	var space_state = get_world_2d().direct_space_state
 	if not space_state:
-		print("⚠️ [Validator] 无法获取物理空间状态")
 		return true
 	
 	# 创建查询参数

@@ -198,7 +198,7 @@ func set_debug_mode(mode: int):
 	debug_mode_changed.emit(debug_mode)
 	
 	var mode_names = ["关闭", "边界", "碰撞形状", "性能", "GPU调试", "预测缓存"]
-	print("🔧 [Config] 调试模式: %s" % mode_names[debug_mode])
+	
 
 func set_performance_logging(enabled: bool):
 	var old_value = enable_performance_logging
@@ -533,4 +533,4 @@ func load_settings(settings: Dictionary):
 			"performance_warning_threshold":
 				performance_warning_threshold = value
 	
-	print("🚀 [Config] 配置已加载") 
+	print("🚀 [Config] 配置已加载")

@@ -663,7 +663,7 @@ func _on_mouse_moved(position: Vector2):
 	# 🎨 更新可视化碰撞体位置
 	if preview_area:
 		preview_area.update_preview_position(position)
-		# print("🎯 [Controller] 更新预览位置: %s" % str(position))  # 调试用，可选
+		
 
 func _on_texture_ready(texture: ImageTexture):
 	# 纹理计算完成的回调

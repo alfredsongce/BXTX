@@ -84,7 +84,7 @@ func _debug_print(message: String) -> void:
 
 func toggle_debug_logging() -> void:
 	debug_logging_enabled = not debug_logging_enabled
-	_debug_print("🔧 [BattleFlowManager] 调试日志: %s" % ("开启" if debug_logging_enabled else "关闭"))
+	
 	debug_mode_toggled.emit(debug_logging_enabled)
 
 # 🚀 查找组件引用
@@ -221,11 +221,11 @@ func _execute_input_action(action: String) -> void:
 
 # 🚀 具体的输入处理方法
 func _handle_start_battle() -> void:
-	print("🎮 [BattleFlowManager] F11 - 开始战斗")
+	
 	start_battle_flow()
 
 func _handle_toggle_collision_display() -> void:
-	print("🎮 [BattleFlowManager] F10 - 切换碰撞显示")
+	
 	collision_display_enabled = !collision_display_enabled
 	print("🔍 [BattleFlowManager] 碰撞显示: %s" % ("开启" if collision_display_enabled else "关闭"))
 	# 委托给BattleScene处理
@@ -233,19 +233,19 @@ func _handle_toggle_collision_display() -> void:
 		battle_scene.toggle_collision_display()
 
 func _handle_test_victory_condition() -> void:
-	print("🎮 [BattleFlowManager] F9 - 测试胜利条件")
+	
 	# 委托给BattleScene处理
 	if battle_scene and battle_scene.has_method("_test_victory_condition"):
 		battle_scene._test_victory_condition()
 	else:
-		print("⚠️ [BattleFlowManager] BattleScene未找到或不支持测试胜利条件")
+		pass
 
 func _handle_toggle_debug_mode() -> void:
-	print("🎮 [BattleFlowManager] F8 - 切换调试模式")
+	
 	toggle_debug_mode()
 
 func _handle_pause_resume_battle() -> void:
-	print("🎮 [BattleFlowManager] F7 - 暂停/恢复战斗")
+	
 	if current_state == BattleFlowState.ACTIVE:
 		pause_battle_flow()
 	elif current_state == BattleFlowState.PAUSED:
@@ -335,7 +335,7 @@ func is_battle_paused() -> bool:
 # 🚀 调试模式管理
 func toggle_debug_mode() -> void:
 	debug_mode_enabled = !debug_mode_enabled
-	print("🐛 [BattleFlowManager] 调试模式: %s" % ("开启" if debug_mode_enabled else "关闭"))
+	
 	
 	# 切换输入模式
 	if debug_mode_enabled:
