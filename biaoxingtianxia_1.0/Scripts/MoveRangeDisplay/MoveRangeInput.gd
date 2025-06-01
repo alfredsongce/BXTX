@@ -1,5 +1,5 @@
 # 🎮 移动范围显示系统 - 输入处理组件（增强版）
-extends Node
+extends Node2D
 class_name MoveRangeInput
 
 # 🎮 输入状态
@@ -14,6 +14,8 @@ var _movement_cost: float = 0.0
 var _last_mouse_update_time: int = 0
 var _mouse_update_interval: int = 16  # 约60FPS的更新频率
 var _cached_query: PhysicsShapeQueryParameters2D = null
+var _physics_space: PhysicsDirectSpaceState2D
+var _use_physics_query: bool = true  # 启用物理查询优化
 
 # 📡 信号
 signal move_confirmed(character: GameCharacter, target_position: Vector2, target_height: float, movement_cost: float)
@@ -29,9 +31,14 @@ var validator: MoveRangeValidator  # 🚀 新增：验证器节点引用
 func _ready():
 	print("🎮 [Input] 输入处理组件初始化完成")
 	
+	# 🚀 初始化物理空间
+	_physics_space = get_world_2d().direct_space_state
+	
 	# 获取配置组件引用
 	call_deferred("_setup_config_reference")
 	call_deferred("_setup_validator_reference")
+	
+	print("🎮 [Input] 移动范围输入处理器已初始化 (物理查询: %s)" % str(_use_physics_query))
 
 func _setup_config_reference():
 	config = get_node("../Config")
@@ -133,10 +140,10 @@ func _validate_target_position_async():
 	#     print("   目标位置: %s" % str(target_position))
 	#     print("   计算距离: %.1f" % _movement_cost)
 	
-	# 验证位置有效性
-	var validation_result = _validate_position_comprehensive(target_position)
+	# 🚀 使用优化的验证流程
+	var validation_result = _validate_position_optimized(target_position, _current_character)
 	_is_valid_position = validation_result.is_valid
-	
+
 	if not validation_result.is_valid:
 		validation_changed.emit(false, validation_result.reason)
 	else:
@@ -278,32 +285,45 @@ func _confirm_move():
 		print("🎮 [Input] 无效的移动确认")
 		return
 	
-	# 🚀 最终确认前再次进行完整验证（双重保险）
+	print("\n🔍 [Input] ========== 开始移动确认验证流程 ==========")
+	print("🎯 [Input] 角色: %s, 目标位置: %s" % [_current_character.name, _mouse_position])
+	
+	# 🚀 步骤1：快速预检测
+	var quick_check = _quick_collision_precheck(_mouse_position, _current_character)
+	print("📋 [Input] 快速预检测结果: %s" % ("通过" if quick_check else "失败"))
+	
+	# 🚀 步骤2：最终确认前再次进行完整验证（双重保险）
 	var target_position = _mouse_position
+	print("🔍 [Input] 开始完整验证...")
 	var final_validation = _validate_position_comprehensive(target_position)
 	
+	print("📊 [Input] 完整验证结果: %s" % ("通过" if final_validation.is_valid else "失败"))
 	if not final_validation.is_valid:
-		print("🚀 [Input] 最终验证失败: %s" % final_validation.reason)
+		print("❌ [Input] 最终验证失败: %s" % final_validation.reason)
+		print("🚨 [Input] 表现层显示X号，但逻辑层验证失败 - 这是正常的双重验证机制")
 		_is_valid_position = false
 		validation_changed.emit(false, final_validation.reason)
 		return
 	
-	# 🚀 计算实际移动距离
+	# 🚀 步骤3：计算实际移动距离
 	var actual_character_position = _get_character_actual_position()
 	if actual_character_position == Vector2.ZERO:
 		actual_character_position = _current_character.position
 	var final_distance = actual_character_position.distance_to(target_position)
+	print("📏 [Input] 移动距离计算: %.1f (从 %s 到 %s)" % [final_distance, actual_character_position, target_position])
 	
-	# 🚀 最后一道防线：确保距离不超过轻功限制
+	# 🚀 步骤4：最后一道防线：确保距离不超过轻功限制
 	if final_distance > _current_character.qinggong_skill:
-		print("🚀 [Input] 最终距离检查失败: %.1f > %d" % [final_distance, _current_character.qinggong_skill])
+		print("❌ [Input] 最终距离检查失败: %.1f > %d" % [final_distance, _current_character.qinggong_skill])
 		_is_valid_position = false
 		validation_changed.emit(false, "移动距离超出轻功限制")
 		return
 	
-	print("✅ [Input] 移动验证通过 - 角色: %s, 距离: %.1f, 轻功: %d" % [
+	print("✅ [Input] 所有验证通过 - 角色: %s, 距离: %.1f, 轻功: %d" % [
 		_current_character.name, final_distance, _current_character.qinggong_skill
 	])
+	print("🚀 [Input] 发送移动确认信号...")
+	print("🔍 [Input] ========== 移动确认验证流程结束 ==========\n")
 	
 	move_confirmed.emit(_current_character, target_position, 0.0, final_distance)
 
@@ -356,5 +376,103 @@ func reset_target_height():
 		var renderer = get_node("../Renderer")
 		if renderer:
 			renderer.update_mouse_indicator(_mouse_position)
-		print("🎮 [Input] 重置到角色当前高度") 
+		print("🎮 [Input] 重置到角色当前高度")
+
+# 🚀 新增：快速碰撞预检测
+func _quick_collision_precheck(position: Vector2, character: GameCharacter) -> bool:
+	"""使用物理查询进行快速碰撞预检测"""
+	if not _use_physics_query or not _physics_space:
+		return true  # 如果不使用物理查询，默认通过
+	
+	# 设置查询参数
+	if not _cached_query:
+		_cached_query = PhysicsShapeQueryParameters2D.new()
+	
+	# 获取角色碰撞形状
+	var shape = _get_character_collision_shape(character)
+	if not shape:
+		return true  # 没有碰撞形状，默认通过
+	
+	_cached_query.shape = shape
+	_cached_query.transform = Transform2D(0, position)
+	# 🚀 修复：设置正确的碰撞掩码，包括静态障碍物(2)、角色(4)和障碍物(8)
+	_cached_query.collision_mask = 14  # 2 + 4 + 8 = 14，检测静态障碍物、其他角色和障碍物
+	_cached_query.collide_with_areas = true
+	_cached_query.collide_with_bodies = true
+	
+	# 排除自身
+	var character_node = _get_character_node(character)
+	var exclude_rids = []
+	if character_node:
+		var char_area = character_node.get_node_or_null("CharacterArea")
+		if char_area:
+			exclude_rids.append(char_area.get_rid())
+	_cached_query.exclude = exclude_rids
+	
+	# 执行查询
+	var results = _physics_space.intersect_shape(_cached_query, 10)  # 增加检测数量以获取更多信息
+	
+	print_rich("[color=cyan]🔍 [快速预检测] 开始检测位置: %s[/color]" % str(position))
+	print_rich("[color=cyan]📋 [快速预检测] 碰撞掩码: %d (二进制: %s)[/color]" % [_cached_query.collision_mask, String.num(_cached_query.collision_mask, 2)])
+	print_rich("[color=cyan]🎯 [快速预检测] 检测Areas: %s, Bodies: %s[/color]" % [_cached_query.collide_with_areas, _cached_query.collide_with_bodies])
+	
+	if results.size() > 0:
+		print_rich("[color=red]🚫 [快速预检测] 检测到 %d 个碰撞对象，位置: %s[/color]" % [results.size(), str(position)])
+		for i in range(results.size()):
+			var result = results[i]
+			var collider = result.get("collider")
+			if collider:
+				var collision_layer = collider.collision_layer if collider.has_method("get") or "collision_layer" in collider else "未知"
+				var node_name = collider.name if collider.has_method("get") or "name" in collider else "未知节点"
+				var node_type = collider.get_class() if collider.has_method("get_class") else "未知类型"
+				print_rich("[color=yellow]  - 碰撞对象 %d: %s (%s), 碰撞层: %s[/color]" % [i+1, node_name, node_type, str(collision_layer)])
+		return false
+	else:
+		print_rich("[color=green]✅ [快速预检测] 位置有效，无碰撞: %s[/color]" % str(position))
+		return true
+
+# 🔧 获取角色碰撞形状
+func _get_character_collision_shape(character: GameCharacter):
+	"""获取角色的碰撞形状"""
+	var character_node = _get_character_node(character)
+	if not character_node:
+		return null
+	
+	# 查找CharacterArea节点
+	var area_node = character_node.get_node_or_null("CharacterArea")
+	if not area_node:
+		return null
+	
+	# 获取碰撞形状
+	var collision_shape = area_node.get_node_or_null("CollisionShape2D")
+	if collision_shape and collision_shape.shape:
+		return collision_shape.shape
+	
+	return null
+
+# 🔧 获取角色节点
+func _get_character_node(character: GameCharacter):
+	"""获取角色节点"""
+	if not character:
+		return null
+	
+	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+	if battle_scene and battle_scene.has_method("_find_character_node_by_id"):
+		return battle_scene._find_character_node_by_id(character.id)
+	
+	return null
+
+# 🚀 优化的位置验证流程
+func _validate_position_optimized(position: Vector2, character: GameCharacter) -> Dictionary:
+	"""优化的位置验证流程，结合快速预检测和详细验证"""
+	# 第一步：快速碰撞预检测
+	if not _quick_collision_precheck(position, character):
+		return {
+			"is_valid": false,
+			"cost": float('inf'),
+			"reason": "collision_detected_precheck"
+		}
+	
+	# 第二步：详细验证
+	return _validate_position_comprehensive(position)
  

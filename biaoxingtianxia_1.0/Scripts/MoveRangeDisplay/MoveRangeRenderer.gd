@@ -1,4 +1,4 @@
-﻿# 🎨 移动范围显示系统 - 渲染组件（增强版）
+# 🎨 移动范围显示系统 - 渲染组件（增强版）
 extends Node2D
 class_name MoveRangeRenderer
 
@@ -98,6 +98,24 @@ func hide_range():
 func update_mouse_indicator(mouse_pos: Vector2):
 	_mouse_position = mouse_pos
 	mouse_indicator_updated.emit(mouse_pos)
+
+# 🚀 新增：更新碰撞反馈的视觉效果
+func update_collision_feedback(is_colliding: bool, collision_objects: Array):
+	"""更新碰撞状态的视觉反馈"""
+	if not _current_character:
+		return
+	
+	# 根据碰撞状态更新视觉效果
+	if is_colliding:
+		# 有碰撞时的视觉反馈
+		print("🔴 [Renderer] 检测到碰撞，对象数: %d" % collision_objects.size())
+		# 可以在这里添加更多视觉效果，比如改变鼠标指示器颜色等
+	else:
+		# 无碰撞时的视觉反馈
+		print("🟢 [Renderer] 无碰撞检测")
+	
+	# 强制重绘以更新视觉效果
+	queue_redraw()
 	if visible:
 		queue_redraw()
 
@@ -355,8 +373,7 @@ func _draw():
 	else:
 		_draw_static_border(local_center)
 	
-	# 绘制鼠标指示器
-	_draw_enhanced_mouse_indicator()
+	# 原有的鼠标指示器已移除，现在使用可视化碰撞体作为指示器
 
 # 🎨 增强的范围纹理绘制
 func _draw_enhanced_range_texture(local_center: Vector2):

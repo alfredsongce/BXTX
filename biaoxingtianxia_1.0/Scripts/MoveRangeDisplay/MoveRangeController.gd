@@ -7,6 +7,8 @@ var config  # 改为动态类型
 var cache  # 改为动态类型
 var renderer  # 改为动态类型
 var input_handler  # 改为动态类型
+var validator  # 🚀 新增：验证器组件
+var preview_area  # 🚀 新增：Area2D预检测组件
 
 # 📡 信号 - 对外接口
 signal move_confirmed(character: GameCharacter, target_position: Vector2, target_height: float, movement_cost: float)
@@ -51,11 +53,20 @@ func _setup_component_references():
 	cache = get_node("../Cache")
 	renderer = get_node("../Renderer")
 	input_handler = get_node("../Input")
+	validator = get_node("../Validator")  # 🚀 新增
 	
-	if not config or not cache or not renderer or not input_handler:
+	# 🚀 新增：预览区域组件（从场景中获取）
+	preview_area = get_node("../PreviewArea")
+	if not preview_area:
+		print("⚠️ [Controller] 未找到PreviewArea节点，将动态创建")
+		preview_area = MovePreviewArea.new()
+		preview_area.name = "PreviewArea"
+		get_parent().add_child(preview_area)
+	
+	if not config or not cache or not renderer or not input_handler or not validator:
 		push_error("[Controller] 缺少必要的子组件")
 	else:
-		print("🔧 [Controller] 组件引用设置完成")
+		print("🔧 [Controller] 组件引用设置完成（包含优化组件）")
 
 func _connect_signals():
 	# 连接输入信号
@@ -67,8 +78,13 @@ func _connect_signals():
 	# 连接渲染器信号
 	if renderer:
 		renderer.texture_ready.connect(_on_texture_ready)
+	
+	# 🚀 连接Area2D预检测信号
+	if preview_area:
+		preview_area.collision_state_changed.connect(_on_preview_collision_changed)
+		preview_area.preview_position_updated.connect(_on_preview_position_updated)
 
-# 🎯 主要公共接口（优雅动画版）
+# 🎯 主要公共接口（优化版 - 集成Area2D预检测）
 func show_move_range(character: GameCharacter):
 	if not character:
 		print("❌ [Controller] 无效的角色")
@@ -76,6 +92,15 @@ func show_move_range(character: GameCharacter):
 	
 	_current_character = character
 	_is_active = true
+	
+	# 🚀 设置Area2D预检测系统
+	if preview_area:
+		var character_node = _get_character_node(character)
+		if character_node:
+			preview_area.setup_movement_preview_area(character_node)
+			print("✅ [Controller] Area2D预检测系统已启动")
+		else:
+			print("⚠️ [Controller] 无法找到角色节点，跳过Area2D预检测")
 	
 	# 🎨 UX优化：启动圆形扩张动画 + 异步计算
 	if renderer:
@@ -91,13 +116,17 @@ func show_move_range(character: GameCharacter):
 	if input_handler:
 		input_handler.set_input_enabled(false)
 	
-	print("🎯 [Controller] 显示移动范围（动画模式） - %s (轻功: %d)" % [character.name, character.qinggong_skill])
+	print("🎯 [Controller] 显示移动范围（优化模式） - %s (轻功: %d)" % [character.name, character.qinggong_skill])
 
 func hide_move_range():
 	print("🎯 [Controller] 隐藏移动范围")
 	
 	_is_active = false
 	_current_character = null
+	
+	# 🚀 清理Area2D预检测系统
+	if preview_area:
+		preview_area._cleanup_preview_area()
 	
 	# 停止渲染
 	if renderer:
@@ -631,8 +660,10 @@ func _on_move_cancelled():
 	hide_move_range()
 
 func _on_mouse_moved(position: Vector2):
-	# 更新鼠标指示器（已在输入组件中处理）
-	pass
+	# 🎨 更新可视化碰撞体位置
+	if preview_area:
+		preview_area.update_preview_position(position)
+		# print("🎯 [Controller] 更新预览位置: %s" % str(position))  # 调试用，可选
 
 func _on_texture_ready(texture: ImageTexture):
 	# 纹理计算完成的回调
@@ -883,6 +914,64 @@ func _log_performance_report(avg_frame_time: float, avg_computation_time: float,
 	
 	print("═══════════════════════════════════════════")
 
+
+
+# 🚀 新增：Area2D预检测信号处理
+func _on_preview_collision_changed(is_colliding: bool, objects: Array):
+	"""处理Area2D预检测碰撞状态变化"""
+	if not _is_active:
+		return
+	
+	# 更新渲染器的视觉反馈
+	if renderer:
+		renderer.update_collision_feedback(is_colliding, objects)
+	
+	# 记录碰撞状态用于调试
+	var status = "碰撞" if is_colliding else "无碰撞"
+	print("🎯 [Controller] Area2D预检测状态: %s (对象数: %d)" % [status, objects.size()])
+
+func _on_preview_position_updated(position: Vector2):
+	"""处理Area2D预检测位置更新"""
+	if not _is_active:
+		return
+	
+	# 可以在这里添加位置相关的逻辑
+	# 例如：更新UI指示器、触发额外的验证等
+	pass
+
+# 🔧 获取角色节点的辅助方法
+func _get_character_node(character: GameCharacter):
+	"""根据角色数据获取对应的节点"""
+	if not character:
+		return null
+	
+	# 尝试通过BattleScene查找角色节点
+	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+	if battle_scene and battle_scene.has_method("_find_character_node_by_id"):
+		return battle_scene._find_character_node_by_id(character.id)
+	
+	return null
+
+# 🚀 强制刷新动态障碍物检测
+func force_refresh_dynamic_obstacles():
+	"""强制刷新动态障碍物检测，用于同步移动的角色"""
+	if preview_area:
+		preview_area.force_refresh_collision_detection()
+		print("🔄 [Controller] 强制刷新动态障碍物检测")
+
+# 🎯 获取当前预检测状态
+func get_preview_collision_state() -> Dictionary:
+	"""获取当前Area2D预检测的碰撞状态"""
+	if preview_area:
+		return preview_area.get_collision_state()
+	else:
+		return {
+			"is_colliding": false,
+			"collision_count": 0,
+			"collision_objects": [],
+			"preview_active": false
+		}
+
 # 🚀 新增：性能重置
 func reset_performance_stats():
 	_performance_monitor = {
@@ -900,5 +989,5 @@ func reset_performance_stats():
 func force_performance_level(level: String):
 	_performance_monitor.current_performance_level = level
 	_auto_adjust_performance(level)
-	print("🔧 [Performance] 强制设置性能级别: %s" % level) 
+	print("🔧 [Performance] 强制设置性能级别: %s" % level)
  

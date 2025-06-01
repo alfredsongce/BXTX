@@ -169,11 +169,47 @@ func get_obstacles_in_area(center: Vector2, radius: float) -> Array:
 	return result
 
 func is_position_blocked(pos: Vector2) -> bool:
-	"""检查位置是否被障碍物阻挡"""
-	for obstacle in obstacles:
-		if obstacle.is_position_blocked(pos):
-			return true
-	return false
+	"""检查位置是否被障碍物阻挡 - 使用物理空间查询（与快速预检测统一）"""
+	print("🔍 [ObstacleManager] 开始物理空间查询检测 - 位置: %s" % str(pos))
+	
+	# 获取物理空间
+	var space = get_world_2d().direct_space_state
+	if not space:
+		print("⚠️ [ObstacleManager] 无法获取物理空间")
+		return false
+	
+	# 创建查询参数
+	var query = PhysicsShapeQueryParameters2D.new()
+	
+	# 创建一个小的圆形查询区域用于点检测
+	var shape = CircleShape2D.new()
+	shape.radius = 5.0  # 小半径用于精确的点检测
+	
+	query.shape = shape
+	query.transform = Transform2D(0, pos)
+	query.collision_mask = 14  # 检测静态障碍物(2)、角色(4)和障碍物(8) = 2+4+8=14（与快速预检测保持一致）
+	query.collide_with_areas = true
+	query.collide_with_bodies = true  # 与快速预检测保持一致，检测Areas和Bodies
+	
+	# 执行物理查询
+	var results = space.intersect_shape(query, 10)
+	
+	print("📋 [ObstacleManager] 物理查询参数 - 碰撞掩码: %d, 检测Areas: %s" % [query.collision_mask, query.collide_with_areas])
+	
+	if results.size() > 0:
+		print("🚫 [ObstacleManager] 检测到 %d 个障碍物碰撞" % results.size())
+		for i in range(results.size()):
+			var result = results[i]
+			var collider = result.get("collider")
+			if collider:
+				var collision_layer = collider.collision_layer if "collision_layer" in collider else "未知"
+				var node_name = collider.name if "name" in collider else "未知节点"
+				var node_type = collider.get_class() if collider.has_method("get_class") else "未知类型"
+				print("  - 障碍物 %d: %s (%s), 碰撞层: %s" % [i+1, node_name, node_type, str(collision_layer)])
+		return true
+	else:
+		print("✅ [ObstacleManager] 位置无障碍物阻挡")
+		return false
 
 func get_obstacle_count() -> int:
 	"""获取障碍物数量"""

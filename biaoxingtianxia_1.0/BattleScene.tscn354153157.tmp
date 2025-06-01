@@ -81,13 +81,13 @@ script = ExtResource("3_config")
 [node name="Cache" type="Node" parent="MoveRange"]
 script = ExtResource("4_cache")
 
-[node name="Validator" type="Node2D" parent="MoveRange"]
+[node name="Validator" type="Node" parent="MoveRange"]
 script = ExtResource("9_validator")
 
 [node name="Renderer" type="Node2D" parent="MoveRange"]
 script = ExtResource("5_renderer")
 
-[node name="Input" type="Node2D" parent="MoveRange"]
+[node name="Input" type="Node" parent="MoveRange"]
 script = ExtResource("6_input")
 
 [node name="Controller" type="Node" parent="MoveRange"]

@@ -22,6 +22,9 @@ var rect_size: Vector2 = Vector2.ZERO
 # 角色ID（用于调试）
 var character_id: String = ""
 
+# 是否显示X号（表示不可移动）
+var show_x_mark: bool = false
+
 # 设置胶囊形状
 func setup_capsule(radius: float, height: float, char_id: String):
 	shape_type = "capsule"
@@ -72,6 +75,10 @@ func _draw():
 			_draw_circle()
 		"rectangle":
 			_draw_rectangle()
+	
+	# 如果需要显示X号，在中心绘制
+	if show_x_mark:
+		_draw_x_mark()
 
 # 绘制胶囊形状
 func _draw_capsule():
@@ -131,4 +138,19 @@ func set_visibility(visible_state: bool):
 # 更新颜色
 func update_color(new_color: Color):
 	shape_color = new_color
-	queue_redraw() 
+	queue_redraw()
+
+# 设置是否显示X号
+func set_x_mark(show: bool):
+	show_x_mark = show
+	queue_redraw()
+
+# 绘制X号标记
+func _draw_x_mark():
+	var x_size = 15.0
+	var x_width = 3.0
+	var x_color = Color.RED
+	
+	# 绘制X的两条对角线
+	draw_line(Vector2(-x_size, -x_size), Vector2(x_size, x_size), x_color, x_width)
+	draw_line(Vector2(-x_size, x_size), Vector2(x_size, -x_size), x_color, x_width)
