@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://c2yvxa080arlr"]
+
+[ext_resource type="Script" uid="uid://v8boxj7hgpa3" path="res://Scripts/Obstacle.gd" id="1_1y9rl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2y9rl"]
+size = Vector2(40, 60)
+
+[node name="WallObstacle" type="Area2D"]
+script = ExtResource("1_1y9rl")
+obstacle_type = 1
+obstacle_radius = 30.0
+obstacle_color = Color(0.5, 0.3, 0.1, 1)
+blocks_vision = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_2y9rl")
+
+[node name="VisualShape" type="Node2D" parent="."]

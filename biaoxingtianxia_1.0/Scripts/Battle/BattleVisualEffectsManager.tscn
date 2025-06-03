@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8xvyiajkl3no"]
+
+[ext_resource type="Script" path="res://Scripts/Battle/BattleVisualEffectsManager.gd" id="1_1h9vy"]
+
+[node name="BattleVisualEffectsManager" type="Node"]
+script = ExtResource("1_1h9vy")
