@@ -7,21 +7,9 @@ signal character_spawned(character_node: Node2D, character_id: String, is_enemy:
 signal all_characters_spawned()
 
 # 常量配置
-const GROUND_LEVEL: float = 1000.0  # 地面的Y坐标值
+const GROUND_LEVEL: float = 1000.0
 
-# 角色初始位置配置
-const SPAWN_POSITIONS := {
-	"1": Vector2(600, GROUND_LEVEL),   # 觉远
-	"2": Vector2(700, GROUND_LEVEL),   # 柳生
-	"3": Vector2(800, GROUND_LEVEL)    # 兰斯洛特
-}
-
-# 敌人初始位置配置
-const ENEMY_SPAWN_POSITIONS := {
-	"101": Vector2(1000, GROUND_LEVEL),   # 山贼头目
-	"102": Vector2(1100, GROUND_LEVEL),   # 野狼
-	"103": Vector2(1200, GROUND_LEVEL)    # 骷髅战士
-}
+# 位置配置使用BattleScene中的定义
 
 # 预加载资源
 @onready var player_scene = preload("res://player.tscn")
@@ -90,9 +78,10 @@ func _spawn_party_members():
 		# 确保节点的角色数据也被更新
 		instance.get_character_data().qinggong_skill = character.qinggong_skill
 		
-		# 设置位置
-		if SPAWN_POSITIONS.has(character_id):
-			var spawn_pos = SPAWN_POSITIONS[character_id]
+		# 设置位置 - 使用BattleScene中的SPAWN_POSITIONS
+		var battle_scene = get_node("/root/战斗场景")
+		if battle_scene and battle_scene.SPAWN_POSITIONS.has(character_id):
+			var spawn_pos = battle_scene.SPAWN_POSITIONS[character_id]
 			instance.set_base_position(spawn_pos)
 		else:
 			instance.set_base_position(Vector2(300, 200))
@@ -131,9 +120,10 @@ func _spawn_enemies():
 		# 设置敌人属性
 		character_data.qinggong_skill = 400  # 敌人轻功值10级
 		
-		# 设置敌人位置
-		if ENEMY_SPAWN_POSITIONS.has(enemy_id):
-			var spawn_pos = ENEMY_SPAWN_POSITIONS[enemy_id]
+		# 设置敌人位置 - 使用BattleScene中的ENEMY_SPAWN_POSITIONS
+		var battle_scene = get_node("/root/战斗场景")
+		if battle_scene and battle_scene.ENEMY_SPAWN_POSITIONS.has(enemy_id):
+			var spawn_pos = battle_scene.ENEMY_SPAWN_POSITIONS[enemy_id]
 			character_data.ground_position = spawn_pos
 			character_data.position = spawn_pos
 			instance.set_base_position(spawn_pos)
@@ -186,4 +176,4 @@ func find_character_node_by_data(character_data: GameCharacter) -> Node2D:
 		print("⚠️ [角色生成器] 角色数据为空")
 		return null
 	
-	return find_character_node_by_id(character_data.id) 
+	return find_character_node_by_id(character_data.id)

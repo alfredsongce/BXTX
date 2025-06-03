@@ -17,12 +17,16 @@ signal obstacles_cleared()
 
 # 内部变量
 var obstacles: Array = []
-var battle_scene: Node2D
+var battle_scene: Node
 var character_positions: Array[Vector2] = []
 
 func _ready():
 	# 获取战斗场景引用
-	battle_scene = get_parent().get_parent() if get_parent() else null
+	var parent = get_parent()
+	if parent:
+		battle_scene = parent.get_parent() if parent.get_parent() else parent
+	else:
+		battle_scene = null
 	
 	# 延迟生成障碍物，等待角色加载完成
 	call_deferred("_generate_initial_obstacles")
@@ -30,6 +34,9 @@ func _ready():
 func _generate_initial_obstacles():
 	# 获取当前角色位置
 	_update_character_positions()
+	
+	# 生成地面平台
+	generate_ground_platform()
 	
 	# 生成乱石障碍物
 	generate_rocks(rock_count)
@@ -54,6 +61,23 @@ func _update_character_positions():
 			if child.has_method("get_global_position"):
 				character_positions.append(child.global_position)
 
+func generate_ground_platform():
+	"""生成地面平台"""
+	var platform = _create_platform_obstacle()
+	# 地面平台位置：平台上边缘与Y轴1000对齐
+	var ground_y = 1000.0
+	var scene_width = 1920.0  # 假设场景宽度
+	var platform_height = 20.0
+	# 平台中心点应该在ground_y + platform_height/2，使上边缘与ground_y对齐
+	platform.global_position = Vector2(scene_width / 2, ground_y + platform_height / 2)
+	platform.platform_width = scene_width
+	platform.platform_height = platform_height
+	
+	add_child(platform)
+	obstacles.append(platform)
+	obstacle_added.emit(platform)
+	print("生成地面平台于位置: ", platform.global_position)
+
 func generate_rocks(count: int):
 	"""生成指定数量的乱石障碍物"""
 	for i in range(count):
@@ -72,14 +96,51 @@ func generate_rocks(count: int):
 
 func _create_rock_obstacle():
 	"""创建乱石障碍物"""
-	var ObstacleClass = preload("res://Scripts/Obstacle.gd")
-	var rock = ObstacleClass.new()
-	rock.obstacle_type = 0  # ObstacleType.ROCK
+	var rock_scene = preload("res://Scenes/Obstacles/RockObstacle.tscn")
+	var rock = rock_scene.instantiate()
 	rock.obstacle_radius = randf_range(rock_radius_min, rock_radius_max)
-	rock.obstacle_color = Color.RED
-	rock.is_passable = false
-	rock.blocks_vision = false
 	return rock
+
+func _create_platform_obstacle():
+	"""创建平台障碍物"""
+	var platform_scene = preload("res://Scenes/Obstacles/PlatformObstacle.tscn")
+	var platform = platform_scene.instantiate()
+	return platform
+
+func _create_wall_obstacle():
+	"""创建墙壁障碍物"""
+	var wall_scene = preload("res://Scenes/Obstacles/WallObstacle.tscn")
+	var wall = wall_scene.instantiate()
+	return wall
+
+func _create_water_obstacle():
+	"""创建水域障碍物"""
+	var water_scene = preload("res://Scenes/Obstacles/WaterObstacle.tscn")
+	var water = water_scene.instantiate()
+	return water
+
+func _create_pit_obstacle():
+	"""创建陷阱障碍物"""
+	var pit_scene = preload("res://Scenes/Obstacles/PitObstacle.tscn")
+	var pit = pit_scene.instantiate()
+	return pit
+
+func create_obstacle_by_type(obstacle_type: int):
+	"""根据类型创建障碍物"""
+	match obstacle_type:
+		0:  # ROCK
+			return _create_rock_obstacle()
+		1:  # WALL
+			return _create_wall_obstacle()
+		2:  # WATER
+			return _create_water_obstacle()
+		3:  # PIT
+			return _create_pit_obstacle()
+		4:  # PLATFORM
+			return _create_platform_obstacle()
+		_:
+			print("未知的障碍物类型: ", obstacle_type)
+			return null
 
 func _find_valid_position() -> Vector2:
 	"""寻找有效的障碍物生成位置"""
@@ -170,12 +231,12 @@ func get_obstacles_in_area(center: Vector2, radius: float) -> Array:
 
 func is_position_blocked(pos: Vector2) -> bool:
 	"""检查位置是否被障碍物阻挡 - 使用物理空间查询（与快速预检测统一）"""
-	print("🔍 [ObstacleManager] 开始物理空间查询检测 - 位置: %s" % str(pos))
+	# print("🔍 [ObstacleManager] 开始物理空间查询检测 - 位置: %s" % str(pos))
 	
 	# 获取物理空间
 	var space = get_world_2d().direct_space_state
 	if not space:
-		print("⚠️ [ObstacleManager] 无法获取物理空间")
+		# print("⚠️ [ObstacleManager] 无法获取物理空间")
 		return false
 	
 	# 创建查询参数
@@ -194,10 +255,10 @@ func is_position_blocked(pos: Vector2) -> bool:
 	# 执行物理查询
 	var results = space.intersect_shape(query, 10)
 	
-	print("📋 [ObstacleManager] 物理查询参数 - 碰撞掩码: %d, 检测Areas: %s" % [query.collision_mask, query.collide_with_areas])
+	# print("📋 [ObstacleManager] 物理查询参数 - 碰撞掩码: %d, 检测Areas: %s" % [query.collision_mask, query.collide_with_areas])
 	
 	if results.size() > 0:
-		print("🚫 [ObstacleManager] 检测到 %d 个障碍物碰撞" % results.size())
+		# print("🚫 [ObstacleManager] 检测到 %d 个障碍物碰撞" % results.size())
 		for i in range(results.size()):
 			var result = results[i]
 			var collider = result.get("collider")
@@ -205,10 +266,10 @@ func is_position_blocked(pos: Vector2) -> bool:
 				var collision_layer = collider.collision_layer if "collision_layer" in collider else "未知"
 				var node_name = collider.name if "name" in collider else "未知节点"
 				var node_type = collider.get_class() if collider.has_method("get_class") else "未知类型"
-				print("  - 障碍物 %d: %s (%s), 碰撞层: %s" % [i+1, node_name, node_type, str(collision_layer)])
+				# print("  - 障碍物 %d: %s (%s), 碰撞层: %s" % [i+1, node_name, node_type, str(collision_layer)])
 		return true
 	else:
-		print("✅ [ObstacleManager] 位置无障碍物阻挡")
+		# print("✅ [ObstacleManager] 位置无障碍物阻挡")
 		return false
 
 func get_obstacle_count() -> int:

@@ -58,15 +58,18 @@ func start_skill_selection(character: GameCharacter, skills: Array) -> void:
 	
 	visible = true
 
-# 🚀 关闭选择器
+# 🚪 关闭选择器
 func close_selector(emit_cancel_signal: bool = true) -> void:
+	print("🔧 [调试] close_selector被调用 - emit_cancel_signal: %s" % emit_cancel_signal)
+	print("🔧 [调试] 调用堆栈: %s" % str(get_stack()))
+	
 	# 🚀 防护：如果正在从技能释放模式返回，忽略关闭请求
 	if has_meta("returning_from_casting"):
 		print("🔙 [可视化技能选择器] 检测到正在从技能释放返回，忽略关闭请求")
 		return
 	
 	print("🔧 [可视化技能选择器] 关闭选择器 - 当前状态: %s，是否发出取消信号: %s" % [SelectorState.keys()[current_state], emit_cancel_signal])
-	print("🔧 [调试] 当前角色: %s, 可见性: %s" % [current_character.name if current_character else "null", visible])
+	print("🔧 [调试] 当前角色: %s, 可见性: %s" % [(current_character.name if current_character else "null"), visible])
 	
 	# 根据当前状态进行清理
 	match current_state:
@@ -343,6 +346,10 @@ func _get_unusable_reason(skill: SkillData) -> String:
 
 # 🎯 技能按钮点击处理
 func _on_skill_button_pressed(skill: SkillData) -> void:
+	print("🔧 [调试] 技能按钮被点击 - 技能: %s" % skill.name)
+	print("🔧 [调试] 当前角色: %s" % (current_character.name if current_character else "null"))
+	print("🔧 [调试] visual_caster存在: %s" % (visual_caster != null))
+	
 	if not skill.can_use(current_character):
 		print("⚠️ [可视化技能选择器] 技能不可用: %s" % skill.name)
 		return
@@ -356,7 +363,11 @@ func _on_skill_button_pressed(skill: SkillData) -> void:
 	current_state = SelectorState.CASTING_SKILL
 	
 	# 启动可视化技能释放
-	visual_caster.start_skill_casting(skill, current_character)
+	if visual_caster:
+		print("🔧 [调试] 调用visual_caster.start_skill_casting")
+		visual_caster.start_skill_casting(skill, current_character)
+	else:
+		print("❌ [错误] visual_caster为null，无法启动技能释放")
 
 # 🎯 取消按钮点击处理
 func _on_cancel_button_pressed() -> void:
@@ -368,19 +379,24 @@ func _on_cancel_button_pressed() -> void:
 func _on_skill_cast_requested(skill: SkillData, caster: GameCharacter, targets: Array) -> void:
 	print("✅ [可视化技能选择器] 技能释放请求: %s，目标数量: %d" % [skill.name, targets.size()])
 	print("🔧 [调试] 当前状态: %s" % SelectorState.keys()[current_state])
+	print("🔧 [调试] 即将发出skill_cast_completed信号")
 	
 	# 发出技能释放完成信号
 	print("📡 [调试] 发出skill_cast_completed信号")
 	skill_cast_completed.emit(skill, caster, targets)
+	print("🔧 [调试] skill_cast_completed信号已发出")
 	
-	# 关闭选择器（不发出取消信号，因为这是成功完成）
-	print("🔧 [调试] 技能释放成功，关闭选择器")
-	close_selector(false)
+	# 🚀 修复：延迟关闭选择器，避免立即取消技能
+	print("🔧 [调试] 设置延迟关闭选择器")
+	get_tree().create_timer(0.1).timeout.connect(func(): 
+		print("🔧 [调试] 延迟关闭选择器被触发")
+		close_selector(false)
+	)
 
 # 🎯 技能释放取消处理
 func _on_skill_casting_cancelled() -> void:
 	print("❌ [可视化技能选择器] 技能释放被取消，当前状态: %s" % SelectorState.keys()[current_state])
-	print("🔧 [调试] 当前角色: %s, 可见性: %s" % [current_character.name if current_character else "null", visible])
+	print("🔧 [调试] 当前角色: %s, 可见性: %s" % [(current_character.name if current_character else "null"), visible])
 	
 	# 只在技能释放状态下才处理取消
 	if current_state != SelectorState.CASTING_SKILL:

@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://b4q6axh71dxeb"]
+[gd_scene load_steps=2 format=3 uid="uid://ddesjyhp5hn3t"]
 
-[ext_resource type="Script" path="res://UI/SkillSelectionMenu.gd" id="1_skill_menu"]
+[ext_resource type="Script" uid="uid://jcxkl2qae4hg" path="res://UI/SkillSelectionMenu.gd" id="1_skill_menu"]
 
 [node name="SkillSelectionMenu" type="Panel"]
 z_index = 100
@@ -49,8 +49,8 @@ size_flags_horizontal = 3
 layout_mode = 2
 
 [node name="SkillInfoPanel" type="Panel" parent="VBoxContainer"]
-layout_mode = 2
 custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/SkillInfoPanel"]
 layout_mode = 1
@@ -87,4 +87,4 @@ layout_mode = 2
 
 [node name="CancelButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "取消" 
+text = "取消"

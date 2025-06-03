@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bc3cyf7xxj2kf"]
 
-[ext_resource type="Script" path="res://UI/TargetSelectionMenu.gd" id="1_target_menu"]
+[ext_resource type="Script" uid="uid://c1li6rpiu6q7x" path="res://UI/TargetSelectionMenu.gd" id="1_target_menu"]
 
 [node name="TargetSelectionMenu" type="Panel"]
 z_index = 100
@@ -54,8 +54,8 @@ size_flags_horizontal = 3
 layout_mode = 2
 
 [node name="TargetInfoPanel" type="Panel" parent="VBoxContainer"]
-layout_mode = 2
 custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TargetInfoPanel"]
 layout_mode = 1
@@ -91,4 +91,4 @@ layout_mode = 2
 
 [node name="CancelButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "取消" 
+text = "取消"

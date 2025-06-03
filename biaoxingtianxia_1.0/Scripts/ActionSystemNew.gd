@@ -208,19 +208,25 @@ func select_action(action: String):
 			print("⚔️ [行动系统] 委托给SkillManager处理技能")
 			
 			if character_data:
-				# 委托给SkillManager处理
+				# 委托给BattleScene处理技能选择
 				var battle_scene = get_tree().current_scene
-				if battle_scene:
-					var skill_manager = battle_scene.get_node_or_null("SkillManager")
-					if skill_manager:
-						print("🎯 [行动系统] 委托SkillManager处理技能选择")
-						skill_manager.start_skill_selection(character_data)
-					else:
-						print("❌ [行动系统] SkillManager不存在")
-						reset_action_system()
-				else:
-					print("❌ [行动系统] 无法找到BattleScene")
-					reset_action_system()
+				# if battle_scene and battle_scene.has_method("show_skill_selection_menu"):  # 已移除SkillSelectionMenu
+				#	var skill_manager = battle_scene.get_node_or_null("SkillManager")
+				#	if skill_manager:
+				#		print("🎯 [行动系统] 获取角色可用技能")
+				#		var available_skills = skill_manager.get_available_skills(character_data)
+				#		print("🎯 [行动系统] 委托BattleScene处理技能选择")
+				#		battle_scene.show_skill_selection_menu(character_data, available_skills)
+				#	else:
+				#		print("❌ [行动系统] SkillManager不存在")
+				#		reset_action_system()
+				# else:
+				#	print("❌ [行动系统] 无法找到BattleScene或show_skill_selection_menu方法")
+				#	reset_action_system()
+				
+				# 已移除SkillSelectionMenu，现在使用VisualSkillSelector进行技能选择
+				print("⚠️ [行动系统] SkillSelectionMenu已移除，请使用VisualSkillSelector进行技能选择")
+				reset_action_system()
 			else:
 				print("⚠️ [行动系统] 无法获取角色数据")
 				reset_action_system()

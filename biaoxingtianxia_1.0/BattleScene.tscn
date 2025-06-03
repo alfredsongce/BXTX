@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://b52xgjrbhdaid"]
+[gd_scene load_steps=27 format=3 uid="uid://b52xgjrbhdaid"]
 
 [ext_resource type="Script" uid="uid://t8vo420x2ral" path="res://Scripts/BattleScene.gd" id="1_ttbo7"]
 [ext_resource type="Script" uid="uid://cb1pjbgdf4lc6" path="res://Scripts/MoveRangeDisplay/MoveRangeConfig.gd" id="3_config"]
@@ -25,6 +25,7 @@
 [ext_resource type="Script" uid="uid://cqeyji86etbuj" path="res://Scripts/Battle/BattleAIManager.gd" id="23_battle_ai_manager"]
 [ext_resource type="Script" uid="uid://73e3mc0sdlbw" path="res://Scripts/Battle/BattleEventManager.gd" id="24_battle_event_manager"]
 [ext_resource type="Script" uid="uid://73ell8m44daj" path="res://Scripts/ObstacleManager.gd" id="25_obstacle_manager"]
+[ext_resource type="Script" uid="uid://bk6udgex28ra8" path="res://Scripts/PositionCollisionManager.gd" id="26_position_collision_manager"]
 
 [node name="战斗场景" type="Node2D"]
 texture_filter = 1
@@ -72,6 +73,9 @@ script = ExtResource("23_battle_ai_manager")
 
 [node name="BattleEventManager" type="Node" parent="BattleSystems"]
 script = ExtResource("24_battle_event_manager")
+
+[node name="PositionCollisionManager" type="Node2D" parent="BattleSystems"]
+script = ExtResource("26_position_collision_manager")
 
 [node name="MoveRange" type="Node" parent="."]
 

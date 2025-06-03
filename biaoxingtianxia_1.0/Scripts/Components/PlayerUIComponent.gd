@@ -124,7 +124,8 @@ func _update_tooltip_height() -> void:
 
 # 打开行动菜单
 func open_action_menu() -> void:
-	print("🎯 [PlayerUIComponent] open_action_menu被调用")
+	print("\n=== 🎯 [PlayerUIComponent] open_action_menu被调用 ===")
+	print("🔥 [PlayerUIComponent] 这是菜单创建的关键方法！")
 	print("🔍 [PlayerUIComponent] 角色: %s" % (character_data.name if character_data else "未知"))
 	print("🔍 [PlayerUIComponent] 当前打开的菜单: %s" % (current_open_menu.name if current_open_menu and is_instance_valid(current_open_menu) else "无"))
 	

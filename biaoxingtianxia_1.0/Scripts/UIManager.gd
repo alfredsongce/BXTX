@@ -7,7 +7,7 @@ var turn_label: Label = null
 var current_character_label: Label = null
 
 # 技能选择UI组件
-var skill_selection_menu: Control = null
+# var skill_selection_menu: Control = null  # 已移除SkillSelectionMenu
 
 # 目标选择UI组件  
 var target_selection_menu: Control = null
@@ -35,7 +35,7 @@ func _ready():
 	
 	# 初始化各个UI组件
 	_setup_battle_ui()
-	_setup_skill_selection_menu()
+	# _setup_skill_selection_menu()  # 已移除SkillSelectionMenu
 	_setup_target_selection_menu()
 	_setup_skill_range_display()
 	_setup_visual_skill_selector()
@@ -112,20 +112,20 @@ func _setup_battle_ui() -> void:
 	
 	print("✅ [UIManager] 战斗UI初始化完成")
 
-# 初始化技能选择菜单
-func _setup_skill_selection_menu() -> void:
-	# 加载技能选择菜单场景
-	var skill_menu_scene = preload("res://UI/SkillSelectionMenu.tscn")
-	skill_selection_menu = skill_menu_scene.instantiate()
-	
-	# 添加到UI容器
-	battle_ui.add_child(skill_selection_menu)
-	
-	# 连接信号
-	skill_selection_menu.skill_selected.connect(_on_skill_selected)
-	skill_selection_menu.menu_closed.connect(_on_skill_menu_closed)
-	
-	print("✅ [UIManager] 技能选择菜单初始化完成")
+# 初始化技能选择菜单 - 已移除SkillSelectionMenu
+# func _setup_skill_selection_menu() -> void:
+#	# 加载技能选择菜单场景
+#	var skill_menu_scene = preload("res://UI/SkillSelectionMenu.tscn")
+#	skill_selection_menu = skill_menu_scene.instantiate()
+#	
+#	# 添加到UI容器
+#	battle_ui.add_child(skill_selection_menu)
+#	
+#	# 连接信号
+#	skill_selection_menu.skill_selected.connect(_on_skill_selected)
+#	skill_selection_menu.menu_closed.connect(_on_skill_menu_closed)
+#	
+#	print("✅ [UIManager] 技能选择菜单初始化完成")
 
 # 初始化目标选择菜单
 func _setup_target_selection_menu() -> void:
@@ -333,14 +333,14 @@ func update_battle_button_state(is_battle_in_progress: bool) -> void:
 # 显示UI菜单的方法
 # ===========================================
 
-# 显示技能选择菜单
-func show_skill_selection_menu(character: GameCharacter, available_skills: Array) -> void:
-	if not skill_selection_menu:
-		print("⚠️ [UIManager] 技能选择菜单未初始化")
-		return
-	
-	print("🎯 [UIManager] 显示技能选择菜单，角色: %s，技能数量: %d" % [character.name, available_skills.size()])
-	skill_selection_menu.open_menu(character, available_skills)
+# 显示技能选择菜单 - 已移除SkillSelectionMenu
+# func show_skill_selection_menu(character: GameCharacter, available_skills: Array) -> void:
+#	if not skill_selection_menu:
+#		print("⚠️ [UIManager] 技能选择菜单未初始化")
+#		return
+#	
+#	print("🎯 [UIManager] 显示技能选择菜单，角色: %s，技能数量: %d" % [character.name, available_skills.size()])
+#	skill_selection_menu.open_menu(character, available_skills)
 
 # 显示目标选择菜单
 func show_target_selection_menu(skill: SkillData, caster: GameCharacter, available_targets: Array) -> void:
@@ -368,15 +368,15 @@ func show_visual_skill_selection(character: GameCharacter, available_skills: Arr
 # 信号处理方法
 # ===========================================
 
-# 技能选择回调
-func _on_skill_selected(skill_id: String) -> void:
-	print("🎯 [UIManager] 玩家选择技能: %s" % skill_id)
-	skill_selected.emit(skill_id)
+# 技能选择回调 - 已移除SkillSelectionMenu
+# func _on_skill_selected(skill_id: String) -> void:
+#	print("🎯 [UIManager] 玩家选择技能: %s" % skill_id)
+#	skill_selected.emit(skill_id)
 
-# 技能菜单关闭回调
-func _on_skill_menu_closed() -> void:
-	print("❌ [UIManager] 技能选择菜单关闭")
-	skill_menu_closed.emit()
+# 技能菜单关闭回调 - 已移除SkillSelectionMenu
+# func _on_skill_menu_closed() -> void:
+#	print("❌ [UIManager] 技能选择菜单关闭")
+#	skill_menu_closed.emit()
 
 # 目标选择回调
 func _on_target_selected(targets: Array) -> void:
@@ -399,6 +399,8 @@ func _on_visual_skill_selection_cancelled() -> void:
 
 # 🚀 开始战斗按钮点击处理
 func _on_start_battle_button_pressed() -> void:
+	print("\n=== 🔥 [UIManager] 开始战斗按钮被点击！===")
 	print("🎮 [UIManager] 开始战斗按钮被点击")
 	# 发出信号给BattleScene处理
-	get_parent().emit_signal("start_battle_requested") 
+	get_parent().emit_signal("start_battle_requested")
+	print("🚀 [UIManager] start_battle_requested信号已发射")

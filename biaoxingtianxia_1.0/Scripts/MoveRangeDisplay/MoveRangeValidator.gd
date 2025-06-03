@@ -2,20 +2,55 @@
 extends Node2D
 class_name MoveRangeValidator
 
-# 🎯 节点架构设计 - 符合Godot理念
+# 统一管理器引用
+var position_collision_manager: PositionCollisionManager
+var debug_mode: bool = true
 
-# 🚀 缓存优化
+# 缓存相关变量
 var _cached_obstacles: Array = []
 var _cache_character_id: String = ""
-var _cache_update_time: int = 0  # 🚀 修复：改为int类型以匹配Time.get_ticks_msec()
-var _cache_lifetime: float = 0.1  # 缓存100ms
+var _cache_update_time: int = 0
+var _cache_lifetime: float = 0.5  # 缓存生存时间（秒）
 
 # 📡 信号
 signal validation_completed(is_valid: bool, reason: String)
 signal obstacle_cache_updated(count: int)
 
 func _ready():
-	print("🔍 [Validator] 验证器节点初始化完成")
+	# 获取PositionCollisionManager的引用
+	# 首先尝试从战斗场景中获取
+	var battle_scene = get_node_or_null("/root/战斗场景")
+	if battle_scene:
+		position_collision_manager = battle_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
+	
+	if not position_collision_manager:
+		push_error("❌ [MoveRangeValidator] 无法找到PositionCollisionManager")
+		print("❌ [MoveRangeValidator] 错误：PositionCollisionManager未找到，这会导致位置验证失败")
+	else:
+		print("✅ [MoveRangeValidator] PositionCollisionManager连接成功")
+
+# 唯一的验证接口
+func validate_position(target_pos: Vector2, character_id: String = "") -> bool:
+	if not position_collision_manager:
+		print("❌ [MoveRangeValidator] validate_position失败：position_collision_manager为空")
+		return false
+	
+	# 根据character_id获取对应的Node2D对象
+	var exclude_character: Node2D = null
+	if character_id != "":
+		exclude_character = _get_character_node_by_id(character_id)
+		if not exclude_character:
+			print("❌ [MoveRangeValidator] validate_position失败：无法找到角色节点 ID=%s" % character_id)
+			return false
+	
+	var result = position_collision_manager.validate_position(target_pos, exclude_character)
+	if debug_mode:
+		print("🔍 [MoveRangeValidator] 位置验证：%s -> %s (角色: %s)" % [target_pos, "通过" if result else "失败", character_id])
+	return result
+
+
+
+
 
 # 🚀 主要验证接口（实例方法 - 优化版）
 func validate_position_comprehensive(
@@ -24,11 +59,11 @@ func validate_position_comprehensive(
 	character_actual_position: Vector2 = Vector2.ZERO
 ) -> Dictionary:
 	
-	print("\n🔍 [Validator] ========== 开始综合验证 ==========")
+	# print("\n🔍 [Validator] ========== 开始综合验证 ==========")
 	
 	if not character:
 		var result = {"is_valid": false, "reason": "角色数据为空"}
-		print("❌ [Validator] %s" % result.reason)
+		# print("❌ [Validator] %s" % result.reason)
 		validation_completed.emit(false, result.reason)
 		return result
 	
@@ -40,66 +75,66 @@ func validate_position_comprehensive(
 	var max_range = character.qinggong_skill
 	var char_ground_y = character.ground_position.y
 	
-	print("📋 [Validator] 验证参数 - 角色: %s, 实际位置: %s, 目标位置: %s, 轻功: %d" % [
-		character.name, actual_char_pos, target_position, max_range
-	])
+	# print("📋 [Validator] 验证参数 - 角色: %s, 实际位置: %s, 目标位置: %s, 轻功: %d" % [
+		# character.name, actual_char_pos, target_position, max_range
+	# ])
 	
 	# 🎯 五重验证逻辑（优化版）
 	
 	# 检查1：圆形范围检查
-	print("🔍 [Validator] 步骤1: 圆形范围检查...")
+	# print("🔍 [Validator] 步骤1: 圆形范围检查...")
 	if not _check_circular_range(actual_char_pos, target_position, max_range):
 		var distance = actual_char_pos.distance_to(target_position)
 		var result = {"is_valid": false, "reason": "超出圆形移动范围(%.1f > %d)" % [distance, max_range]}
-		print("❌ [Validator] %s" % result.reason)
+		# print("❌ [Validator] %s" % result.reason)
 		validation_completed.emit(false, result.reason)
 		return result
-	print("✅ [Validator] 圆形范围检查通过")
+	# print("✅ [Validator] 圆形范围检查通过")
 	
 	# 检查2：高度限制检查
-	print("🔍 [Validator] 步骤2: 高度限制检查...")
+	# print("🔍 [Validator] 步骤2: 高度限制检查...")
 	if not _check_height_limit(target_position, char_ground_y, max_range):
 		var target_height = char_ground_y - target_position.y
 		var result = {"is_valid": false, "reason": "超出高度限制(%.1f > %d)" % [target_height, max_range]}
-		print("❌ [Validator] %s" % result.reason)
+		# print("❌ [Validator] %s" % result.reason)
 		validation_completed.emit(false, result.reason)
 		return result
-	print("✅ [Validator] 高度限制检查通过")
+	# print("✅ [Validator] 高度限制检查通过")
 	
 	# 检查3：地面检查
-	print("🔍 [Validator] 步骤3: 地面检查...")
+	# print("🔍 [Validator] 步骤3: 地面检查...")
 	if not _check_ground_limit(target_position, char_ground_y):
 		var result = {"is_valid": false, "reason": "不能移动到地面以下"}
-		print("❌ [Validator] %s" % result.reason)
+		# print("❌ [Validator] %s" % result.reason)
 		validation_completed.emit(false, result.reason)
 		return result
-	print("✅ [Validator] 地面检查通过")
+	# print("✅ [Validator] 地面检查通过")
 	
 	# 检查4：角色障碍物碰撞检查（优化版 - 支持空间查询）
-	print("🔍 [Validator] 步骤4: 角色障碍物碰撞检查...")
+	# print("🔍 [Validator] 步骤4: 角色障碍物碰撞检查...")
 	var obstacles = _get_obstacle_characters_cached(character.id)
-	print("📊 [Validator] 发现角色障碍物数量: %d" % obstacles.size())
+	# print("📊 [Validator] 发现角色障碍物数量: %d" % obstacles.size())
 	if not _check_capsule_obstacles(target_position, obstacles, character):
 		var result = {"is_valid": false, "reason": "目标位置有角色碰撞"}
-		print("❌ [Validator] %s" % result.reason)
+		# print("❌ [Validator] %s" % result.reason)
 		validation_completed.emit(false, result.reason)
 		return result
-	print("✅ [Validator] 角色障碍物检查通过")
+	# print("✅ [Validator] 角色障碍物检查通过")
 	
 	# 检查5：静态障碍物碰撞检查（优化版 - 使用空间查询）
-	print("🔍 [Validator] 步骤5: 静态障碍物碰撞检查...")
+	# print("🔍 [Validator] 步骤5: 静态障碍物碰撞检查...")
 	var static_check_result = _check_static_obstacles(target_position, character)
-	print("📊 [Validator] 静态障碍物检查结果: %s" % ("通过" if static_check_result else "失败"))
+	# print("📊 [Validator] 静态障碍物检查结果: %s" % ("通过" if static_check_result else "失败"))
 	if not static_check_result:
 		var result = {"is_valid": false, "reason": "目标位置有静态障碍物"}
-		print("❌ [Validator] %s" % result.reason)
+		# print("❌ [Validator] %s" % result.reason)
 		validation_completed.emit(false, result.reason)
 		return result
-	print("✅ [Validator] 静态障碍物检查通过")
+	# print("✅ [Validator] 静态障碍物检查通过")
 	
 	var result = {"is_valid": true, "reason": ""}
-	print("✅ [Validator] 所有验证步骤通过")
-	print("🔍 [Validator] ========== 综合验证结束 ==========\n")
+	# print("✅ [Validator] 所有验证步骤通过")
+# print("🔍 [Validator] ========== 综合验证结束 ==========\n")
 	validation_completed.emit(true, result.reason)
 	return result
 
@@ -117,14 +152,25 @@ func _check_height_limit(world_pos: Vector2, ground_y: float, max_range: int) ->
 func _check_ground_limit(world_pos: Vector2, ground_y: float) -> bool:
 	return world_pos.y <= ground_y  # 目标位置不能在地面以下
 
-# 🔍 检查4：胶囊型障碍物检查（优化版 - 支持空间查询）
+# 🔍 检查4：角色障碍物碰撞检查（优化版 - 支持空间查询）
 func _check_capsule_obstacles(world_pos: Vector2, obstacles: Array, character = null) -> bool:
+	# 🚀 修复：将鼠标位置转换为角色中心位置进行碰撞检测
+	var character_center_pos = world_pos
+	if character:
+		# 获取GroundAnchor偏移量，将鼠标位置转换为角色中心位置
+		var character_node = _get_character_node(character)
+		if character_node:
+			var ground_anchor = character_node.get_node_or_null("GroundAnchor")
+			if ground_anchor:
+				# 鼠标位置对应GroundAnchor位置，需要转换为角色中心位置
+				character_center_pos = Vector2(world_pos.x, world_pos.y - ground_anchor.position.y)
+	
 	# 如果有角色信息，尝试使用空间查询优化
 	if character and obstacles.size() > 5:  # 只在障碍物较多时使用空间查询
-		return _check_capsule_obstacles_with_physics_query(world_pos, character)
+		return _check_capsule_obstacles_with_physics_query(character_center_pos, character)
 	else:
 		# 使用传统遍历方法
-		return _check_capsule_obstacles_legacy(world_pos, obstacles)
+		return _check_capsule_obstacles_legacy(character_center_pos, obstacles)
 
 # 🚀 新增：基于空间查询的角色障碍物检测
 func _check_capsule_obstacles_with_physics_query(world_pos: Vector2, character) -> bool:
@@ -181,7 +227,7 @@ func _check_capsule_obstacles_with_physics_query(world_pos: Vector2, character) 
 	
 	# 如果有碰撞结果，说明与其他角色碰撞
 	if results.size() > 0:
-		print("🔍 [Validator] 空间查询检测到角色碰撞 - 位置: %s" % str(world_pos))
+		# print("🔍 [Validator] 空间查询检测到角色碰撞 - 位置: %s" % str(world_pos))
 		return false
 	
 	return true
@@ -213,25 +259,23 @@ func _get_obstacle_characters_cached(exclude_character_id: String) -> Array:
 
 # 🔍 检查5：静态障碍物检查（统一使用物理查询）
 func _check_static_obstacles(world_pos: Vector2, character = null) -> bool:
-	print("🔍 [Validator] 静态障碍物检测开始 - 位置: %s" % world_pos)
+	# print("🔍 [Validator] 静态障碍物检测开始 - 位置: %s" % world_pos)
 	
 	# 🚀 统一使用物理空间查询（与快速预检测保持一致）
 	var space_state = get_world_2d().direct_space_state
 	if not space_state:
 		return true
 	
+	# 🚀 修复：使用角色的真实碰撞形状
+	var shape = _get_character_collision_shape(character)
+	
+	# 必须获取到角色的真实碰撞形状
+	if not shape:
+		push_error("[MoveRangeValidator] 无法获取角色碰撞形状，静态障碍物检测失败")
+		return false
+	
 	# 创建查询参数
 	var query = PhysicsShapeQueryParameters2D.new()
-	
-	# 🚀 修复：使用与快速预检测相同的角色碰撞形状
-	var shape = _get_character_collision_shape(character)
-	if not shape:
-		# 如果无法获取角色形状，使用默认圆形
-		shape = CircleShape2D.new()
-		shape.radius = 20.0  # 使用更大的半径，接近角色实际大小
-
-	else:
-		pass
 	query.shape = shape
 	query.transform = Transform2D(0, world_pos)
 	query.collision_mask = 14  # 检测静态障碍物(2)、角色(4)和障碍物(8) = 2+4+8=14（与快速预检测完全一致）
@@ -249,89 +293,85 @@ func _check_static_obstacles(world_pos: Vector2, character = null) -> bool:
 	
 	# 执行物理查询
 	var results = space_state.intersect_shape(query, 10)
-	
-	# 返回检测结果
 	return results.size() == 0
 
-# 🚀 新增：基于PhysicsShapeQueryParameters2D的静态障碍物检测
-func _check_static_obstacles_with_physics_query(world_pos: Vector2, character) -> bool:
-	# 获取角色的碰撞形状参数
-	var capsule_params = _get_character_capsule_params(character)
-	if not capsule_params:
-		# 如果无法获取胶囊参数，回退到传统方法
-		return _check_static_obstacles_legacy(world_pos)
-	
-	# 获取物理空间
+
+
+# 🚀 快速预检测（使用物理查询）
+func _quick_precheck_physics(world_pos: Vector2, character) -> bool:
+	"""使用物理查询进行快速预检测"""
 	var space_state = get_world_2d().direct_space_state
 	if not space_state:
 		return true
 	
-	# 创建查询参数
+	# 🚀 使用角色的真实碰撞形状
+	var character_shape = _get_character_collision_shape(character)
+	
+	# 必须获取到角色的真实碰撞形状
+	if not character_shape:
+		push_error("[MoveRangeValidator] 无法获取角色碰撞形状，快速预检测失败")
+		return false
+	
+	# 使用角色真实形状进行查询
 	var query = PhysicsShapeQueryParameters2D.new()
-	
-	# 设置碰撞形状
-	if capsule_params.half_height > 0.0:
-		# 使用胶囊形状
-		var capsule_shape = CapsuleShape2D.new()
-		capsule_shape.radius = capsule_params.radius
-		capsule_shape.height = capsule_params.height
-		query.shape = capsule_shape
-	else:
-		# 使用圆形形状
-		var circle_shape = CircleShape2D.new()
-		circle_shape.radius = capsule_params.radius
-		query.shape = circle_shape
-	
-	# 设置变换（位置和旋转）
-	var transform = Transform2D()
-	transform.origin = world_pos
-	# 处理角色旋转（如果有的话）
-	var character_node = _get_character_node(character)
-	if character_node:
-		transform.rotation = character_node.rotation
-		# 处理缩放
-		transform = transform.scaled(character_node.scale)
-	query.transform = transform
-	
-	# 设置碰撞层和掩码（只检测静态障碍物）
-	query.collision_mask = 2  # 假设静态障碍物在第2层
+	query.shape = character_shape
+	query.transform = Transform2D(0, world_pos)
+	query.collision_mask = 14  # 静态障碍物(2) + 角色(4) + 障碍物(8)
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
 	
-	# 执行查询（只需要知道是否有碰撞）
+	# 排除当前角色
+	var exclude_rids = []
+	var character_node = _get_character_node(character)
+	if character_node:
+		var char_area = character_node.get_node_or_null("CharacterArea")
+		if char_area:
+			exclude_rids.append(char_area.get_rid())
+	query.exclude = exclude_rids
+	
+	# 执行物理查询
 	var results = space_state.intersect_shape(query, 1)
+	return results.size() == 0
+
+
+
+
+
+# 批量验证（用于移动范围计算）
+func validate_positions(positions: Array, character_id: String = "") -> Array:
+	var results = []
+	for pos in positions:
+		results.append(validate_position(pos, character_id))
+	return results
+
+
 	
-	# 如果有碰撞结果，说明位置被阻挡
-	if results.size() > 0:
-		print("🔍 [Validator] 空间查询检测到静态障碍物碰撞 - 位置: %s" % str(world_pos))
-		return false
-	
-	return true
+
 
 # 🔧 传统静态障碍物检测方法（向后兼容）
 func _check_static_obstacles_legacy(world_pos: Vector2) -> bool:
-	print("🔍 [Validator] 传统静态障碍物检测开始")
+	# print("🔍 [Validator] 传统静态障碍物检测开始")
 	# 获取BattleScene来查找ObstacleManager
 	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
 	if not battle_scene:
-		print("⚠️ [Validator] 无法找到battle_scene组")
+		# print("⚠️ [Validator] 无法找到battle_scene组")
 		return true  # 如果找不到场景，假设没有障碍物
 	
 	# 获取ObstacleManager
 	var obstacle_manager = battle_scene.get_node_or_null("TheLevel/ObstacleManager")
 	if not obstacle_manager:
-		print("⚠️ [Validator] 无法找到ObstacleManager")
+		# print("⚠️ [Validator] 无法找到ObstacleManager")
 		return true  # 如果找不到障碍物管理器，假设没有障碍物
 	
-	print("✅ [Validator] 找到ObstacleManager: %s" % obstacle_manager.name)
+	# print("✅ [Validator] 找到ObstacleManager: %s" % obstacle_manager.name)
 	
 	# 使用点检测
 	if obstacle_manager.has_method("is_position_blocked"):
 		var is_blocked = obstacle_manager.is_position_blocked(world_pos)
-		print("📊 [Validator] ObstacleManager检测结果 - 位置: %s, 被阻挡: %s" % [str(world_pos), str(is_blocked)])
+		# print("📊 [Validator] ObstacleManager检测结果 - 位置: %s, 被阻挡: %s" % [str(world_pos), str(is_blocked)])
 		return not is_blocked
 	else:
-		print("⚠️ [Validator] ObstacleManager没有is_position_blocked方法")
+		# print("⚠️ [Validator] ObstacleManager没有is_position_blocked方法")
 		return true
 
 # 🔍 胶囊体积静态障碍物检测
@@ -351,13 +391,13 @@ func _check_capsule_static_obstacles(world_pos: Vector2, character, obstacle_man
 		var search_radius = capsule_params.radius + 100  # 额外缓冲
 		obstacles = obstacle_manager.get_obstacles_in_area(world_pos, search_radius)
 	else:
-		print("⚠️ [Validator] ObstacleManager没有get_obstacles_in_area方法")
+		# print("⚠️ [Validator] ObstacleManager没有get_obstacles_in_area方法")
 		return true
 	
 	# 检查胶囊与每个障碍物的碰撞
 	for obstacle in obstacles:
 		if _capsule_intersects_circle(world_pos, capsule_params, obstacle.position, obstacle.radius):
-			print("🔍 [Validator] 胶囊体与静态障碍物碰撞 - 位置: %s, 障碍物: %s" % [str(world_pos), str(obstacle.position)])
+			# print("🔍 [Validator] 胶囊体与静态障碍物碰撞 - 位置: %s, 障碍物: %s" % [str(world_pos), str(obstacle.position)])
 			return false
 	
 	return true
@@ -418,18 +458,18 @@ func _get_character_capsule_params(character) -> Dictionary:
 		character_node = character
 	
 	if not character_node:
-		print("⚠️ [Validator] 无法找到角色节点")
+		# print("⚠️ [Validator] 无法找到角色节点")
 		return {}
 	
 	# 获取碰撞形状
 	var character_area = character_node.get_node_or_null("CharacterArea")
 	if not character_area:
-		print("⚠️ [Validator] 角色没有CharacterArea")
+		# print("⚠️ [Validator] 角色没有CharacterArea")
 		return {}
 	
 	var collision_shape = character_area.get_node_or_null("CollisionShape2D")
 	if not collision_shape or not collision_shape.shape:
-		print("⚠️ [Validator] 角色没有有效的碰撞形状")
+		# print("⚠️ [Validator] 角色没有有效的碰撞形状")
 		return {}
 	
 	# 检查是否为胶囊形状
@@ -449,7 +489,7 @@ func _get_character_capsule_params(character) -> Dictionary:
 			"half_height": 0.0
 		}
 	else:
-		print("⚠️ [Validator] 不支持的碰撞形状类型: %s" % collision_shape.shape.get_class())
+		# print("⚠️ [Validator] 不支持的碰撞形状类型: %s" % collision_shape.shape.get_class())
 		return {}
 
 # 🔍 胶囊与圆形碰撞检测
@@ -495,13 +535,13 @@ func _get_obstacle_characters(exclude_character_id: String) -> Array:
 	
 	# 🚀 简化：直接使用get_tree()而不是Engine.get_singleton
 	if not get_tree():
-		print("⚠️ [Validator] 无法获取场景树")
+		# print("⚠️ [Validator] 无法获取场景树")
 		return obstacles
 	
 	# 获取BattleScene来查找所有角色
 	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
 	if not battle_scene:
-		print("⚠️ [Validator] 无法找到battle_scene组")
+		# print("⚠️ [Validator] 无法找到battle_scene组")
 		return obstacles
 	
 	# 🚀 减少详细输出
@@ -537,8 +577,8 @@ func _get_obstacle_characters(exclude_character_id: String) -> Array:
 		var character_data = node.get_character_data() if node.has_method("get_character_data") else null
 		if not character_data:
 			# 只在调试模式下显示详细信息
-			if OS.is_debug_build():
-				print("⚠️ [Validator] 节点 %s 没有角色数据" % node.name)
+			# if OS.is_debug_build():
+				# print("⚠️ [Validator] 节点 %s 没有角色数据" % node.name)
 			continue
 			
 		if character_data.id == exclude_character_id:
@@ -548,14 +588,14 @@ func _get_obstacle_characters(exclude_character_id: String) -> Array:
 		# 获取碰撞形状信息
 		var character_area = node.get_node_or_null("CharacterArea")
 		if not character_area:
-			if OS.is_debug_build():
-				print("⚠️ [Validator] 角色 %s 没有CharacterArea" % character_data.id)
+			# if OS.is_debug_build():
+				# print("⚠️ [Validator] 角色 %s 没有CharacterArea" % character_data.id)
 			continue
 		
 		var collision_shape = character_area.get_node_or_null("CollisionShape2D")
 		if not collision_shape or not collision_shape.shape:
-			if OS.is_debug_build():
-				print("⚠️ [Validator] 角色 %s 没有有效的碰撞形状" % character_data.id)
+			# if OS.is_debug_build():
+				# print("⚠️ [Validator] 角色 %s 没有有效的碰撞形状" % character_data.id)
 			continue
 		
 		# 构建障碍物数据
@@ -568,8 +608,8 @@ func _get_obstacle_characters(exclude_character_id: String) -> Array:
 		# print("✅ [Validator] 添加障碍物: %s 位置: %s" % [character_data.id, str(node.position)])
 	
 	# 🚀 只在有障碍物或出现问题时打印
-	if obstacles.size() > 0 or found_characters == 0:
-		print("🔍 [Validator] 扫描完成 - 检查节点: %d, 发现角色: %d, 障碍物: %d" % [checked_nodes, found_characters, obstacles.size()])
+	# if obstacles.size() > 0 or found_characters == 0:
+		# print("🔍 [Validator] 扫描完成 - 检查节点: %d, 发现角色: %d, 障碍物: %d" % [checked_nodes, found_characters, obstacles.size()])
 	return obstacles
 
 # 🔍 检查点是否与胶囊体相交
@@ -661,33 +701,31 @@ func validate_positions_batch(
 # 🔧 工具方法：获取角色实际位置
 func get_character_actual_position(character: GameCharacter) -> Vector2:
 	if not character:
-		print("⚠️ [Validator] 角色参数为空")
+		push_error("[MoveRangeValidator] 角色参数为空")
 		return Vector2.ZERO
 	
 	# 🚀 简化：直接使用get_tree()
 	if not get_tree():
-		print("⚠️ [Validator] 无法获取场景树")
-		return character.position
+		push_error("[MoveRangeValidator] 无法获取场景树")
+		return Vector2.ZERO
 	
 	# 尝试通过BattleScene查找角色节点
 	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
 	if not battle_scene:
-		print("⚠️ [Validator] 无法找到battle_scene组，使用角色数据位置")
-		return character.position
+		push_error("[MoveRangeValidator] 无法找到battle_scene组")
+		return Vector2.ZERO
 	
 	# 查找对应的角色节点
 	if battle_scene.has_method("_find_character_node_by_id"):
 		var character_node = battle_scene._find_character_node_by_id(character.id)
 		if character_node:
-			# print("✅ [Validator] 获取到角色 %s 节点位置: %s" % [character.id, str(character_node.position)])
 			return character_node.position
 		else:
-			print("⚠️ [Validator] 找不到角色节点 %s，使用数据位置" % character.id)
+			push_error("[MoveRangeValidator] 找不到角色节点: %s" % character.id)
+			return Vector2.ZERO
 	else:
-		print("⚠️ [Validator] BattleScene没有_find_character_node_by_id方法")
-	
-	# 如果找不到，返回角色数据位置作为fallback
-	return character.position
+		push_error("[MoveRangeValidator] BattleScene没有_find_character_node_by_id方法")
+		return Vector2.ZERO
 
 # 🚀 缓存管理
 func clear_cache():
@@ -695,12 +733,38 @@ func clear_cache():
 	_cached_obstacles.clear()
 	_cache_character_id = ""
 	_cache_update_time = 0
-	print("🔍 [Validator] 缓存已清理")
+	# print("🔍 [Validator] 缓存已清理")
 
 func set_cache_lifetime(lifetime_seconds: float):
 	"""设置缓存生存时间"""
 	_cache_lifetime = clamp(lifetime_seconds, 0.01, 1.0)
-	print("🔍 [Validator] 缓存生存时间设置为: %.2f秒" % _cache_lifetime)
+	# print("🔍 [Validator] 缓存生存时间设置为: %.2f秒" % _cache_lifetime)
+
+# 🔧 辅助函数：根据角色ID获取角色节点
+func _get_character_node_by_id(character_id: String) -> Node2D:
+	var character_manager = get_node_or_null("/root/BattleScene/CharacterManager")
+	if not character_manager:
+		print("❌ [MoveRangeValidator] _get_character_node_by_id失败：CharacterManager未找到")
+		return null
+	
+	# 检查队友
+	if character_manager.has_method("get_party_member_nodes"):
+		var party_nodes = character_manager.get_party_member_nodes()
+		if party_nodes.has(character_id):
+			if debug_mode:
+				print("✅ [MoveRangeValidator] 找到队友角色：%s (ID: %s)" % [party_nodes[character_id].name, character_id])
+			return party_nodes[character_id]
+	
+	# 检查敌人
+	if character_manager.has_method("get_enemy_nodes"):
+		var enemy_nodes = character_manager.get_enemy_nodes()
+		if enemy_nodes.has(character_id):
+			if debug_mode:
+				print("✅ [MoveRangeValidator] 找到敌人角色：%s (ID: %s)" % [enemy_nodes[character_id].name, character_id])
+			return enemy_nodes[character_id]
+	
+	print("❌ [MoveRangeValidator] 未找到角色 ID: %s" % character_id)
+	return null
 
 # 🚀 性能统计
 func get_validation_stats() -> Dictionary:
@@ -712,5 +776,5 @@ func get_validation_stats() -> Dictionary:
 		"cache_character": _cache_character_id,
 		"supported_shapes": ["CapsuleShape2D", "CircleShape2D", "RectangleShape2D"],
 		"validation_checks": ["circular_range", "height_limit", "ground_limit", "capsule_obstacles"],
-		"features": ["batch_validation", "obstacle_caching", "signal_emission"]
+		"features": ["batch_validation", "obstacle_caching", "signal_emission", "unified_collision_detection"]
 	}

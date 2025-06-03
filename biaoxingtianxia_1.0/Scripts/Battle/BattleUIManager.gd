@@ -13,6 +13,7 @@ var turn_label: Label
 var current_character_label: Label
 var ui_update_timer: Timer
 var last_ui_update_type: String = ""
+var mouse_coordinate_label: Label  # 鼠标坐标显示标签
 
 # 初始化
 func _ready() -> void:
@@ -89,6 +90,9 @@ func _setup_battle_ui() -> void:
 	
 	# 🚀 添加开始战斗按钮
 	_setup_battle_control_button()
+	
+	# 🚀 添加鼠标坐标显示
+	_setup_mouse_coordinate_display()
 	
 	print("✅ [BattleUIManager] 战斗UI初始化完成")
 
@@ -233,8 +237,10 @@ func _setup_battle_control_button() -> void:
 
 # 🚀 开始战斗按钮点击处理
 func _on_start_battle_button_pressed() -> void:
+	print("\n=== 🔥 [BattleUIManager] 战斗按钮被点击！===")
 	print("🎮 [BattleUIManager] 战斗按钮被点击")
 	battle_button_pressed.emit()
+	print("🚀 [BattleUIManager] battle_button_pressed信号已发射")
 
 # 🚀 更新开始战斗按钮状态
 func update_battle_button_state(is_battle_in_progress: bool) -> void:
@@ -248,6 +254,75 @@ func update_battle_button_state(is_battle_in_progress: bool) -> void:
 	else:
 		button.disabled = false
 		button.text = "开始战斗"
+
+# 🚀 设置鼠标坐标显示
+func _setup_mouse_coordinate_display() -> void:
+	# 创建坐标显示面板
+	var coord_panel = Panel.new()
+	coord_panel.name = "MouseCoordinatePanel"
+	coord_panel.custom_minimum_size = Vector2(200, 60)
+	
+	# 定位到右上角
+	var viewport_size = get_viewport().get_visible_rect().size
+	coord_panel.position = Vector2(viewport_size.x - 220, 20)
+	
+	# 设置面板样式
+	var style_box = StyleBoxFlat.new()
+	style_box.bg_color = Color(0.1, 0.1, 0.1, 0.8)  # 深色半透明背景
+	style_box.border_width_left = 2
+	style_box.border_width_right = 2
+	style_box.border_width_top = 2
+	style_box.border_width_bottom = 2
+	style_box.border_color = Color(0.6, 0.6, 0.6, 1.0)  # 灰色边框
+	style_box.corner_radius_top_left = 6
+	style_box.corner_radius_top_right = 6
+	style_box.corner_radius_bottom_left = 6
+	style_box.corner_radius_bottom_right = 6
+	coord_panel.add_theme_stylebox_override("panel", style_box)
+	
+	battle_ui.add_child(coord_panel)
+	
+	# 添加边距容器
+	var margin = MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	coord_panel.add_child(margin)
+	
+	# 创建垂直布局容器
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	margin.add_child(vbox)
+	
+	# 创建标题标签
+	var title_label = Label.new()
+	title_label.text = "鼠标坐标"
+	title_label.add_theme_font_size_override("font_size", 14)
+	title_label.add_theme_color_override("font_color", Color.LIGHT_GRAY)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title_label)
+	
+	# 创建坐标标签
+	mouse_coordinate_label = Label.new()
+	mouse_coordinate_label.name = "MouseCoordinateLabel"
+	mouse_coordinate_label.text = "X: 0, Y: 0"
+	mouse_coordinate_label.add_theme_font_size_override("font_size", 16)
+	mouse_coordinate_label.add_theme_color_override("font_color", Color.WHITE)
+	mouse_coordinate_label.add_theme_color_override("font_shadow_color", Color.BLACK)
+	mouse_coordinate_label.add_theme_constant_override("shadow_offset_x", 1)
+	mouse_coordinate_label.add_theme_constant_override("shadow_offset_y", 1)
+	mouse_coordinate_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(mouse_coordinate_label)
+	
+	print("✅ [BattleUIManager] 鼠标坐标显示组件已创建")
+
+# 🚀 实时更新鼠标坐标
+func _process(_delta: float) -> void:
+	if mouse_coordinate_label and mouse_coordinate_label.is_inside_tree():
+		var mouse_pos = get_global_mouse_position()
+		mouse_coordinate_label.text = "X: %.0f, Y: %.0f" % [mouse_pos.x, mouse_pos.y]
 
 # 获取UI容器（供其他组件使用）
 func get_ui_container() -> Control:

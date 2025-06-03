@@ -47,6 +47,7 @@ func handle_input(event: InputEvent) -> void:
 # 处理点击事件
 func _handle_click() -> void:
 	print("🔍 [输入组件] 角色 %s 被点击，开始检查" % (character_data.name if character_data else "未知"))
+	print("🎯 [DEBUG] PlayerInputComponent._handle_click() 被调用")
 	
 	# 🚀 添加控制类型检查：只有玩家控制的角色才能弹出菜单
 	if not character_data or not character_data.is_player_controlled():
@@ -81,15 +82,24 @@ func _handle_click() -> void:
 	var action_system_script = preload("res://Scripts/ActionSystemNew.gd")
 	var action_system = player_node.get_tree().current_scene.get_node_or_null("ActionSystem")
 	
-	if action_system and action_system.current_state == action_system_script.SystemState.SELECTING_CHARACTER:
-		# 如果行动系统正在等待选择角色，则通知行动系统
-		print("🎯 [输入组件] 行动系统正在选择角色，通知选择：%s" % character_data.name)
-		action_system.select_character(player_node)
-		clicked.emit()
+	if action_system:
+		print("🔍 [PlayerInputComponent] ActionSystem状态: %s" % action_system_script.SystemState.keys()[action_system.current_state])
+		if action_system.current_state == action_system_script.SystemState.SELECTING_CHARACTER:
+			# 如果行动系统正在等待选择角色，则通知行动系统
+			print("🎯 [PlayerInputComponent] 通知ActionSystem选择角色: %s" % character_data.name)
+			action_system.select_character(player_node)
+			clicked.emit()
+		else:
+			# 其他情况下，仅显示菜单
+			print("📤 [PlayerInputComponent] 准备发射 action_menu_requested 信号")
+			action_menu_requested.emit()
+			print("✅ [PlayerInputComponent] action_menu_requested 信号已发射")
 	else:
-		# 其他情况下，仅显示菜单
+		# 没有行动系统时，直接显示菜单
 		print("🎮 [输入组件] 当前回合角色请求打开行动菜单：%s" % character_data.name)
+		print("🎯 [DEBUG] 即将发射action_menu_requested信号")
 		action_menu_requested.emit()
+		print("🎯 [DEBUG] action_menu_requested信号已发射")
 
 # 处理鼠标移动
 func _handle_mouse_motion(local_pos: Vector2) -> void:

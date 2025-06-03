@@ -22,19 +22,8 @@ signal character_updated(character_id: String)
 var party_member_nodes = {}
 var enemy_nodes = {}
 
-# 角色初始位置配置
+# 角色初始位置配置 - 使用BattleScene中的定义
 const GROUND_LEVEL: float = 1000.0
-const SPAWN_POSITIONS := {
-	"1": Vector2(600, GROUND_LEVEL),
-	"2": Vector2(700, GROUND_LEVEL),
-	"3": Vector2(800, GROUND_LEVEL)
-}
-
-const ENEMY_SPAWN_POSITIONS := {
-	"101": Vector2(1000, GROUND_LEVEL),
-	"102": Vector2(1100, GROUND_LEVEL),
-	"103": Vector2(1200, GROUND_LEVEL)
-}
 
 # 死亡标记绘制类
 class _DeathMarkerDrawer extends Node2D:
@@ -108,9 +97,10 @@ func spawn_party_members() -> void:
 			character.qinggong_skill = 280
 		char_data_node.qinggong_skill = character.qinggong_skill
 		
-		# 设置位置
-		if SPAWN_POSITIONS.has(character_id):
-			instance.set_base_position(SPAWN_POSITIONS[character_id])
+		# 设置位置 - 使用BattleScene中的SPAWN_POSITIONS
+		var battle_scene = get_node("/root/战斗场景")
+		if battle_scene and battle_scene.SPAWN_POSITIONS.has(character_id):
+			instance.set_base_position(battle_scene.SPAWN_POSITIONS[character_id])
 		else:
 			instance.set_base_position(Vector2(300, 200))
 		
@@ -153,9 +143,10 @@ func spawn_enemies() -> void:
 		character_data_script.set_as_enemy()
 		character_data_script.qinggong_skill = 400
 		
-		# 设置位置
-		if ENEMY_SPAWN_POSITIONS.has(enemy_id):
-			var spawn_pos = ENEMY_SPAWN_POSITIONS[enemy_id]
+		# 设置位置 - 使用BattleScene中的ENEMY_SPAWN_POSITIONS
+		var battle_scene = get_node("/root/战斗场景")
+		if battle_scene and battle_scene.ENEMY_SPAWN_POSITIONS.has(enemy_id):
+			var spawn_pos = battle_scene.ENEMY_SPAWN_POSITIONS[enemy_id]
 			character_data_script.ground_position = spawn_pos
 			character_data_script.position = spawn_pos
 			instance.set_base_position(spawn_pos)
@@ -266,7 +257,6 @@ func get_character_node_by_data(character_data: GameCharacter) -> Node2D:
 		if character_node and character_node.has_method("get_character_data"):
 			var node_character_data = character_node.get_character_data()
 			if node_character_data == character_data:
-				print("✅ [查找节点] 在队友节点中找到: %s" % character_data.name)
 				return character_node
 	
 	# 在敌人节点中查找

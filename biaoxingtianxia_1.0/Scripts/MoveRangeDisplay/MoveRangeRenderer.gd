@@ -9,6 +9,7 @@ var _mouse_position: Vector2 = Vector2.ZERO
 var _visual_effects_time: float = 0.0
 var _animation_phases: Array = []
 var _edge_gradient_texture: ImageTexture = null
+var _show_invalid_indicator: bool = false  # 🚀 新增：控制X号显示
 
 # 🚀 新增：GPU渲染支持
 var _compute_shader: RenderingDevice = null
@@ -39,7 +40,7 @@ var config  # 改为动态类型
 var validator: MoveRangeValidator  # 🚀 新增：验证器节点引用
 
 func _ready():
-	print("🎨 [Renderer] 渲染组件初始化完成")
+	# print("🎨 [Renderer] 渲染组件初始化完成")
 	set_process(true)
 	visible = false
 	
@@ -73,9 +74,9 @@ func _initialize_gpu_compute():
 	
 	if RenderingServer.get_rendering_device():
 		_compute_shader = RenderingServer.get_rendering_device()
-		print("🚀 [Renderer] GPU计算系统初始化成功")
-	else:
-		print("⚠️ [Renderer] 当前平台不支持GPU计算，使用CPU渲染")
+		# print("🚀 [Renderer] GPU计算系统初始化成功")
+	# else:
+		# print("⚠️ [Renderer] 当前平台不支持GPU计算，使用CPU渲染")
 
 # 🎯 主要接口
 func update_display(texture: ImageTexture, character: GameCharacter, position: Vector2):
@@ -85,7 +86,7 @@ func update_display(texture: ImageTexture, character: GameCharacter, position: V
 	visible = true
 	queue_redraw()
 	range_shown.emit()
-	print("🎨 [Renderer] 显示移动范围")
+	# print("🎨 [Renderer] 显示移动范围")
 
 func hide_range():
 	visible = false
@@ -93,10 +94,25 @@ func hide_range():
 	_current_character = null
 	_stop_all_animations()  # 停止所有动画
 	range_hidden.emit()
-	print("🎨 [Renderer] 隐藏移动范围")
+	# print("🎨 [Renderer] 隐藏移动范围")
 
 func update_mouse_indicator(mouse_pos: Vector2):
 	_mouse_position = mouse_pos
+	
+	# 检查位置有效性
+	var is_valid = _check_mouse_position_validity()
+	
+	# 🐛 调试X号显示问题
+	# 调试输出已禁用以减少控制台输出
+	# if OS.is_debug_build() and Input.is_key_pressed(KEY_CTRL):
+	#	print("🐛 [渲染器] 更新鼠标指示器: 位置%s, 有效性%s, 将显示X号: %s" % [mouse_pos, is_valid, not is_valid])
+	
+	# 更新指示器状态
+	_show_invalid_indicator = not is_valid
+	
+	# 触发重绘
+	queue_redraw()
+	
 	mouse_indicator_updated.emit(mouse_pos)
 
 # 🚀 新增：更新碰撞反馈的视觉效果
@@ -106,13 +122,13 @@ func update_collision_feedback(is_colliding: bool, collision_objects: Array):
 		return
 	
 	# 根据碰撞状态更新视觉效果
-	if is_colliding:
+	# if is_colliding:
 		# 有碰撞时的视觉反馈
-		print("🔴 [Renderer] 检测到碰撞，对象数: %d" % collision_objects.size())
+		# print("🔴 [Renderer] 检测到碰撞，对象数: %d" % collision_objects.size())
 		# 可以在这里添加更多视觉效果，比如改变鼠标指示器颜色等
-	else:
+	# else:
 		# 无碰撞时的视觉反馈
-		print("🟢 [Renderer] 无碰撞检测")
+		# print("🟢 [Renderer] 无碰撞检测")
 	
 	# 强制重绘以更新视觉效果
 	queue_redraw()
@@ -133,9 +149,9 @@ func compute_range_texture_gpu(character: GameCharacter, texture_resolution: int
 	var computation_time = (Time.get_ticks_msec() - start_time) / 1000.0
 	_is_computing = false
 	
-	print("🚀 [Renderer] GPU计算完成，分辨率: %dx%d, 用时: %.1fms" % [
-		texture_resolution, texture_resolution, computation_time * 1000
-	])
+	# print("🚀 [Renderer] GPU计算完成，分辨率: %dx%d, 用时: %.1fms" % [
+		# texture_resolution, texture_resolution, computation_time * 1000
+	# ])
 	
 	texture_ready.emit(texture)
 	return texture
@@ -145,7 +161,7 @@ func _generate_range_texture_gpu_optimized(character: GameCharacter, resolution:
 	if not character:
 		return null
 	
-	print("🚀 [Renderer] GPU优化纹理生成: 角色=%s, 轻功=%d" % [character.name, character.qinggong_skill])
+	# print("🚀 [Renderer] GPU优化纹理生成: 角色=%s, 轻功=%d" % [character.name, character.qinggong_skill])
 	
 	var image = Image.create(resolution, resolution, false, Image.FORMAT_RGBA8)
 	if not image:
@@ -173,7 +189,7 @@ func _generate_range_texture_gpu_optimized(character: GameCharacter, resolution:
 	var texture = ImageTexture.new()
 	if texture:
 		texture.set_image(image)
-	print("🚀 [Renderer] GPU优化纹理生成完成，分辨率: %dx%d" % [resolution, resolution])
+	# print("🚀 [Renderer] GPU优化纹理生成完成，分辨率: %dx%d" % [resolution, resolution])
 	return texture
 
 # 🚀 处理GPU计算块（精确版本）
@@ -248,7 +264,7 @@ func _compute_range_texture_cpu(character: GameCharacter, resolution: int) -> Im
 	if not character:
 		return null
 	
-	print("🎨 [Renderer] 生成移动范围纹理: 角色=%s, 轻功=%d" % [character.name, character.qinggong_skill])
+	# print("🎨 [Renderer] 生成移动范围纹理: 角色=%s, 轻功=%d" % [character.name, character.qinggong_skill])
 	
 	# 🎯 第1步：创建与移动范围大小相同的图像
 	var image = Image.create(resolution, resolution, false, Image.FORMAT_RGBA8)
@@ -296,7 +312,7 @@ func _compute_range_texture_cpu(character: GameCharacter, resolution: int) -> Im
 	# 创建并返回纹理
 	var texture = ImageTexture.new()
 	texture.set_image(image)
-	print("🎨 [Renderer] 纹理生成完成，分辨率: %dx%d" % [resolution, resolution])
+	# print("🎨 [Renderer] 纹理生成完成，分辨率: %dx%d" % [resolution, resolution])
 	return texture
 
 # 🎨 渲染实现
@@ -327,7 +343,7 @@ func _process(delta):
 				_animation_active = false
 				_animation_type = ""
 				_notify_animation_complete()
-				print("🎨 [Renderer] 淡入动画完成")
+				# print("🎨 [Renderer] 淡入动画完成")
 	
 	# 原有的视觉效果更新
 	if visible and config and config.is_visual_effects_enabled():
@@ -513,11 +529,12 @@ func _check_mouse_position_validity() -> bool:
 	# 获取输入组件来验证当前鼠标位置
 	var input_handler = get_node("../Input")
 	if input_handler and input_handler.has_method("is_position_valid"):
-		return input_handler.is_position_valid()
+		var result = input_handler.is_position_valid()
+		return result
 	
-	# 备用验证：使用简化的距离检查
-	var distance = _current_character.position.distance_to(_mouse_position)
-	return distance <= _current_character.qinggong_skill
+	# 无法获取输入处理器时直接返回false，不使用备用验证
+	push_error("[MoveRangeRenderer] 无法获取输入处理器，位置验证失败")
+	return false
 
 # 🎨 视觉效果初始化
 func _initialize_visual_effects():
@@ -532,7 +549,7 @@ func _initialize_visual_effects():
 	for i in range(8):
 		_animation_phases.append(randf() * 2.0 * PI)
 	
-	print("🎨 [Renderer] 视觉效果初始化完成")
+	# print("🎨 [Renderer] 视觉效果初始化完成")
 
 # 🚀 创建边缘渐变纹理
 func _create_gradient_texture():
@@ -591,7 +608,7 @@ func start_expanding_circle_animation(character: GameCharacter, center_position:
 	_animation_duration = config.expanding_animation_duration if config else 0.5  # 从配置获取时长
 	visible = true
 	
-	print("🎨 [Renderer] 开始圆形扩张动画 - 目标半径: %.0f, 时长: %.1f秒" % [_target_radius, _animation_duration])
+	# print("🎨 [Renderer] 开始圆形扩张动画 - 目标半径: %.0f, 时长: %.1f秒" % [_target_radius, _animation_duration])
 
 # 🚀 新增：完成动画并淡入纹理
 func complete_animation_and_fade_in_texture(texture: ImageTexture, character: GameCharacter, position: Vector2):
@@ -609,7 +626,7 @@ func complete_animation_and_fade_in_texture(texture: ImageTexture, character: Ga
 	_animation_duration = config.fade_in_animation_duration if config else 0.4  # 从配置获取淡入时长
 	global_position = position
 	
-	print("🎨 [Renderer] 开始淡入真实纹理")
+	# print("🎨 [Renderer] 开始淡入真实纹理")
 
 # 🚀 新增：停止所有动画
 func _stop_all_animations():
@@ -635,7 +652,7 @@ func _start_fade_in_with_pending_texture():
 	# 清理等待的纹理
 	_pending_fade_texture = null
 	
-	print("🎨 [Renderer] 扩张动画完成，开始淡入真实纹理")
+	# print("🎨 [Renderer] 扩张动画完成，开始淡入真实纹理")
 
 # 🚀 新增：通知动画完成
 func _notify_animation_complete():
@@ -736,14 +753,14 @@ func _compute_range_texture_cpu_with_obstacles(character: GameCharacter, resolut
 	texture.set_image(image)
 	
 	var computation_time = (Time.get_ticks_msec() - start_time)
-	print("🧮 [Renderer] CPU纹理计算完成，分辨率: %dx%d, 用时: %dms" % [resolution, resolution, computation_time])
+	# print("🧮 [Renderer] CPU纹理计算完成，分辨率: %dx%d, 用时: %dms" % [resolution, resolution, computation_time])
 	
 	return texture
 
 # 🚀 新增：带障碍物数据的GPU纹理计算
 func compute_range_texture_gpu_with_obstacles(character: GameCharacter, resolution: int, obstacles_data: Array) -> ImageTexture:
 	# GPU计算暂时未实现，回退到CPU计算
-	print("⚠️ [Renderer] GPU计算暂未支持障碍物数据，回退到CPU")
+	# print("⚠️ [Renderer] GPU计算暂未支持障碍物数据，回退到CPU")
 	return _compute_range_texture_cpu_with_obstacles(character, resolution, obstacles_data)
 
 # 🚀 新增：纹理生成的快速位置验证

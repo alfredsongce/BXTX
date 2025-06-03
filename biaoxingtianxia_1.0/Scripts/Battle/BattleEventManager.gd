@@ -254,14 +254,24 @@ func _handle_visual_skill_cast_completed(event_data: Dictionary) -> void:
 	var caster = event_data.get("caster")
 	var targets = event_data.get("targets", [])
 	
-	print("✅ [事件管理器] 处理视觉技能施放完成: %s，施法者: %s，目标数量: %d" % [skill.name if skill else "null", caster.name if caster else "null", targets.size()])
+	print("🎯 [事件管理器] 接收到视觉技能施放完成事件")
+	print("🔧 [调试] 调用堆栈: %s" % str(get_stack()))
+	print("  - 技能: %s" % (skill.name if skill else "null"))
+	print("  - 施法者: %s" % (caster.name if caster else "null"))
+	print("  - 目标数量: %d" % targets.size())
+	print("🔧 [调试] skill_manager存在: %s" % (skill_manager != null))
 	
-	# 直接执行技能
+	# 检查技能管理器是否可用
 	if skill_manager and skill_manager.has_method("execute_skill"):
-		print("🎯 [事件管理器] 调用技能管理器执行技能")
+		print("✅ [事件管理器] 调用技能管理器执行技能")
 		skill_manager.execute_skill(skill, caster, targets)
+		print("🔧 [调试] skill_manager.execute_skill调用完成")
 	else:
 		print("⚠️ [事件管理器] 技能管理器不可用或没有execute_skill方法")
+		if skill_manager:
+			print("🔧 [调试] skill_manager存在但没有execute_skill方法")
+		else:
+			print("🔧 [调试] skill_manager为null")
 
 func _handle_visual_skill_selection_cancelled(event_data: Dictionary) -> void:
 	"""处理视觉技能选择取消"""

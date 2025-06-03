@@ -141,8 +141,8 @@ func update_color(new_color: Color):
 	queue_redraw()
 
 # 设置是否显示X号
-func set_x_mark(show: bool):
-	show_x_mark = show
+func set_x_mark(show_mark: bool):
+	show_x_mark = show_mark
 	queue_redraw()
 
 # 绘制X号标记

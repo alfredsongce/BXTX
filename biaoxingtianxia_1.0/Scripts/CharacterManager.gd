@@ -13,22 +13,23 @@ var enemy_nodes = {}
 @onready var players_container: Node = null
 @onready var enemies_container: Node = null
 
-# 地面高度常量
-const GROUND_LEVEL: float = 1000.0  # 地面的Y坐标值
+const GROUND_LEVEL: float = 1000.0
 
-# 角色初始位置配置
-const SPAWN_POSITIONS := {
-	"1": Vector2(600, GROUND_LEVEL),   # 觉远 - 地面位置
-	"2": Vector2(700, GROUND_LEVEL),   # 柳生 - 地面位置
-	"3": Vector2(800, GROUND_LEVEL)    # 兰斯洛特 - 地面位置
-}
+# 角色初始生成位置（Y坐标将根据GroundAnchor动态调整）
+const SPAWN_POSITIONS: Array[Vector2] = [
+	Vector2(200, GROUND_LEVEL),
+	Vector2(300, GROUND_LEVEL),
+	Vector2(400, GROUND_LEVEL),
+	Vector2(500, GROUND_LEVEL)
+]
 
-# 敌人初始位置配置
-const ENEMY_SPAWN_POSITIONS := {
-	"101": Vector2(1000, GROUND_LEVEL),   # 山贼头目 - 地面位置
-	"102": Vector2(1100, GROUND_LEVEL),   # 野狼 - 地面位置  
-	"103": Vector2(1200, GROUND_LEVEL)    # 骷髅战士 - 地面位置
-}
+# 敌人初始生成位置（Y坐标将根据GroundAnchor动态调整）
+const ENEMY_SPAWN_POSITIONS: Array[Vector2] = [
+	Vector2(1600, GROUND_LEVEL),
+	Vector2(1500, GROUND_LEVEL),
+	Vector2(1400, GROUND_LEVEL),
+	Vector2(1300, GROUND_LEVEL)
+]
 
 # 信号
 signal character_spawned(character_id: String, character_node: Node2D)

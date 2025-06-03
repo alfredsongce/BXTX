@@ -16,18 +16,18 @@ const SkillRangeDisplayScript = preload("res://Scripts/SkillRangeDisplay.gd")
 # 🌍 统一的地面高度定义
 const GROUND_LEVEL: float = 1000.0  # 地面的Y坐标值
 
-# 角色初始位置配置 - 都在统一地面高度
+# 角色初始位置配置 - Y坐标将根据GroundAnchor动态调整
 const SPAWN_POSITIONS := {
-	"1": Vector2(600, GROUND_LEVEL),   # 觉远 - 地面位置
-	"2": Vector2(700, GROUND_LEVEL),   # 柳生 - 地面位置
-	"3": Vector2(800, GROUND_LEVEL)    # 兰斯洛特 - 地面位置
+	"1": Vector2(600, GROUND_LEVEL),   # 觉远
+	"2": Vector2(700, GROUND_LEVEL),   # 柳生
+	"3": Vector2(800, GROUND_LEVEL)    # 兰斯洛特
 }
 
-# 敌人初始位置配置 - 也在统一地面高度，在右侧不同X坐标
+# 敌人初始位置配置 - Y坐标将根据GroundAnchor动态调整
 const ENEMY_SPAWN_POSITIONS := {
-	"101": Vector2(1000, GROUND_LEVEL),   # 山贼头目 - 地面位置
-	"102": Vector2(1100, GROUND_LEVEL),   # 野狼 - 地面位置  
-	"103": Vector2(1200, GROUND_LEVEL)    # 骷髅战士 - 地面位置
+	"101": Vector2(1000, GROUND_LEVEL),   # 山贼头目
+	"102": Vector2(1100, GROUND_LEVEL),   # 野狼
+	"103": Vector2(1200, GROUND_LEVEL)    # 骷髅战士
 }
 
 # 🚀 新架构：使用场景中预创建的节点引用
@@ -289,6 +289,9 @@ func _setup_obstacle_manager() -> void:
 		obstacle_manager.obstacle_removed.connect(_on_obstacle_removed)
 		obstacle_manager.obstacles_cleared.connect(_on_obstacles_cleared)
 		
+		# 生成初始障碍物
+		_generate_initial_obstacles()
+		
 		print("✅ [BattleScene] 障碍物管理器初始化完成")
 	else:
 		print("❌ [BattleScene] 未找到障碍物管理器节点")
@@ -301,6 +304,29 @@ func _on_obstacle_removed(obstacle) -> void:
 
 func _on_obstacles_cleared() -> void:
 	print("🧹 [BattleScene] 所有障碍物已清除")
+
+func _generate_initial_obstacles() -> void:
+	"""生成战斗场景的初始障碍物"""
+	print("🪨 [BattleScene] 开始生成初始障碍物")
+	
+	if not obstacle_manager:
+		print("❌ [BattleScene] 障碍物管理器不存在，无法生成障碍物")
+		return
+	
+	# 等待一帧确保所有角色都已生成
+	await get_tree().process_frame
+	
+	# 生成地面平台
+	obstacle_manager.generate_ground_platform()
+	
+	# 生成乱石障碍物
+	obstacle_manager.generate_rocks(obstacle_manager.rock_count)
+	
+	# 可以根据需要添加其他类型的障碍物
+	# obstacle_manager.add_obstacle_at_position(Vector2(900, 980), 1)  # 墙壁
+	# obstacle_manager.add_obstacle_at_position(Vector2(1050, 980), 2)  # 水域
+	
+	print("✅ [BattleScene] 初始障碍物生成完成")
 
 func _show_gameplay_tips() -> void:
 	print("游戏已启动 - 按F11开始战斗，F10切换碰撞体积显示")
@@ -438,6 +464,16 @@ func _input(event):
 				obstacle_manager.regenerate_obstacles()
 			else:
 				pass
+		# 🚀 按Q键刷新障碍物
+		elif event.keycode == KEY_Q:
+			if obstacle_manager:
+				print("🔄 [BattleScene] Q键触发 - 重新生成障碍物")
+				obstacle_manager.regenerate_obstacles()
+			else:
+				printerr("❌ [BattleScene] 障碍物管理器不存在")
+		# 🚀 按W键输出障碍物系统状态信息（不刷新障碍物）
+		elif event.keycode == KEY_W:
+			_debug_obstacle_system_status()
 	
 func _check_and_fix_character_heights() -> void:
 	character_manager.check_and_fix_character_heights()
@@ -667,7 +703,8 @@ func _on_turn_started(turn_number: int):
 
 # 🚀 新增：处理玩家回合开始
 func _on_player_turn_started(character: GameCharacter) -> void:
-	print("👤 [BattleScene] 玩家回合开始: %s" % character.name)
+	print("\n=== 👤 [BattleScene] 玩家回合开始: %s ===" % character.name)
+	print("🔥 [BattleScene] 这将触发菜单自动打开！")
 	
 	var character_node = _find_character_node_by_character_data(character)
 	if character_node:
@@ -814,8 +851,9 @@ func get_character_node_by_data(character_data: GameCharacter) -> Node2D:
 
 # 为指定角色节点打开行动菜单
 func _open_character_action_menu(character_node: Node2D) -> void:
-	print("🎯 [BattleScene] _open_character_action_menu被调用")
+	print("\n=== 🎯 [BattleScene] _open_character_action_menu被调用 ===")
 	print("🔍 [BattleScene] 传入的character_node: %s" % character_node.name)
+	print("🔍 [BattleScene] 这是菜单自动打开的关键方法！")
 	
 	# 🚀 添加当前回合角色检查
 	var character_data = character_node.get_character_data()
@@ -901,6 +939,13 @@ func _setup_battle_ui() -> void:
 	battle_ui_manager.ui_update_requested.connect(_on_ui_update_requested)
 	battle_ui_manager.battle_button_pressed.connect(_on_battle_button_pressed)
 	
+	# 🚀 连接SkillManager的信号
+	if skill_manager:
+		skill_manager.skill_selection_started.connect(_on_skill_selection_started)
+		print("✅ [战斗UI] 已连接SkillManager的skill_selection_started信号")
+	else:
+		print("⚠️ [战斗UI] SkillManager不存在，无法连接信号")
+	
 	# 🚀 初始化技能选择协调器
 	await _setup_skill_selection_coordinator()
 
@@ -929,13 +974,32 @@ func _setup_skill_selection_coordinator() -> void:
 # 🚀 SkillSelectionCoordinator信号回调函数
 func _on_skill_selected_from_coordinator(skill_id: String) -> void:
 	print("🎯 [技能协调器] 技能选择: %s" % skill_id)
-	# 委托给原有的处理函数
-	_on_skill_selected(skill_id)
+	# 委托给原有的处理函数 - 已移除SkillSelectionMenu，直接处理
+	# _on_skill_selected(skill_id)  # 已移除SkillSelectionMenu
+	
+	# 直接通知SkillManager选择了技能
+	if skill_manager:
+		skill_manager.select_skill(skill_id)
 
 func _on_skill_selection_cancelled_from_coordinator() -> void:
 	print("❌ [技能协调器] 技能选择取消")
-	# 委托给原有的处理函数
-	_on_skill_menu_closed()
+	# 委托给原有的处理函数 - 已移除SkillSelectionMenu，直接处理
+	# _on_skill_menu_closed()  # 已移除SkillSelectionMenu
+	
+	# 直接处理技能选择取消
+	if skill_manager.current_state == SkillManager.SkillState.SELECTING_SKILL:
+		skill_manager.cancel_skill_selection()
+
+# 🚀 处理SkillManager的skill_selection_started信号
+func _on_skill_selection_started(character: GameCharacter) -> void:
+	print("🎯 [BattleScene] 收到skill_selection_started信号，角色: %s" % character.name)
+	
+	# 获取角色的可用技能
+	var available_skills = skill_manager.get_available_skills(character)
+	print("🔍 [BattleScene] 角色 %s 的可用技能数量: %d" % [character.name, available_skills.size()])
+	
+	# 显示可视化技能选择界面
+	show_visual_skill_selection(character, available_skills)
 
 func _on_target_selected_from_coordinator(targets: Array) -> void:
 	print("🎯 [技能协调器] 目标选择: %d 个" % targets.size())
@@ -1008,24 +1072,24 @@ func _on_skill_cancelled():
 # 🚀 技能选择UI相关方法
 
 # 显示技能选择菜单（通过SkillSelectionCoordinator）
-func show_skill_selection_menu(character: GameCharacter, available_skills: Array) -> void:
-	skill_selection_coordinator.show_skill_selection_menu(character, available_skills)
+# func show_skill_selection_menu(character: GameCharacter, available_skills: Array) -> void:  # 已移除SkillSelectionMenu
+#	skill_selection_coordinator.show_skill_selection_menu(character, available_skills)
 
-# 技能选择回调
-func _on_skill_selected(skill_id: String) -> void:
-	print("🎯 [技能UI] 玩家选择技能: %s" % skill_id)
-	
-	# 通知SkillManager选择了技能
-	if skill_manager:
-		skill_manager.select_skill(skill_id)
+# 技能选择回调 - 已移除SkillSelectionMenu
+# func _on_skill_selected(skill_id: String) -> void:
+#	print("🎯 [技能UI] 玩家选择技能: %s" % skill_id)
+#	
+#	# 通知SkillManager选择了技能
+#	if skill_manager:
+#		skill_manager.select_skill(skill_id)
 
-# 技能菜单关闭回调
-func _on_skill_menu_closed() -> void:
-	print("❌ [技能UI] 技能选择菜单关闭")
-	
-	# 如果技能系统还在选择状态，则取消技能选择
-	if skill_manager.current_state == SkillManager.SkillState.SELECTING_SKILL:
-		skill_manager.cancel_skill_selection()
+# 技能菜单关闭回调 - 已移除SkillSelectionMenu
+# func _on_skill_menu_closed() -> void:
+#	print("❌ [技能UI] 技能选择菜单关闭")
+#	
+#	# 如果技能系统还在选择状态，则取消技能选择
+#	if skill_manager.current_state == SkillManager.SkillState.SELECTING_SKILL:
+#		skill_manager.cancel_skill_selection()
 
 # 🚀 目标选择UI相关方法
 # 显示目标选择菜单（通过SkillSelectionCoordinator）
@@ -1133,16 +1197,23 @@ func get_all_characters() -> Array:
 
 # 🚀 显示技能选择对话
 func show_skill_menu(character: GameCharacter) -> void:
+	print("🔥🔥🔥 [BattleScene] show_skill_menu 被调用！！！")
 	print("🎯 [技能系统] 为角色 %s 显示技能菜单" % character.name)
 	
 	# 检查SkillManager是否可用
+	print("🔍 [技能系统] 检查SkillManager: %s" % (skill_manager != null))
+	if not skill_manager:
+		print("❌ [技能系统] SkillManager不可用！")
+		return
 	
 	# 检查SkillManager是否空闲
-	if skill_manager.is_busy():
+	print("🔍 [技能系统] SkillManager当前状态: %s" % skill_manager.current_state)
+	if skill_manager.current_state != SkillManager.SkillState.IDLE:
 		print("⚠️ [技能系统] SkillManager正忙，无法开始新的技能选择")
 		return
 	
 	# 🎯 启动技能选择流程
+	print("🚀 [技能系统] 即将调用 skill_manager.start_skill_selection")
 	skill_manager.start_skill_selection(character)
 	
 	print("✅ [技能系统] 技能选择流程已启动")
@@ -1237,3 +1308,64 @@ func _join_string_array(arr: Array, delimiter: String = "、", final_delimiter: 
 			result += delimiter + str(arr[i])
 		result += final_delimiter + str(arr[-1])
 		return result
+
+# 🚀 调试：输出障碍物系统状态信息
+func _debug_obstacle_system_status() -> void:
+	print("\n=== 🪨 障碍物系统状态报告 ===")
+	
+	# 检查障碍物管理器是否存在
+	if not obstacle_manager:
+		printerr("❌ 障碍物管理器不存在！")
+		return
+	
+	print("✅ 障碍物管理器已找到: %s" % obstacle_manager.name)
+	print("📍 障碍物管理器位置: %s" % obstacle_manager.global_position)
+	
+	# 输出障碍物管理器配置
+	print("\n--- 配置信息 ---")
+	print("🪨 乱石数量: %d" % obstacle_manager.rock_count)
+	print("📏 乱石半径范围: %.1f - %.1f" % [obstacle_manager.rock_radius_min, obstacle_manager.rock_radius_max])
+	print("🎯 生成区域大小: %s" % obstacle_manager.spawn_area_size)
+	print("📐 障碍物间最小距离: %.1f" % obstacle_manager.min_distance_between_obstacles)
+	print("👥 角色最小距离: %.1f" % obstacle_manager.min_distance_from_characters)
+	
+	# 检查当前障碍物数量
+	var current_obstacles = obstacle_manager.get_children()
+	print("\n--- 当前障碍物 ---")
+	print("📊 当前障碍物总数: %d" % current_obstacles.size())
+	
+	if current_obstacles.size() > 0:
+		for i in range(current_obstacles.size()):
+			var obstacle = current_obstacles[i]
+			var collision_layer_info = "未知"
+			var collision_mask_info = "未知"
+			if obstacle is Area2D:
+				collision_layer_info = str(obstacle.collision_layer)
+				collision_mask_info = str(obstacle.collision_mask)
+			print("  %d. %s - 位置: %s, 碰撞层: %s, 碰撞掩码: %s" % [i+1, obstacle.name, obstacle.global_position, collision_layer_info, collision_mask_info])
+	else:
+		print("⚠️ 当前没有障碍物")
+	
+	# 检查角色位置（用于障碍物生成参考）
+	print("\n--- 角色位置信息 ---")
+	if character_manager:
+		var party_nodes = character_manager.get_party_member_nodes()
+		var enemy_nodes = character_manager.get_enemy_nodes()
+		
+		print("👥 玩家角色数量: %d" % party_nodes.size())
+		for character_id in party_nodes:
+			var character_node = party_nodes[character_id]
+			print("  - %s: %s" % [character_id, character_node.global_position])
+		
+		print("👹 敌人角色数量: %d" % enemy_nodes.size())
+		for character_id in enemy_nodes:
+			var character_node = enemy_nodes[character_id]
+			print("  - %s: %s" % [character_id, character_node.global_position])
+	else:
+		print("❌ 角色管理器不存在")
+	
+	# 状态信息输出完成
+	print("\n--- 状态输出完成 ---")
+	print("💡 提示: 按Q键可重新生成障碍物")
+	
+	print("\n=== 障碍物系统状态报告结束 ===\n")

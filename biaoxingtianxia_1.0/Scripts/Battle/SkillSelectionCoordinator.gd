@@ -21,7 +21,7 @@ signal visual_skill_cast_completed(skill: SkillData, caster: GameCharacter, targ
 signal visual_skill_selection_cancelled()
 
 # UI组件引用
-var skill_selection_menu: Control = null
+# var skill_selection_menu: Control = null  # 已移除SkillSelectionMenu
 var target_selection_menu: Control = null
 var skill_range_display: Node2D = null
 var visual_skill_selector: Node = null
@@ -54,8 +54,8 @@ func _initialize():
 	_setup_dependencies()
 	
 	# 初始化UI组件
-	print("🔍 [技能选择协调器] 调用_setup_skill_selection_menu")
-	_setup_skill_selection_menu()
+	# print("🔍 [技能选择协调器] 调用_setup_skill_selection_menu")  # 已移除SkillSelectionMenu
+	# _setup_skill_selection_menu()  # 已移除SkillSelectionMenu
 	print("🔍 [技能选择协调器] 调用_setup_target_selection_menu")
 	_setup_target_selection_menu()
 	print("🔍 [技能选择协调器] 调用_setup_skill_range_display")
@@ -84,44 +84,44 @@ func _setup_dependencies():
 
 # 🚀 技能选择菜单相关方法
 
-# 初始化技能选择菜单
-func _setup_skill_selection_menu() -> void:
-	if not battle_ui_manager:
-		print("⚠️ [技能选择协调器] BattleUIManager未找到，无法初始化技能选择菜单")
-		return
-	
-	# 加载技能选择菜单场景
-	var skill_menu_scene = preload("res://UI/SkillSelectionMenu.tscn")
-	skill_selection_menu = skill_menu_scene.instantiate()
-	
-	# 添加到UI容器
-	battle_ui_manager.get_ui_container().add_child(skill_selection_menu)
-	
-	# 连接信号
-	skill_selection_menu.skill_selected.connect(_on_skill_selected)
-	skill_selection_menu.menu_closed.connect(_on_skill_menu_closed)
-	
-	print("✅ [技能选择协调器] 技能选择菜单初始化完成")
+# 初始化技能选择菜单 - 已移除SkillSelectionMenu
+# func _setup_skill_selection_menu() -> void:
+#	if not battle_ui_manager:
+#		print("⚠️ [技能选择协调器] BattleUIManager未找到，无法初始化技能选择菜单")
+#		return
+#	
+#	# 加载技能选择菜单场景
+#	var skill_menu_scene = preload("res://UI/SkillSelectionMenu.tscn")
+#	skill_selection_menu = skill_menu_scene.instantiate()
+#	
+#	# 添加到UI容器
+#	battle_ui_manager.get_ui_container().add_child(skill_selection_menu)
+#	
+#	# 连接信号
+#	skill_selection_menu.skill_selected.connect(_on_skill_selected)
+#	skill_selection_menu.menu_closed.connect(_on_skill_menu_closed)
+#	
+#	print("✅ [技能选择协调器] 技能选择菜单初始化完成")
 
-# 显示技能选择菜单
-func show_skill_selection_menu(character: GameCharacter, available_skills: Array) -> void:
-	if not skill_selection_menu:
-		print("⚠️ [技能选择协调器] 技能选择菜单未初始化")
-		return
-	
-	current_character = character
-	print("🎯 [技能选择协调器] 显示技能选择菜单，角色: %s，技能数量: %d" % [character.name, available_skills.size()])
-	skill_selection_menu.open_menu(character, available_skills)
+# 显示技能选择菜单 - 已移除SkillSelectionMenu
+# func show_skill_selection_menu(character: GameCharacter, available_skills: Array) -> void:
+#	if not skill_selection_menu:
+#		print("⚠️ [技能选择协调器] 技能选择菜单未初始化")
+#		return
+#	
+#	current_character = character
+#	print("🎯 [技能选择协调器] 显示技能选择菜单，角色: %s，技能数量: %d" % [character.name, available_skills.size()])
+#	skill_selection_menu.open_menu(character, available_skills)
 
-# 技能选择回调
-func _on_skill_selected(skill_id: String) -> void:
-	print("🎯 [技能选择协调器] 玩家选择技能: %s" % skill_id)
-	skill_selected.emit(skill_id)
+# 技能选择回调 - 已移除SkillSelectionMenu
+# func _on_skill_selected(skill_id: String) -> void:
+#	print("🎯 [技能选择协调器] 玩家选择技能: %s" % skill_id)
+#	skill_selected.emit(skill_id)
 
-# 技能菜单关闭回调
-func _on_skill_menu_closed() -> void:
-	print("❌ [技能选择协调器] 技能选择菜单关闭")
-	skill_selection_cancelled.emit()
+# 技能菜单关闭回调 - 已移除SkillSelectionMenu
+# func _on_skill_menu_closed() -> void:
+#	print("❌ [技能选择协调器] 技能选择菜单关闭")
+#	skill_selection_cancelled.emit()
 
 # 🚀 目标选择菜单相关方法
 
@@ -262,9 +262,9 @@ func _on_visual_skill_selection_cancelled() -> void:
 func cancel_all_selections() -> void:
 	print("🔄 [技能选择协调器] 取消所有技能选择")
 	
-	# 关闭技能选择菜单
-	if skill_selection_menu and skill_selection_menu.visible:
-		skill_selection_menu.close_menu()
+	# 关闭技能选择菜单 - 已移除SkillSelectionMenu
+	# if skill_selection_menu and skill_selection_menu.visible:
+	#	skill_selection_menu.close_menu()
 	
 	# 关闭目标选择菜单
 	if target_selection_menu and target_selection_menu.visible:
@@ -285,8 +285,8 @@ func cancel_all_selections() -> void:
 func has_active_selection() -> bool:
 	var has_active = false
 	
-	if skill_selection_menu and skill_selection_menu.visible:
-		has_active = true
+	# if skill_selection_menu and skill_selection_menu.visible:  # 已移除SkillSelectionMenu
+	#	has_active = true
 	
 	if target_selection_menu and target_selection_menu.visible:
 		has_active = true

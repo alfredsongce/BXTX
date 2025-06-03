@@ -101,6 +101,9 @@ func _input(event):
 
 # 🚀 开始技能释放流程
 func start_skill_casting(skill: SkillData, caster: GameCharacter) -> void:
+	print("🔧 [调试] start_skill_casting被调用 - 技能: %s, 施法者: %s" % [skill.name if skill else "null", caster.name if caster else "null"])
+	print("🔧 [调试] 当前状态: %s" % CastingState.keys()[current_state])
+	
 	if current_state != CastingState.INACTIVE:
 		print("⚠️ [可视化技能] 技能释放系统正忙")
 		return
@@ -417,9 +420,12 @@ func _update_effect_range_preview() -> void:
 	
 	add_child(effect_range_preview)
 
-# 🖱️ 处理左键点击
+# 🖱️ 处理左键点击 (确认释放)
 func _handle_left_click() -> void:
+	print("🔧 [调试] _handle_left_click被调用，当前状态: %s" % CastingState.keys()[current_state])
+	
 	if current_state != CastingState.SELECTING_TARGET:
+		print("🔧 [调试] 状态不匹配，退出_handle_left_click")
 		return
 	
 	var targets = _get_targets_for_click()
@@ -429,12 +435,33 @@ func _handle_left_click() -> void:
 		return
 	
 	print("✅ [可视化技能] 确认释放技能，目标数量: %d" % targets.size())
+	print("🔧 [调试] 即将发出skill_cast_requested信号")
+	print("🔧 [调试] 技能: %s, 施法者: %s" % [active_skill.name if active_skill else "null", active_caster.name if active_caster else "null"])
 	
 	# 发送技能释放请求
 	skill_cast_requested.emit(active_skill, active_caster, targets)
+	print("🔧 [调试] skill_cast_requested信号已发出")
 	
-	# 清理并退出
-	cancel_skill_casting()
+	# 🚀 修复：技能释放成功时不调用cancel_skill_casting，而是直接清理视觉效果
+	print("🔧 [调试] 开始清理视觉效果")
+	_clear_all_visuals()
+	_clear_hud()
+	
+	# 🚀 修复：通知BattleScene恢复正常UI状态
+	var battle_scene = get_tree().current_scene
+	if battle_scene and battle_scene.has_method("_restore_current_turn_ui"):
+		print("🔧 [调试] 调用battle_scene._restore_current_turn_ui()")
+		battle_scene._restore_current_turn_ui()
+	
+	print("🔧 [调试] 设置状态为INACTIVE并清理变量")
+	current_state = CastingState.INACTIVE
+	active_skill = null
+	active_caster = null
+	hovered_target = null
+	valid_targets_in_range.clear()
+	
+	print("🔧 [调试] _handle_left_click处理完成，没有发出cancelled信号")
+	# 🚀 修复：技能释放成功时不发出cancelled信号
 
 # 🖱️ 处理右键点击 (取消)
 func _handle_right_click() -> void:
@@ -676,12 +703,13 @@ func _output_debug_info() -> void:
 	print("🎯 施法者: %s (位置: %s)" % [active_caster.name, active_caster.position])
 	print("🎯 技能范围: %s" % active_skill.targeting_range)
 	
-	print("\n🖱️ 鼠标和坐标信息:")
-	print("  - 鼠标世界位置: %s" % mouse_world_position)
-	print("  - 鼠标屏幕位置: %s" % get_viewport().get_mouse_position())
-	print("  - 视口大小: %s" % get_viewport().get_visible_rect().size)
-	print("  - VisualSkillCaster变换: %s" % transform)
-	print("  - VisualSkillCaster全局变换: %s" % global_transform)
+	# 鼠标调试信息已禁用以减少控制台输出
+	# print("\n🖱️ 鼠标和坐标信息:")
+	# print("  - 鼠标世界位置: %s" % mouse_world_position)
+	# print("  - 鼠标屏幕位置: %s" % get_viewport().get_mouse_position())
+	# print("  - 视口大小: %s" % get_viewport().get_visible_rect().size)
+	# print("  - VisualSkillCaster变换: %s" % transform)
+	# print("  - VisualSkillCaster全局变换: %s" % global_transform)
 	
 	print("🎯 目标类型: %s" % SkillEnums.TargetType.keys()[active_skill.target_type])
 	print("🎯 效果类型: %s" % _analyze_skill_effect_type())
@@ -720,10 +748,11 @@ func _output_debug_info() -> void:
 					distance, in_range, is_valid, color_name
 				])
 	
-	print("\n🎯 鼠标点击检测:")
+	# 鼠标点击调试信息已禁用以减少控制台输出
+	# print("\n🎯 鼠标点击检测:")
 	var clicked_target = _get_target_at_position(mouse_world_position)
 	if clicked_target:
-		print("  - 最近目标: %s (距离: %.1f)" % [clicked_target.name, mouse_world_position.distance_to(clicked_target.position)])
+		# print("  - 最近目标: %s (距离: %.1f)" % [clicked_target.name, mouse_world_position.distance_to(clicked_target.position)])
 		print("  - 目标合法: %s" % _is_target_valid_for_skill(clicked_target))
 		var effect_color = _get_target_effect_color(clicked_target)
 		var color_name = "红色" if effect_color.r > 0.8 else ("绿色" if effect_color.g > 0.8 else "其他")

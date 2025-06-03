@@ -39,7 +39,7 @@ var _frame_time_samples: int = 30  # 保留最近30帧的数据
 var _performance_check_interval: float = 1.0  # 每秒检查一次性能
 
 func _ready():
-	print("🚀 [Controller] 移动范围系统主控制器初始化完成")
+	# print("🚀 [Controller] 移动范围系统主控制器初始化完成")
 	
 	# 获取组件引用
 	call_deferred("_setup_component_references")
@@ -58,15 +58,15 @@ func _setup_component_references():
 	# 🚀 新增：预览区域组件（从场景中获取）
 	preview_area = get_node("../PreviewArea")
 	if not preview_area:
-		print("⚠️ [Controller] 未找到PreviewArea节点，将动态创建")
+		# print("⚠️ [Controller] 未找到PreviewArea节点，将动态创建")
 		preview_area = MovePreviewArea.new()
 		preview_area.name = "PreviewArea"
 		get_parent().add_child(preview_area)
 	
 	if not config or not cache or not renderer or not input_handler or not validator:
 		push_error("[Controller] 缺少必要的子组件")
-	else:
-		print("🔧 [Controller] 组件引用设置完成（包含优化组件）")
+	# else:
+		# print("🔧 [Controller] 组件引用设置完成（包含优化组件）")
 
 func _connect_signals():
 	# 连接输入信号
@@ -87,7 +87,7 @@ func _connect_signals():
 # 🎯 主要公共接口（优化版 - 集成Area2D预检测）
 func show_move_range(character: GameCharacter):
 	if not character:
-		print("❌ [Controller] 无效的角色")
+		# print("❌ [Controller] 无效的角色")
 		return
 	
 	_current_character = character
@@ -98,9 +98,9 @@ func show_move_range(character: GameCharacter):
 		var character_node = _get_character_node(character)
 		if character_node:
 			preview_area.setup_movement_preview_area(character_node)
-			print("✅ [Controller] Area2D预检测系统已启动")
-		else:
-			print("⚠️ [Controller] 无法找到角色节点，跳过Area2D预检测")
+			# print("✅ [Controller] Area2D预检测系统已启动")
+		# else:
+			# print("⚠️ [Controller] 无法找到角色节点，跳过Area2D预检测")
 	
 	# 🎨 UX优化：启动圆形扩张动画 + 异步计算
 	if renderer:
@@ -116,10 +116,10 @@ func show_move_range(character: GameCharacter):
 	if input_handler:
 		input_handler.set_input_enabled(false)
 	
-	print("🎯 [Controller] 显示移动范围（优化模式） - %s (轻功: %d)" % [character.name, character.qinggong_skill])
+	# print("🎯 [Controller] 显示移动范围（优化模式） - %s (轻功: %d)" % [character.name, character.qinggong_skill])
 
 func hide_move_range():
-	print("🎯 [Controller] 隐藏移动范围")
+	# print("🎯 [Controller] 隐藏移动范围")
 	
 	_is_active = false
 	_current_character = null
@@ -148,7 +148,7 @@ func _calculate_range_texture_with_animation(character: GameCharacter):
 	if cached_texture:
 		# 立即完成动画并显示缓存纹理
 		call_deferred("_on_texture_ready_with_animation", cached_texture, 0.0)
-		print("📦 [Controller] 使用缓存纹理（快速完成动画）")
+		# print("📦 [Controller] 使用缓存纹理（快速完成动画）")
 		return
 	
 	# 启动后台计算
@@ -163,7 +163,7 @@ func _start_background_texture_computation_with_animation(character: GameCharact
 	if config and config.enable_threading:
 		var callable = _compute_texture_in_background_animated.bind(character, cache_key, obstacles_data)
 		WorkerThreadPool.add_task(callable)
-		print("🧵 [Controller] 启动后台纹理计算（动画模式）")
+		# print("🧵 [Controller] 启动后台纹理计算（动画模式）")
 	else:
 		# 主线程分帧计算（保持动画流畅）
 		_start_framewise_computation_animated(character, cache_key)
@@ -260,14 +260,14 @@ func _on_texture_ready_with_animation(texture: ImageTexture, computation_time: f
 		if renderer._animation_type == "expanding_circle" and renderer._animation_progress < 1.0:
 			# 扩张动画还没完成，等待完成后再淡入
 			renderer._pending_fade_texture = texture
-			print("🎨 [Controller] 纹理准备完成，等待扩张动画结束")
+			# print("🎨 [Controller] 纹理准备完成，等待扩张动画结束")
 		else:
 			# 扩张动画已完成或不在扩张状态，立即开始淡入
 			renderer.complete_animation_and_fade_in_texture(texture, _current_character, _current_character.position)
 			_enable_input_after_animation()
 	
 	var time_str = "%.1fms" % (computation_time * 1000) if computation_time > 0 else "缓存"
-	print("🧮 [Controller] 纹理生成完成，用时: %s" % time_str)
+	# print("🧮 [Controller] 纹理生成完成，用时: %s" % time_str)
 
 # 🚀 新增：动画完成后启用输入
 func _enable_input_after_animation():
@@ -296,7 +296,7 @@ func _start_framewise_computation_animated(character: GameCharacter, cache_key: 
 	
 	_framewise_data = computation_data
 	set_process(true)  # 🚀 确保启用处理
-	print("📊 [Controller] 启动分帧计算（动画友好模式）- 障碍物: %d" % obstacles_data.size())
+	# print("📊 [Controller] 启动分帧计算（动画友好模式）- 障碍物: %d" % obstacles_data.size())
 
 # 🚀 新增：分帧计算处理器
 var _framewise_data: Dictionary = {}
@@ -458,7 +458,7 @@ func _finalize_framewise_computation():
 	set_process(false)
 	
 	var mode_str = "动画友好" if data.get("animated", false) else "普通"
-	print("📊 [Controller] 分帧计算完成（%s），总用时: %.1fms" % [mode_str, computation_time * 1000])
+	# print("📊 [Controller] 分帧计算完成（%s），总用时: %.1fms" % [mode_str, computation_time * 1000])
 
 # 🚀 新增：异步缓存清理
 func _clear_character_related_cache_async(character: GameCharacter):
@@ -468,8 +468,8 @@ func _clear_character_related_cache_async(character: GameCharacter):
 	# 只清理明显过时的缓存，不做完整清理
 	var removed_count = cache.clear_character_cache(character.name)
 	
-	if config and config.debug_mode >= 2 and removed_count > 0:
-		print("🗑️ [Controller] 异步清理缓存: %d 项" % removed_count)
+	# if config and config.debug_mode >= 2 and removed_count > 0:
+		# print("🗑️ [Controller] 异步清理缓存: %d 项" % removed_count)
 
 # 🚀 保留原来的后台计算完成回调（用于非动画模式）
 func _on_background_texture_ready(texture: ImageTexture, cache_key: String, computation_time: float):
@@ -490,7 +490,7 @@ func _on_background_texture_ready(texture: ImageTexture, cache_key: String, comp
 	if renderer and _current_character:
 		renderer.update_display(texture, _current_character, _current_character.position)
 	
-	print("🧮 [Controller] 后台计算完成，用时: %.1fms" % (computation_time * 1000))
+	# print("🧮 [Controller] 后台计算完成，用时: %.1fms" % (computation_time * 1000))
 
 # 🚀 智能算法选择
 func _calculate_range_texture_smart(character: GameCharacter) -> ImageTexture:
@@ -502,7 +502,7 @@ func _calculate_range_texture_smart(character: GameCharacter) -> ImageTexture:
 		cached_texture = cache.get_cached_texture(cache_key)
 	
 	if cached_texture:
-		print("📦 [Controller] 使用缓存纹理")
+		# print("📦 [Controller] 使用缓存纹理")
 		return cached_texture
 	
 	# 2. 选择计算算法
@@ -528,7 +528,7 @@ func _calculate_range_texture_smart(character: GameCharacter) -> ImageTexture:
 	if _auto_algorithm_selection:
 		_adjust_algorithm_selection()
 	
-	print("🧮 [Controller] 计算新纹理完成，用时: %.1fms" % (_last_computation_time * 1000))
+	# print("🧮 [Controller] 计算新纹理完成，用时: %.1fms" % (_last_computation_time * 1000))
 	return texture
 
 # 🚀 判断是否应该使用GPU计算
@@ -595,7 +595,7 @@ func _adjust_algorithm_selection():
 		if config and config.adaptive_resolution:
 			# 可以动态调整分辨率
 			pass
-		print("⚠️ [Controller] 性能警告，考虑降低质量设置")
+		# print("⚠️ [Controller] 性能警告，考虑降低质量设置")
 
 # 🧮 原来的基础范围计算（保持兼容性）
 func _compute_range_texture(character: GameCharacter) -> ImageTexture:
@@ -643,19 +643,19 @@ func _generate_cache_key(character: GameCharacter) -> String:
 	var final_key = "|".join(key_parts)
 	
 	# 🔍 调试输出
-	if config and config.debug_mode >= 3:
-		print("🔑 [Controller] 缓存key: %s" % final_key.substr(0, 80))
+	# if config and config.debug_mode >= 3:
+		# print("🔑 [Controller] 缓存key: %s" % final_key.substr(0, 80))
 	
 	return final_key
 
 # 📡 信号处理
 func _on_move_confirmed(character: GameCharacter, target_position: Vector2, target_height: float, movement_cost: float):
-	print("✅ [Controller] 移动确认 - %s -> %s, 高度: %.1f级, 成本: %.1f" % [character.name, str(target_position), target_height, movement_cost])
+	# print("✅ [Controller] 移动确认 - %s -> %s, 高度: %.1f级, 成本: %.1f" % [character.name, str(target_position), target_height, movement_cost])
 	move_confirmed.emit(character, target_position, target_height, movement_cost)
 	hide_move_range()
 
 func _on_move_cancelled():
-	print("❌ [Controller] 移动取消")
+	# print("❌ [Controller] 移动取消")
 	move_cancelled.emit()
 	hide_move_range()
 
@@ -707,11 +707,11 @@ func get_performance_info() -> Dictionary:
 
 func set_performance_threshold(threshold: float):
 	_performance_threshold = threshold
-	print("🎯 [Controller] 性能阈值设置为: %.1fms" % (threshold * 1000))
+	# print("🎯 [Controller] 性能阈值设置为: %.1fms" % (threshold * 1000))
 
 func set_auto_algorithm_selection(enabled: bool):
 	_auto_algorithm_selection = enabled
-	print("🎯 [Controller] 自动算法选择: %s" % ("启用" if enabled else "禁用"))
+	# print("🎯 [Controller] 自动算法选择: %s" % ("启用" if enabled else "禁用"))
 
 # 🔧 工具方法
 func clear_cache():
@@ -741,12 +741,12 @@ func add_to_batch_queue(character_id: String, position: Vector2, range_val: int)
 func force_gpu_mode(enabled: bool):
 	if config:
 		config.enable_gpu_compute = enabled
-		print("🔧 [Controller] 强制GPU模式: %s" % ("启用" if enabled else "禁用"))
+		# print("🔧 [Controller] 强制GPU模式: %s" % ("启用" if enabled else "禁用"))
 
 func force_resolution(resolution: int):
 	if config:
 		config.texture_resolution = resolution
-		print("🔧 [Controller] 强制分辨率: %dx%d" % [resolution, resolution])
+		# print("🔧 [Controller] 强制分辨率: %dx%d" % [resolution, resolution])
 
 func get_algorithm_recommendation(character: GameCharacter) -> String:
 	if not character:
@@ -769,7 +769,7 @@ func _setup_performance_monitoring():
 	# 设置帧时间监控
 	set_process(true)  # 启用_process进行帧时间监控
 	
-	print("📊 [Controller] 性能监控系统已启动")
+	# print("📊 [Controller] 性能监控系统已启动")
 
 # 🚀 新增：记录帧时间
 func _record_frame_time(delta: float):
@@ -928,7 +928,7 @@ func _on_preview_collision_changed(is_colliding: bool, objects: Array):
 	
 	# 记录碰撞状态用于调试
 	var status = "碰撞" if is_colliding else "无碰撞"
-	print("🎯 [Controller] Area2D预检测状态: %s (对象数: %d)" % [status, objects.size()])
+	# print("🎯 [Controller] Area2D预检测状态: %s (对象数: %d)" % [status, objects.size()])
 
 func _on_preview_position_updated(position: Vector2):
 	"""处理Area2D预检测位置更新"""
@@ -957,7 +957,7 @@ func force_refresh_dynamic_obstacles():
 	"""强制刷新动态障碍物检测，用于同步移动的角色"""
 	if preview_area:
 		preview_area.force_refresh_collision_detection()
-		print("🔄 [Controller] 强制刷新动态障碍物检测")
+		# print("🔄 [Controller] 强制刷新动态障碍物检测")
 
 # 🎯 获取当前预检测状态
 func get_preview_collision_state() -> Dictionary:

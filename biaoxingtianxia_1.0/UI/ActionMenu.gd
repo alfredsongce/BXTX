@@ -6,23 +6,33 @@ signal menu_closed() # 菜单关闭信号
 var target_character = null # 当前操作的角色
 
 func _ready():
+	print("🚀 [ActionMenu] _ready 被调用")
 	# 🚀 添加到action_menus组，方便全局管理
 	add_to_group("action_menus")
 	
 	# 连接按钮信号
+	print("🔗 [ActionMenu] 开始连接按钮信号")
 	$VBoxContainer/MoveButton.pressed.connect(_on_move_pressed)
+	print("✅ [ActionMenu] MoveButton 信号已连接")
 	$VBoxContainer/SkillButton.pressed.connect(_on_skill_pressed)
+	print("✅ [ActionMenu] SkillButton 信号已连接")
 	$VBoxContainer/ItemButton.pressed.connect(_on_item_pressed)
+	print("✅ [ActionMenu] ItemButton 信号已连接")
 	$VBoxContainer/SpecialButton.pressed.connect(_on_special_pressed)
+	print("✅ [ActionMenu] SpecialButton 信号已连接")
 	$VBoxContainer/RestButton.pressed.connect(_on_rest_pressed)
+	print("✅ [ActionMenu] RestButton 信号已连接")
 	$VBoxContainer/CancelButton.pressed.connect(_on_cancel_pressed)
+	print("✅ [ActionMenu] CancelButton 信号已连接")
 	
 	# 默认隐藏菜单
 	visible = false
+	print("✅ [ActionMenu] _ready 完成，菜单已隐藏")
 
 # 打开菜单
 func open_menu(character):
-	print("🎯 [ActionMenu] open_menu被调用")
+	print("\n=== 🎯 [ActionMenu] open_menu被调用 ===")
+	print("🔥 [ActionMenu] 菜单正在被打开！")
 	print("🔍 [ActionMenu] 传入角色: %s" % (character.name if character else "null"))
 	
 	target_character = character
@@ -124,9 +134,17 @@ func _on_move_pressed():
 	close_menu()
 
 func _on_skill_pressed():
-	print("角色 [", target_character.get_character_data().name, "] 选择了 [技能] 行动")
+	print("🎯 [ActionMenu] _on_skill_pressed 被调用!")
+	print("🔍 [ActionMenu] target_character: %s" % (target_character.name if target_character else "null"))
+	if target_character:
+		print("角色 [", target_character.get_character_data().name, "] 选择了 [技能] 行动")
+	else:
+		print("❌ [ActionMenu] target_character 为空!")
+	print("📡 [ActionMenu] 即将发射 action_selected 信号: skill")
 	action_selected.emit("skill")
+	print("✅ [ActionMenu] action_selected 信号已发射")
 	close_menu()
+	print("✅ [ActionMenu] 菜单已关闭")
 
 func _on_item_pressed():
 	print("角色 [", target_character.get_character_data().name, "] 选择了 [道具] 行动")
