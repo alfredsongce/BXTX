@@ -32,20 +32,23 @@ func setup(player: Node2D) -> void:
 		character_data = player.get_character_data()
 		print("✅ [PlayerMovementComponent] 角色数据获取成功: ", character_data.name if character_data else "null")
 	
-	# 获取位置碰撞管理器引用
-	print("🔍 [PlayerMovementComponent] 正在查找PositionCollisionManager...")
-	var battle_scene = player.get_tree().current_scene
-	if battle_scene:
-		position_collision_manager = battle_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
+	# 延迟查找位置碰撞管理器，只在战斗场景中才需要
+	_try_find_position_collision_manager()
+
+# 尝试查找位置碰撞管理器
+func _try_find_position_collision_manager() -> void:
+	var current_scene = player_node.get_tree().current_scene
+	if current_scene and current_scene.name == "战斗场景":
+		print("🔍 [PlayerMovementComponent] 在战斗场景中查找PositionCollisionManager...")
+		position_collision_manager = current_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
 		if position_collision_manager:
 			print("🎯 [PlayerMovementComponent] 成功连接到统一位置碰撞管理器!")
 			print("📍 [PlayerMovementComponent] 管理器路径: BattleSystems/PositionCollisionManager")
-			print("🔗 [PlayerMovementComponent] 管理器类型: ", position_collision_manager.get_class())
 		else:
 			print("❌ [PlayerMovementComponent] 错误: 未找到PositionCollisionManager")
-			print("🔍 [PlayerMovementComponent] 请检查BattleScene中是否正确配置了管理器")
 	else:
-		print("❌ [PlayerMovementComponent] 错误: 无法获取当前场景")
+		print("ℹ️ [PlayerMovementComponent] 当前场景(", current_scene.name if current_scene else "未知", ")不是战斗场景，跳过PositionCollisionManager查找")
+
 
 # 处理移动到指定位置
 func move_to(new_position: Vector2, target_height: float = 0.0) -> void:
@@ -65,6 +68,11 @@ func move_to(new_position: Vector2, target_height: float = 0.0) -> void:
 	
 	# 🚀 使用统一的位置碰撞检测管理器验证位置
 	print("🔍 [PlayerMovementComponent] 开始使用统一物理查询管理器验证位置...")
+	
+	# 如果还没有管理器引用，尝试重新查找
+	if not position_collision_manager:
+		_try_find_position_collision_manager()
+	
 	var validation_result = true  # 默认为true，如果没有管理器则跳过验证
 	if position_collision_manager:
 		print("✅ [PlayerMovementComponent] 统一PositionCollisionManager可用，调用validate_position方法")
@@ -168,7 +176,8 @@ func show_move_range() -> void:
 	
 	# 获取行动系统，确保状态正确
 	var action_system_script = preload("res://Scripts/ActionSystemNew.gd")
-	var action_system = player_node.get_tree().current_scene.get_node_or_null("ActionSystem")
+	var battle_scene = AutoLoad.get_battle_scene()
+	var action_system = battle_scene.get_node_or_null("ActionSystem") if battle_scene else null
 	if action_system:
 		if action_system.current_state != action_system_script.SystemState.SELECTING_MOVE_TARGET:
 			print("警告：行动系统状态不是SELECTING_MOVE_TARGET，将其设置为正确状态")
@@ -176,7 +185,6 @@ func show_move_range() -> void:
 			action_system.selected_character = player_node
 	
 	# 🚀 新架构：使用MoveRange组件系统
-	var battle_scene = player_node.get_tree().current_scene
 	var move_range_controller = battle_scene.get_node_or_null("MoveRange/Controller")
 	
 	if move_range_controller:

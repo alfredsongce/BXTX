@@ -27,7 +27,7 @@ func _ready():
 	print("📦 [角色生成器] 初始化...")
 	
 	# 获取容器节点引用
-	var battle_scene = get_node("/root/战斗场景")
+	var battle_scene = AutoLoad.get_battle_scene()
 	players_container = battle_scene.get_node("Players")
 	enemies_container = battle_scene.get_node("Enemies")
 	
@@ -79,7 +79,7 @@ func _spawn_party_members():
 		instance.get_character_data().qinggong_skill = character.qinggong_skill
 		
 		# 设置位置 - 使用BattleScene中的SPAWN_POSITIONS
-		var battle_scene = get_node("/root/战斗场景")
+		var battle_scene = AutoLoad.get_battle_scene()
 		if battle_scene and battle_scene.SPAWN_POSITIONS.has(character_id):
 			var spawn_pos = battle_scene.SPAWN_POSITIONS[character_id]
 			instance.set_base_position(spawn_pos)
@@ -121,7 +121,7 @@ func _spawn_enemies():
 		character_data.qinggong_skill = 400  # 敌人轻功值10级
 		
 		# 设置敌人位置 - 使用BattleScene中的ENEMY_SPAWN_POSITIONS
-		var battle_scene = get_node("/root/战斗场景")
+		var battle_scene = AutoLoad.get_battle_scene()
 		if battle_scene and battle_scene.ENEMY_SPAWN_POSITIONS.has(enemy_id):
 			var spawn_pos = battle_scene.ENEMY_SPAWN_POSITIONS[enemy_id]
 			character_data.ground_position = spawn_pos

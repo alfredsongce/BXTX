@@ -4,80 +4,137 @@ class_name MoveRangeConfig
 
 # 🎨 视觉配置
 @export_group("视觉配置")
+## 设置角色可移动区域的显示颜色，包含透明度
 @export var movable_color: Color = Color(0.0, 0.8, 0.0, 0.6)    # 可移动区域
+## 设置被阻挡区域的显示颜色，用于标识无法移动的位置
 @export var blocked_color: Color = Color(1.0, 0.2, 0.2, 0.5)    # 阻挡区域
+## 调试模式下碰撞检测区域的显示颜色
 @export var collision_debug_color: Color = Color(0.0, 1.0, 1.0, 0.4)  # 调试碰撞
 
 # 🚀 动画配置
 @export_group("动画配置")
+## 移动范围显示时的扩张动画持续时间，单位为秒
 @export var expanding_animation_duration: float = 0.5  # 扩张动画持续时间（秒）
+## 移动范围淡入显示的动画持续时间，单位为秒
 @export var fade_in_animation_duration: float = 0.4  # 淡入动画持续时间（秒）
+## 扩张动画边框的颜色设置
 @export var expanding_border_color: Color = Color.WHITE  # 扩张动画边框颜色
+## 扩张动画边框的宽度，单位为像素
 @export var expanding_border_width: float = 4.0  # 扩张动画边框宽度
+## 是否启用脉冲视觉效果
 @export var enable_pulse_effect: bool = true  # 启用脉冲效果
+## 脉冲效果的强度，数值越大脉冲越明显，单位为像素
 @export var pulse_intensity: float = 5.0  # 脉冲强度（像素）
 
 # ⚡ 性能配置
 @export_group("性能配置")
+## 移动范围纹理的分辨率，数值越高画质越好但性能消耗越大
 @export var texture_resolution: int = 256  # 纹理分辨率
+## 是否启用多线程计算以提升性能
 @export var enable_threading: bool = true  # 启用多线程计算
+## 是否根据性能自动调整分辨率
 @export var adaptive_resolution: bool = true  # 自适应分辨率
+## 移动范围计算的内存使用限制，单位为MB
 @export var memory_limit_mb: int = 50  # 内存限制(MB)
 
 # 🚀 深度性能优化配置
 @export_group("深度性能优化")
+## 启用快速预览模式，在计算完整结果前先显示低质量预览
 @export var enable_quick_preview: bool = true  # 启用快速预览
+## 启用分帧计算，将复杂计算分散到多帧中执行
 @export var enable_framewise_computation: bool = true  # 启用分帧计算
+## 单帧最大计算时间限制，超过此时间将暂停计算，单位为毫秒
 @export var max_computation_time_ms: float = 16.0  # 最大计算时间（毫秒）
+## 快速预览模式下使用的纹理分辨率
 @export var preview_resolution: int = 64  # 预览纹理分辨率
+## 分帧计算时将工作分割成的块数
 @export var framewise_chunks: int = 16  # 分帧计算块数
+## 是否启用工作线程池进行后台计算
 @export var enable_worker_threads: bool = true  # 启用工作线程池
+## 工作线程池的最大线程数量
 @export var max_worker_threads: int = 2  # 最大工作线程数
 
 # 🚀 缓存优化配置
 @export_group("缓存优化")
+## 启用快速查找表以加速重复计算
 @export var enable_lookup_table: bool = true  # 启用快速查找表
+## 启用预加载缓存，提前计算可能需要的移动范围
 @export var enable_preload_cache: bool = true  # 启用预加载缓存
+## 预加载队列的大小，决定同时预加载的移动范围数量
 @export var preload_queue_size: int = 5  # 预加载队列大小
+## 缓存清理的时间间隔，单位为秒
 @export var cache_cleanup_interval: float = 10.0  # 缓存清理间隔（秒）
+## 是否使用异步方式进行缓存操作
 @export var async_cache_operations: bool = true  # 异步缓存操作
 
 # 🚀 算法优化配置
 @export_group("算法优化")
+## 使用简化的障碍物检测算法以提升性能
 @export var simplified_obstacle_detection: bool = true  # 简化障碍物检测
+## 障碍物检测时使用的固定半径，单位为像素
 @export var obstacle_detection_radius: float = 25.0  # 固定障碍物半径
+## 启用空间分割优化算法
 @export var enable_spatial_optimization: bool = true  # 启用空间优化
+## 空间网格的大小，用于空间分割优化，单位为像素
 @export var spatial_grid_size: float = 50.0  # 空间网格大小
 
 # 🚀 性能监控配置
 @export_group("性能监控")
+## 是否启用性能监控功能，默认关闭以避免额外开销
 @export var enable_performance_monitoring: bool = false  # 默认关闭性能监控
+## 性能日志输出的时间间隔，单位为秒
 @export var performance_log_interval: float = 5.0  # 性能日志间隔（秒）
+## 目标帧时间，用于性能评估，60FPS对应16.6毫秒
 @export var target_frame_time_ms: float = 16.6  # 目标帧时间（60FPS）
+## 是否根据性能表现自动调整配置参数
 @export var performance_auto_adjust: bool = true  # 自动性能调整
+## 性能警告的阈值，超过此时间将发出警告，单位为毫秒
 @export var performance_warning_threshold: float = 32.0  # 性能警告阈值（毫秒）
 
 # 🚀 高级功能配置
 @export_group("高级功能")
+## 是否启用GPU计算以加速复杂的移动范围计算
 @export var enable_gpu_compute: bool = true  # 启用GPU计算
+## 启用预测性缓存，根据玩家行为预测并缓存可能需要的移动范围
 @export var enable_predictive_cache: bool = true  # 启用预测性缓存
+## 是否启用移动范围的视觉效果
 @export var enable_visual_effects: bool = true  # 启用视觉效果
+## 启用批量计算模式以提升多角色场景的性能
 @export var batch_computation: bool = true  # 启用批量计算
+## 动画播放的速度倍数，数值越大动画越快
 @export var animation_speed: float = 2.0  # 动画速度
 
+# 🚀 轻功配置
+@export_group("轻功配置")
+## 角色踩在地面上时的固定高度偏移，与轻功能力无关，单位为像素
+@export var ground_height_offset: int = 30  # 角色踩在地面上的固定高度偏移（像素）
+
+
 # 🚀 性能优化配置
+@export_group("其他性能优化")
+## 是否启用智能算法选择，根据场景复杂度自动选择最优算法
 @export var enable_smart_algorithm_selection: bool = true  # 智能算法选择
+## GPU计算的复杂度阈值，超过此值将使用GPU计算
 @export var gpu_threshold_complexity: float = 2.0  # GPU计算复杂度阈值
 
 # 🚀 缓存配置
+@export_group("缓存管理")
+## 全局缓存的过期时间，单位为分钟
 @export var cache_expiry_global_minutes: float = 5.0  # 全局缓存过期时间（分钟）
+## 预测性缓存的过期时间，单位为分钟
 @export var cache_expiry_predictive_minutes: float = 2.0  # 预测缓存过期时间（分钟）
+## 保存的最大移动历史记录数量
 @export var max_movement_history: int = 20  # 最大移动历史记录数
+## 批量处理时的批次大小
 @export var batch_process_size: int = 3  # 批量处理大小
 
 # 🚀 调试配置
+@export_group("调试选项")
+## 调试模式：0=关闭, 1=边界, 2=碰撞形状, 3=性能, 4=GPU调试, 5=预测缓存
 @export var debug_mode: int = 0  # 0=关闭, 1=边界, 2=碰撞形状, 3=性能, 4=GPU调试, 5=预测缓存
+## 是否启用性能日志记录
 @export var enable_performance_logging: bool = false  # 启用性能日志
+## 是否显示算法选择的详细信息
 @export var show_algorithm_choice: bool = false  # 显示算法选择信息
 
 # 📡 信号
@@ -159,6 +216,20 @@ func is_debug_mode_enabled() -> bool:
 
 func is_performance_logging_enabled() -> bool:
 	return enable_performance_logging
+
+
+
+func set_ground_height_offset(offset: int):
+	var old_value = ground_height_offset
+	ground_height_offset = clamp(offset, 1, 50)
+	config_changed.emit("ground_height_offset", old_value, ground_height_offset)
+	print("🔧 [Config] 地面高度偏移: %d像素" % ground_height_offset)
+
+func get_ground_height_offset() -> int:
+	"""获取角色踩在地面上的固定高度偏移"""
+	return ground_height_offset
+
+
 
 # 🎯 动态配置更新接口
 func set_gpu_enabled(enabled: bool):

@@ -55,30 +55,30 @@ func _setup_node_references():
 	
 	# 等待 BattleCharacterManager 被创建
 	await get_tree().process_frame
-	character_manager = get_node_or_null("/root/战斗场景/BattleCharacterManager")
+	character_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleCharacterManager") if AutoLoad.get_battle_scene() else null
 	print("👥 [MovementCoordinator] 角色管理器: ", "找到" if character_manager else "未找到")
 	
 	# 如果还是找不到，尝试通过 BattleScene 获取
 	if not character_manager:
-		var battle_scene = get_node_or_null("/root/战斗场景")
+		var battle_scene = AutoLoad.get_battle_scene()
 		if battle_scene and battle_scene.has_method("get_character_manager"):
 			character_manager = battle_scene.get_character_manager()
 			print("🔄 [MovementCoordinator] 通过BattleScene获取角色管理器: ", "成功" if character_manager else "失败")
 	
 	# 尝试其他可能的路径
 	if not move_range_controller:
-		move_range_controller = get_node_or_null("/root/战斗场景/MoveRange/Controller")
+		move_range_controller = AutoLoad.get_battle_scene().get_node_or_null("MoveRange/Controller") if AutoLoad.get_battle_scene() else null
 		print("🔄 [MovementCoordinator] 备用路径查找MoveRange控制器: ", "找到" if move_range_controller else "未找到")
 	if not action_system:
-		action_system = get_node_or_null("/root/战斗场景/ActionSystem")
+		action_system = AutoLoad.get_battle_scene().get_node_or_null("ActionSystem") if AutoLoad.get_battle_scene() else null
 		print("🔄 [MovementCoordinator] 备用路径查找行动系统: ", "找到" if action_system else "未找到")
 	if not position_collision_manager:
-		position_collision_manager = get_node_or_null("/root/战斗场景/BattleSystems/PositionCollisionManager")
+		position_collision_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/PositionCollisionManager") if AutoLoad.get_battle_scene() else null
 		print("🔄 [MovementCoordinator] 备用路径查找统一管理器: ", "找到" if position_collision_manager else "未找到")
 		
 		if position_collision_manager:
 			print("✅ [MovementCoordinator] 通过备用路径成功连接到统一位置碰撞管理器!")
-			print("📍 [MovementCoordinator] 备用管理器路径: /root/战斗场景/BattleSystems/PositionCollisionManager")
+			print("📍 [MovementCoordinator] 备用管理器路径: BattleSystems/PositionCollisionManager")
 	
 	print("📊 [MovementCoordinator] 节点引用设置完成 - 统一管理器状态: ", "已连接" if position_collision_manager else "未连接")
 
@@ -247,7 +247,7 @@ func _on_movement_animation_completed(character: GameCharacter, final_position: 
 	print("✅ [MovementCoordinator] 移动完成处理结束")
 	
 	# 🚀 通知BattleScene的移动完成处理（保持现有游戏逻辑）
-	var battle_scene = get_node_or_null("/root/战斗场景")
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_method("_on_move_completed"):
 		print("📞 [MovementCoordinator] 通知BattleScene移动完成: %s" % character.name)
 		# 获取最终位置用于通知BattleScene

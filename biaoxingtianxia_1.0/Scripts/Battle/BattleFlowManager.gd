@@ -92,44 +92,44 @@ func _find_component_references() -> void:
 	# 查找BattleManager
 	battle_manager = get_node_or_null("../BattleManager")
 	if not battle_manager:
-		battle_manager = get_node_or_null("/root/BattleScene/BattleSystems/BattleManager")
+		battle_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/BattleManager") if AutoLoad.get_battle_scene() else null
 	
 	# 查找BattleUIManager
 	battle_ui_manager = get_node_or_null("../BattleUIManager")
 	if not battle_ui_manager:
-		battle_ui_manager = get_node_or_null("/root/BattleScene/UI/BattleUIManager")
+		battle_ui_manager = AutoLoad.get_battle_scene().get_node_or_null("UI/BattleUIManager") if AutoLoad.get_battle_scene() else null
 	
 	# 查找CharacterManager
 	character_manager = get_node_or_null("../CharacterManager")
 	if not character_manager:
-		character_manager = get_node_or_null("/root/BattleScene/BattleSystems/CharacterManager")
+		character_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/CharacterManager") if AutoLoad.get_battle_scene() else null
 	
 	# 查找SkillManager
-	skill_manager = get_node_or_null("/root/SkillManager")
+	skill_manager = AutoLoad.get_battle_scene().get_node_or_null("SkillManager") if AutoLoad.get_battle_scene() else null
 	if not skill_manager:
 		skill_manager = get_node_or_null("../SkillManager")
 	
 	# 查找SkillSelectionCoordinator
 	skill_selection_coordinator = get_node_or_null("../SkillSelectionCoordinator")
 	if not skill_selection_coordinator:
-		skill_selection_coordinator = get_node_or_null("/root/BattleScene/BattleSystems/SkillSelectionCoordinator")
+		skill_selection_coordinator = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/SkillSelectionCoordinator") if AutoLoad.get_battle_scene() else null
 	
 	# 查找MovementCoordinator
 	movement_coordinator = get_node_or_null("../MovementCoordinator")
 	if not movement_coordinator:
-		movement_coordinator = get_node_or_null("/root/BattleScene/BattleSystems/MovementCoordinator")
+		movement_coordinator = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/MovementCoordinator") if AutoLoad.get_battle_scene() else null
 	
 	# 查找BattleCombatManager
 	battle_combat_manager = get_node_or_null("../BattleCombatManager")
 	if not battle_combat_manager:
-		battle_combat_manager = get_node_or_null("/root/BattleScene/BattleSystems/BattleCombatManager")
+		battle_combat_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/BattleCombatManager") if AutoLoad.get_battle_scene() else null
 	
 
 
 
 # 🚀 查找BattleScene引用
 func _find_battle_scene_reference() -> void:
-	battle_scene = get_node_or_null("/root/BattleScene")
+	battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene:
 		# 尝试通过父节点查找
 		var current = get_parent()

@@ -128,7 +128,7 @@ func create_damage_numbers(target: GameCharacter, damage: int, is_critical: bool
 	damage_label.global_position = start_pos
 	
 	# 添加到场景
-	get_tree().current_scene.add_child(damage_label)
+	AutoLoad.get_battle_scene().add_child(damage_label)
 	active_effects.append(damage_label)
 	
 	print("✅ [伤害数字] 伤害数字已创建: %s" % text_content)
@@ -190,7 +190,7 @@ func create_healing_numbers(target: GameCharacter, healing: int) -> void:
 	heal_label.global_position = start_pos
 	
 	# 添加到场景
-	get_tree().current_scene.add_child(heal_label)
+	AutoLoad.get_battle_scene().add_child(heal_label)
 	active_effects.append(heal_label)
 	
 	# 创建温和的上升动画
@@ -243,7 +243,7 @@ func _show_skill_name(skill: SkillData, caster: GameCharacter) -> void:
 	skill_label.global_position = start_pos
 	
 	# 添加到场景
-	get_tree().current_scene.add_child(skill_label)
+	AutoLoad.get_battle_scene().add_child(skill_label)
 	active_effects.append(skill_label)
 	
 	# 创建完整的技能名称动画序列
@@ -284,7 +284,7 @@ func _play_cast_animation(skill: SkillData, caster: GameCharacter) -> void:
 func _create_cast_ring(position: Vector2) -> Node2D:
 	var ring = Node2D.new()
 	ring.global_position = position
-	get_tree().current_scene.add_child(ring)
+	AutoLoad.get_battle_scene().add_child(ring)
 	active_effects.append(ring)
 	
 	# 创建多个光环粒子
@@ -361,7 +361,7 @@ func _create_projectile(start_pos: Vector2, end_pos: Vector2) -> ColorRect:
 	projectile.global_position = start_pos
 	projectile.z_index = 50
 	
-	get_tree().current_scene.add_child(projectile)
+	AutoLoad.get_battle_scene().add_child(projectile)
 	active_effects.append(projectile)
 	
 	# 计算方向和旋转
@@ -380,7 +380,7 @@ func _create_impact_effect(position: Vector2) -> void:
 	# 创建爆炸环
 	var impact_ring = Node2D.new()
 	impact_ring.global_position = position
-	get_tree().current_scene.add_child(impact_ring)
+	AutoLoad.get_battle_scene().add_child(impact_ring)
 	active_effects.append(impact_ring)
 	
 	# 创建爆炸粒子
@@ -445,7 +445,7 @@ func _create_pierce_beam(start_pos: Vector2, end_pos: Vector2) -> Line2D:
 	beam.default_color = Color.YELLOW
 	beam.z_index = 40
 	
-	get_tree().current_scene.add_child(beam)
+	AutoLoad.get_battle_scene().add_child(beam)
 	active_effects.append(beam)
 	
 	# 射线闪烁效果
@@ -489,7 +489,7 @@ func _play_area_effect_animation(skill: SkillData, targets: Array) -> void:
 func _create_area_circle(center_pos: Vector2, radius: float) -> Node2D:
 	var circle = Node2D.new()
 	circle.global_position = center_pos
-	get_tree().current_scene.add_child(circle)
+	AutoLoad.get_battle_scene().add_child(circle)
 	active_effects.append(circle)
 	
 	# 创建圆圈边界
@@ -539,7 +539,7 @@ func _play_single_target_animation(skill: SkillData, targets: Array) -> void:
 func _create_single_target_effect(position: Vector2) -> void:
 	var effect = Node2D.new()
 	effect.global_position = position
-	get_tree().current_scene.add_child(effect)
+	AutoLoad.get_battle_scene().add_child(effect)
 	active_effects.append(effect)
 	
 	# 创建闪光效果
@@ -579,7 +579,7 @@ func _play_self_effect_animation(skill: SkillData, caster: GameCharacter) -> voi
 func _create_self_enhancement_effect(position: Vector2) -> void:
 	var effect = Node2D.new()
 	effect.global_position = position
-	get_tree().current_scene.add_child(effect)
+	AutoLoad.get_battle_scene().add_child(effect)
 	active_effects.append(effect)
 	
 	# 创建上升光柱效果
@@ -608,7 +608,7 @@ func _get_character_node(character: GameCharacter) -> Node2D:
 	
 	print("🔍 [SkillEffects] 查找角色节点: %s (ID: %s)" % [character.name, character.id])
 	
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene:
 		print("⚠️ [SkillEffects] 当前场景为空")
 		return null
@@ -631,7 +631,7 @@ func _get_character_node(character: GameCharacter) -> Node2D:
 func _find_character_node_fallback(character: GameCharacter) -> Node2D:
 	print("🔍 [SkillEffects] 使用备用方法查找角色节点: %s" % character.name)
 	
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene:
 		return null
 	

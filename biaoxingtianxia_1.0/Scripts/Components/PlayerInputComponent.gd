@@ -57,7 +57,7 @@ func _handle_click() -> void:
 	print("✅ [输入组件] 角色 %s 是玩家控制，继续检查回合" % character_data.name)
 	
 	# 🚀 检查是否是当前回合的角色
-	var battle_scene = player_node.get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	print("🔍 [输入组件] 获取战斗场景：%s" % (battle_scene.name if battle_scene else "null"))
 	
 	if battle_scene and battle_scene.has_method("get_node_or_null"):
@@ -80,7 +80,7 @@ func _handle_click() -> void:
 	
 	# 获取行动系统
 	var action_system_script = preload("res://Scripts/ActionSystemNew.gd")
-	var action_system = player_node.get_tree().current_scene.get_node_or_null("ActionSystem")
+	var action_system = battle_scene.get_node_or_null("ActionSystem") if battle_scene else null
 	
 	if action_system:
 		print("🔍 [PlayerInputComponent] ActionSystem状态: %s" % action_system_script.SystemState.keys()[action_system.current_state])

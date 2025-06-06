@@ -7,20 +7,17 @@ signal obstacle_added(obstacle)
 signal obstacle_removed(obstacle)
 signal obstacles_cleared()
 
-# 障碍物配置
-@export var rock_count: int = 5
-@export var rock_radius_min: float = 15.0
-@export var rock_radius_max: float = 30.0
-@export var spawn_area_size: Vector2 = Vector2(800, 600)
-@export var min_distance_between_obstacles: float = 50.0
-@export var min_distance_from_characters: float = 80.0
+# 障碍物管理配置（不再动态生成）
+# 所有障碍物都应该在场景中预先配置
 
 # 内部变量
 var obstacles: Array = []
 var battle_scene: Node
-var character_positions: Array[Vector2] = []
 
 func _ready():
+	# 添加到obstacle_manager组，供其他系统查找
+	add_to_group("obstacle_manager")
+	
 	# 获取战斗场景引用
 	var parent = get_parent()
 	if parent:
@@ -28,198 +25,17 @@ func _ready():
 	else:
 		battle_scene = null
 	
-	# 延迟生成障碍物，等待角色加载完成
-	call_deferred("_generate_initial_obstacles")
+	# 注释掉自动扫描，由BattleScene统一控制
+	# call_deferred("_register_existing_obstacles")
 
-func _generate_initial_obstacles():
-	# 获取当前角色位置
-	_update_character_positions()
-	
-	# 生成地面平台
-	generate_ground_platform()
-	
-	# 生成乱石障碍物
-	generate_rocks(rock_count)
+# 移除动态生成障碍物的功能，改为只扫描现有障碍物
+# func _generate_initial_obstacles(): # 已删除
 
-func _update_character_positions():
-	character_positions.clear()
-	
-	if not battle_scene:
-		return
-	
-	# 获取玩家位置
-	var players_node = battle_scene.get_node_or_null("Players")
-	if players_node:
-		for child in players_node.get_children():
-			if child.has_method("get_global_position"):
-				character_positions.append(child.global_position)
-	
-	# 获取敌人位置
-	var enemies_node = battle_scene.get_node_or_null("Enemies")
-	if enemies_node:
-		for child in enemies_node.get_children():
-			if child.has_method("get_global_position"):
-				character_positions.append(child.global_position)
+# 移除角色位置更新功能，不再需要动态生成时的位置检查
+# func _update_character_positions(): # 已删除
 
-func generate_ground_platform():
-	"""生成地面平台"""
-	var platform = _create_platform_obstacle()
-	# 地面平台位置：平台上边缘与Y轴1000对齐
-	var ground_y = 1000.0
-	var scene_width = 1920.0  # 假设场景宽度
-	var platform_height = 20.0
-	# 平台中心点应该在ground_y + platform_height/2，使上边缘与ground_y对齐
-	platform.global_position = Vector2(scene_width / 2, ground_y + platform_height / 2)
-	platform.platform_width = scene_width
-	platform.platform_height = platform_height
-	
-	add_child(platform)
-	obstacles.append(platform)
-	obstacle_added.emit(platform)
-	print("生成地面平台于位置: ", platform.global_position)
-
-func generate_rocks(count: int):
-	"""生成指定数量的乱石障碍物"""
-	for i in range(count):
-		var rock = _create_rock_obstacle()
-		var position = _find_valid_position()
-		
-		if position != Vector2.ZERO:
-			rock.global_position = position
-			add_child(rock)
-			obstacles.append(rock)
-			obstacle_added.emit(rock)
-			print("生成乱石障碍物于位置: ", position)
-		else:
-			print("无法找到合适位置生成障碍物")
-			rock.queue_free()
-
-func _create_rock_obstacle():
-	"""创建乱石障碍物"""
-	var rock_scene = preload("res://Scenes/Obstacles/RockObstacle.tscn")
-	var rock = rock_scene.instantiate()
-	rock.obstacle_radius = randf_range(rock_radius_min, rock_radius_max)
-	return rock
-
-func _create_platform_obstacle():
-	"""创建平台障碍物"""
-	var platform_scene = preload("res://Scenes/Obstacles/PlatformObstacle.tscn")
-	var platform = platform_scene.instantiate()
-	return platform
-
-func _create_wall_obstacle():
-	"""创建墙壁障碍物"""
-	var wall_scene = preload("res://Scenes/Obstacles/WallObstacle.tscn")
-	var wall = wall_scene.instantiate()
-	return wall
-
-func _create_water_obstacle():
-	"""创建水域障碍物"""
-	var water_scene = preload("res://Scenes/Obstacles/WaterObstacle.tscn")
-	var water = water_scene.instantiate()
-	return water
-
-func _create_pit_obstacle():
-	"""创建陷阱障碍物"""
-	var pit_scene = preload("res://Scenes/Obstacles/PitObstacle.tscn")
-	var pit = pit_scene.instantiate()
-	return pit
-
-func create_obstacle_by_type(obstacle_type: int):
-	"""根据类型创建障碍物"""
-	match obstacle_type:
-		0:  # ROCK
-			return _create_rock_obstacle()
-		1:  # WALL
-			return _create_wall_obstacle()
-		2:  # WATER
-			return _create_water_obstacle()
-		3:  # PIT
-			return _create_pit_obstacle()
-		4:  # PLATFORM
-			return _create_platform_obstacle()
-		_:
-			print("未知的障碍物类型: ", obstacle_type)
-			return null
-
-func _find_valid_position() -> Vector2:
-	"""寻找有效的障碍物生成位置"""
-	var max_attempts = 50
-	
-	# 获取地面高度（从BattleScene获取）
-	var ground_level = 1000.0  # GROUND_LEVEL常量值
-	
-	for attempt in range(max_attempts):
-		# 在角色头顶区域生成障碍物
-		# X坐标：在所有角色位置的范围内随机
-		var min_x = INF
-		var max_x = -INF
-		for char_pos in character_positions:
-			min_x = min(min_x, char_pos.x)
-			max_x = max(max_x, char_pos.x)
-		
-		# 扩展X范围，在角色区域周围生成
-		var x_range = max_x - min_x
-		if x_range < 200:  # 最小范围
-			x_range = 200
-		var center_x = (min_x + max_x) / 2
-		var x = center_x + randf_range(-x_range, x_range)
-		
-		# Y坐标：在地面上方一定范围内（角色头顶区域）
-		# 障碍物应该在地面上，不要太高
-		var y = ground_level + randf_range(-50, -10)  # 地面上方10-50像素
-		
-		var test_position = Vector2(x, y)
-		
-		# 检查是否与现有障碍物冲突
-		if _is_position_valid(test_position):
-			return test_position
-	
-	return Vector2.ZERO  # 找不到合适位置
-
-func _is_position_valid(pos: Vector2) -> bool:
-	"""检查位置是否有效"""
-	# 检查与角色的距离
-	for char_pos in character_positions:
-		if pos.distance_to(char_pos) < min_distance_from_characters:
-			return false
-	
-	# 检查与现有障碍物的距离
-	for obstacle in obstacles:
-		if pos.distance_to(obstacle.global_position) < min_distance_between_obstacles:
-			return false
-	
-	return true
-
-func add_obstacle_at_position(pos: Vector2, obstacle_type: int = 0):
-	"""在指定位置添加障碍物"""
-	var obstacle
-	
-	match obstacle_type:
-		0:  # ROCK
-			obstacle = _create_rock_obstacle()
-		_:
-			obstacle = _create_rock_obstacle()
-	
-	obstacle.global_position = pos
-	add_child(obstacle)
-	obstacles.append(obstacle)
-	obstacle_added.emit(obstacle)
-	return obstacle
-
-func remove_obstacle(obstacle):
-	"""移除指定障碍物"""
-	if obstacle in obstacles:
-		obstacles.erase(obstacle)
-		obstacle_removed.emit(obstacle)
-		obstacle.queue_free()
-
-func clear_all_obstacles():
-	"""清除所有障碍物"""
-	for obstacle in obstacles:
-		obstacle.queue_free()
-	obstacles.clear()
-	obstacles_cleared.emit()
+# 移除位置验证功能，不再需要动态生成时的位置检查
+# func _is_position_valid(pos: Vector2) -> bool: # 已删除
 
 func get_obstacles_in_area(center: Vector2, radius: float) -> Array:
 	"""获取指定区域内的障碍物"""
@@ -272,29 +88,51 @@ func is_position_blocked(pos: Vector2) -> bool:
 		# print("✅ [ObstacleManager] 位置无障碍物阻挡")
 		return false
 
+func _register_existing_obstacles():
+	"""扫描并注册场景中已存在的障碍物"""
+	print("🔍 开始扫描现有障碍物...")
+	if not get_parent():
+		print("❌ 没有父节点，无法扫描")
+		return
+		
+	print("📂 父节点: %s, 子节点数量: %d" % [get_parent().name, get_parent().get_child_count()])
+	
+	# 递归扫描所有子节点，包括DynamicsLevel下的障碍物
+	_scan_node_for_obstacles(get_parent())
+	
+	print("🏁 扫描完成，总障碍物数量: %d" % obstacles.size())
+	print("📋 已注册的障碍物列表:")
+	for i in range(obstacles.size()):
+		var obstacle = obstacles[i]
+		print("  %d. %s - 位置: %s, 碰撞层: %d" % [i+1, obstacle.name, obstacle.global_position, obstacle.collision_layer])
+
+func _scan_node_for_obstacles(node: Node):
+	"""递归扫描节点及其子节点寻找障碍物"""
+	for child in node.get_children():
+		# 排除ObstacleManager自身
+		if child == self:
+			continue
+			
+		# 检查各种条件
+		var is_in_obstacle_group = child.is_in_group("obstacle")
+		var is_obstacle_class = child.get_class() == "Obstacle"
+		var has_obstacle_in_name = "Obstacle" in child.name
+		
+		# 检查是否是障碍物类型（必须是StaticBody2D类型）
+		if (is_in_obstacle_group or is_obstacle_class or has_obstacle_in_name) and child is StaticBody2D:
+			# 避免重复添加
+			if not child in obstacles:
+				obstacles.append(child)
+				print("✅ 注册障碍物: %s" % child.name)
+				obstacle_added.emit(child)
+		
+		# 递归检查子节点
+		_scan_node_for_obstacles(child)
+
+func get_obstacles() -> Array:
+	"""获取所有障碍物"""
+	return obstacles
+
 func get_obstacle_count() -> int:
 	"""获取障碍物数量"""
 	return obstacles.size()
-
-# 调试功能
-func regenerate_obstacles():
-	"""重新生成障碍物（调试用）"""
-	clear_all_obstacles()
-	_update_character_positions()
-	generate_rocks(rock_count)
-
-func add_debug_obstacles_around_characters():
-	"""在角色周围添加调试障碍物"""
-	_update_character_positions()
-	
-	for char_pos in character_positions:
-		# 在角色周围生成几个障碍物
-		for i in range(3):
-			var angle = i * TAU / 3.0
-			var distance = randf_range(100, 150)
-			var offset = Vector2(cos(angle), sin(angle)) * distance
-			var obstacle_pos = char_pos + offset
-			
-			# 确保不与现有障碍物重叠
-			if _is_position_valid(obstacle_pos):
-				add_obstacle_at_position(obstacle_pos, 0)

@@ -32,8 +32,28 @@ var current_turn: int = 0
 #endregion
 
 #region 场景引用
-@onready var battle_scene: Node = get_tree().current_scene  # 🚀 修复：使用current_scene获取场景引用
+@onready var battle_scene: Node = AutoLoad.get_battle_scene()  # 🚀 修复：使用AutoLoad获取战斗场景引用
 #endregion
+
+# 🚀 智能获取战斗场景的方法
+func _get_battle_scene() -> Node:
+	var current_scene = get_tree().current_scene
+	# 如果当前场景就是战斗场景
+	if current_scene.name == "战斗场景" or current_scene.name == "BattleScene":
+		return current_scene
+	# 如果当前场景是main场景，查找其中的战斗场景子节点
+	var battle_scene_node = current_scene.get_node_or_null("战斗场景")
+	if battle_scene_node:
+		_debug_print("🎯 [BattleManager] 在main场景中找到战斗场景子节点")
+		return battle_scene_node
+	# 备用方案：通过路径查找
+	battle_scene_node = AutoLoad.get_battle_scene()
+	if battle_scene_node:
+		_debug_print("🎯 [BattleManager] 通过路径找到战斗场景节点")
+		return battle_scene_node
+	# 最后的备用方案：返回当前场景
+	_debug_print("⚠️ [BattleManager] 未找到专门的战斗场景，使用当前场景")
+	return current_scene
 
 func _ready() -> void:
 	_debug_print("⚔️ [BattleManager] 战斗协调器初始化")

@@ -5,7 +5,7 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_1x8qk"]
 radius = 20.0
 
-[node name="RockObstacle" type="Area2D"]
+[node name="RockObstacle" type="StaticBody2D"]
 script = ExtResource("1_0x8qk")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

@@ -65,8 +65,11 @@ func _setup_container_references():
 func spawn_party_members() -> void:
 	"""生成队伍成员"""
 	print("👥 [BattleCharacterManager] 开始生成队伍成员")
+	print("📋 [BattleCharacterManager] 队伍成员ID列表: %s" % [game_party.get_member_ids()])
 	
 	for character_id in game_party.get_member_ids():
+		print("🎯 [BattleCharacterManager] 开始生成角色ID: %s" % character_id)
+		
 		var instance = player_scene.instantiate()
 		
 		if players_container:
@@ -79,26 +82,31 @@ func spawn_party_members() -> void:
 		
 		# 从GameParty获取角色数据并设置
 		var character = game_party.get_member(character_id)
-		var char_data_node = instance.get_character_data()
+		var char_data_node = instance.get_node("Data")
 		if not char_data_node:
-			print("❌ [BattleCharacterManager] 角色实例 %s 没有get_character_data方法或返回null" % instance.name)
+			printerr("❌ [BattleCharacterManager] 角色实例 %s 没有Data节点" % instance.name)
 			instance.queue_free()
 			continue
 		
-		char_data_node.load_from_id(character_id)
+		print("📊 [BattleCharacterManager] 开始为角色ID %s 加载数据" % character_id)
+		char_data_node.load_character_data(character_id)
+		print("✅ [BattleCharacterManager] 角色ID %s 数据加载完成" % character_id)
+		
+		# 获取加载后的角色数据
+		var character_data = char_data_node.get_character()
 		
 		# 🚀 确保玩家角色设置为玩家控制
-		char_data_node.set_as_player()
+		character_data.set_as_player()
 		
 		# 设置轻功值
 		if character_id == "3":
-			character.qinggong_skill = 120
+			character_data.qinggong_skill = 120
 		else:
-			character.qinggong_skill = 280
-		char_data_node.qinggong_skill = character.qinggong_skill
+			character_data.qinggong_skill = 280
+		print("⚡ [BattleCharacterManager] 角色 %s 轻功值设置为: %d" % [character_data.name, character_data.qinggong_skill])
 		
 		# 设置位置 - 使用BattleScene中的SPAWN_POSITIONS
-		var battle_scene = get_node("/root/战斗场景")
+		var battle_scene = AutoLoad.get_battle_scene()
 		if battle_scene and battle_scene.SPAWN_POSITIONS.has(character_id):
 			instance.set_base_position(battle_scene.SPAWN_POSITIONS[character_id])
 		else:
@@ -106,16 +114,23 @@ func spawn_party_members() -> void:
 		
 		# 设置初始高度
 		if character_id == "1":
-			character.set_height(3.5)
+			character_data.set_height(3.5)
 		elif character_id == "2":
-			character.set_height(2.5)
+			character_data.set_height(2.5)
 		
 		# 连接信号
-		_connect_character_signals(character, character_id)
+		_connect_character_signals(character_data, character_id)
 		
 		party_member_nodes[character_id] = instance
 		character_spawned.emit(character_id, instance)
-		print("✅ [BattleCharacterManager] 生成队友: %s (ID: %s)" % [character.name, character_id])
+		
+		# 🔍 验证被动技能加载结果
+		var passive_skills = character_data.get_passive_skills()
+		var can_fly = character_data.has_passive_skill("御剑飞行")
+		print("🎉 [BattleCharacterManager] 角色生成完成: %s (ID: %s)" % [character_data.name, character_id])
+		print("🔮 [BattleCharacterManager] 角色 %s 被动技能: %s" % [character_data.name, passive_skills])
+		print("✈️ [BattleCharacterManager] 角色 %s 飞行能力: %s" % [character_data.name, "可以飞行" if can_fly else "不能飞行"])
+		print("=".repeat(50))
 
 func spawn_enemies() -> void:
 	"""生成敌人"""
@@ -144,7 +159,7 @@ func spawn_enemies() -> void:
 		character_data_script.qinggong_skill = 400
 		
 		# 设置位置 - 使用BattleScene中的ENEMY_SPAWN_POSITIONS
-		var battle_scene = get_node("/root/战斗场景")
+		var battle_scene = AutoLoad.get_battle_scene()
 		if battle_scene and battle_scene.ENEMY_SPAWN_POSITIONS.has(enemy_id):
 			var spawn_pos = battle_scene.ENEMY_SPAWN_POSITIONS[enemy_id]
 			character_data_script.ground_position = spawn_pos

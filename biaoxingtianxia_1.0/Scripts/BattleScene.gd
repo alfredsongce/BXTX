@@ -12,6 +12,8 @@ const SkillRangeDisplayScript = preload("res://Scripts/SkillRangeDisplay.gd")
 
 # 🚀 障碍物管理器引用
 @onready var obstacle_manager: Node2D = $TheLevel/ObstacleManager
+# 🚀 关卡容器引用
+@onready var the_level: Node = $TheLevel
 
 # 🌍 统一的地面高度定义
 const GROUND_LEVEL: float = 1000.0  # 地面的Y坐标值
@@ -82,10 +84,14 @@ var _collision_test_shape: CollisionShape2D = null
 var show_collision_shapes: bool = true  # 默认开启碰撞体积显示
 
 func _ready() -> void:
+	print("🚀 [BattleScene] _ready方法开始执行")
 	# 🚀 添加到battle_scene组，方便其他组件找到
 	add_to_group("battle_scene")
+	print("✅ [BattleScene] 已添加到battle_scene组")
 	# 🚀 初始化角色管理组件
+	print("🚀 [BattleScene] 准备初始化角色管理组件")
 	await _setup_character_manager()
+	print("✅ [BattleScene] 角色管理组件初始化完成")
 	# 初始化移动范围显示系统
 	_setup_move_range_system()
 	# 🚀 显示所有角色的碰撞体积
@@ -110,15 +116,19 @@ func _ready() -> void:
 	_setup_battle_combat_manager()
 	# 🚀 初始化BattleAIManager
 	_setup_battle_ai_manager()
+	# 🚀 加载初始关卡
+	_load_initial_level()
 	# 🚀 初始化障碍物管理器
 	_setup_obstacle_manager()
 	# 显示游戏操作提示
 	_show_gameplay_tips()
 
 func _setup_character_manager() -> void:
+	print("🚀 [BattleScene] 开始初始化角色管理器")
 	character_manager = BattleCharacterManager.new()
 	character_manager.name = "BattleCharacterManager"
 	add_child(character_manager)
+	print("✅ [BattleScene] 角色管理器已创建并添加到场景树")
 	
 	character_manager.character_spawned.connect(_on_character_spawned)
 	character_manager.character_death.connect(_on_character_death_from_manager)
@@ -280,6 +290,25 @@ func _on_ai_decision_made(ai_character: GameCharacter, decision: Dictionary) -> 
 	print("🧠 [BattleScene] AI决策制定: %s - %s" % [ai_character.name, decision.get("description", "未知决策")])
 	# 可以在这里添加AI决策的可视化提示
 
+func _load_initial_level() -> void:
+	"""加载初始关卡场景"""
+	print("🎮 [BattleScene] 开始加载初始关卡")
+	
+	# 获取DynamicsLevel节点
+	var dynamics_level = $TheLevel/DynamicsLevel
+	if not dynamics_level:
+		print("❌ [BattleScene] 未找到DynamicsLevel节点")
+		return
+	
+	# 加载Level_1_序幕场景
+	var level_scene = preload("res://level_1_序幕.tscn")
+	var level_instance = level_scene.instantiate()
+	
+	# 将关卡实例添加到DynamicsLevel节点下
+	dynamics_level.add_child(level_instance)
+	
+	print("✅ [BattleScene] 初始关卡加载完成: %s，挂载到DynamicsLevel节点下" % level_instance.name)
+
 func _setup_obstacle_manager() -> void:
 	print("🚀 [BattleScene] 初始化障碍物管理器")
 	
@@ -289,15 +318,22 @@ func _setup_obstacle_manager() -> void:
 		obstacle_manager.obstacle_removed.connect(_on_obstacle_removed)
 		obstacle_manager.obstacles_cleared.connect(_on_obstacles_cleared)
 		
-		# 生成初始障碍物
-		_generate_initial_obstacles()
+		# 注释掉原有的动态障碍物生成，现在使用关卡场景中的静态障碍物
+		# _generate_initial_obstacles()
+		
+		# 延迟重新扫描障碍物，确保关卡中的障碍物已经完全初始化
+		print("⏰ [BattleScene] 延迟重新扫描障碍物...")
+		await get_tree().process_frame  # 等待一帧
+		await get_tree().process_frame  # 再等待一帧确保完全初始化
+		obstacle_manager._register_existing_obstacles()
 		
 		print("✅ [BattleScene] 障碍物管理器初始化完成")
 	else:
 		print("❌ [BattleScene] 未找到障碍物管理器节点")
 
 func _on_obstacle_added(obstacle) -> void:
-	print("🪨 [BattleScene] 障碍物已添加: %s" % obstacle.global_position)
+	# 障碍物添加事件处理（已简化输出）
+	pass
 
 func _on_obstacle_removed(obstacle) -> void:
 	print("🗑️ [BattleScene] 障碍物已移除: %s" % obstacle.global_position)
@@ -305,28 +341,29 @@ func _on_obstacle_removed(obstacle) -> void:
 func _on_obstacles_cleared() -> void:
 	print("🧹 [BattleScene] 所有障碍物已清除")
 
-func _generate_initial_obstacles() -> void:
-	"""生成战斗场景的初始障碍物"""
-	print("🪨 [BattleScene] 开始生成初始障碍物")
-	
-	if not obstacle_manager:
-		print("❌ [BattleScene] 障碍物管理器不存在，无法生成障碍物")
-		return
-	
-	# 等待一帧确保所有角色都已生成
-	await get_tree().process_frame
-	
-	# 生成地面平台
-	obstacle_manager.generate_ground_platform()
-	
-	# 生成乱石障碍物
-	obstacle_manager.generate_rocks(obstacle_manager.rock_count)
-	
-	# 可以根据需要添加其他类型的障碍物
-	# obstacle_manager.add_obstacle_at_position(Vector2(900, 980), 1)  # 墙壁
-	# obstacle_manager.add_obstacle_at_position(Vector2(1050, 980), 2)  # 水域
-	
-	print("✅ [BattleScene] 初始障碍物生成完成")
+# 🚀 原有的动态障碍物生成方法已移除，现在使用关卡场景中的静态障碍物
+# func _generate_initial_obstacles() -> void:
+#	"""生成战斗场景的初始障碍物"""
+#	print("🪨 [BattleScene] 开始生成初始障碍物")
+#	
+#	if not obstacle_manager:
+#		print("❌ [BattleScene] 障碍物管理器不存在，无法生成障碍物")
+#		return
+#	
+#	# 等待一帧确保所有角色都已生成
+#	await get_tree().process_frame
+#	
+#	# 生成地面平台
+#	obstacle_manager.generate_ground_platform()
+#	
+#	# 生成乱石障碍物
+#	obstacle_manager.generate_rocks(obstacle_manager.rock_count)
+#	
+#	# 可以根据需要添加其他类型的障碍物
+#	# obstacle_manager.add_obstacle_at_position(Vector2(900, 980), 1)  # 墙壁
+#	# obstacle_manager.add_obstacle_at_position(Vector2(1050, 980), 2)  # 水域
+#	
+#	print("✅ [BattleScene] 初始障碍物生成完成")
 
 func _show_gameplay_tips() -> void:
 	print("游戏已启动 - 按F11开始战斗，F10切换碰撞体积显示")
@@ -858,12 +895,41 @@ func _open_character_action_menu(character_node: Node2D) -> void:
 	# 🚀 添加当前回合角色检查
 	var character_data = character_node.get_character_data()
 	# 获取当前场景、战斗管理器和回合管理器
-	var current_scene = get_tree().current_scene
+	var current_scene = AutoLoad.get_battle_scene()
 	var battle_manager_node = null
-	if current_scene.name == "战斗场景" or current_scene.name == "BattleScene":
-		battle_manager_node = current_scene.get_node("BattleManager")
-	else:
-		battle_manager_node = get_node("/root/BattleScene/BattleManager")
+	
+	# 智能查找BattleManager节点
+	# 1. 首先尝试直接获取子节点
+	battle_manager_node = get_node_or_null("BattleManager")
+	
+	# 2. 如果找不到，检查当前场景
+	if battle_manager_node == null:
+		if current_scene.name == "战斗场景" or current_scene.name == "BattleScene":
+			battle_manager_node = current_scene.get_node_or_null("BattleManager")
+		elif current_scene.name == "Main":
+			# 在Main场景中，战斗场景是子节点
+			var battle_scene = current_scene.get_node_or_null("战斗场景")
+			if battle_scene:
+				battle_manager_node = battle_scene.get_node_or_null("BattleManager")
+	
+	# 3. 如果仍然找不到，尝试通过绝对路径
+	if battle_manager_node == null:
+		printerr("⚠️ [BattleScene] 无法通过相对路径找到BattleManager，尝试绝对路径")
+		# 尝试可能的绝对路径
+		var possible_paths = [
+			"BattleManager"
+		]
+		
+		for path in possible_paths:
+			battle_manager_node = get_node_or_null(path)
+			if battle_manager_node:
+				print("✅ [BattleScene] 通过绝对路径找到BattleManager: %s" % path)
+				break
+	
+	# 4. 如果所有尝试都失败，报错并返回
+	if battle_manager_node == null:
+		printerr("❌ [BattleScene] 无法找到BattleManager节点，无法打开角色行动菜单")
+		return
 	
 	var current_character = battle_manager_node.turn_manager.get_current_character()
 	if current_character == null:
@@ -1323,11 +1389,12 @@ func _debug_obstacle_system_status() -> void:
 	
 	# 输出障碍物管理器配置
 	print("\n--- 配置信息 ---")
-	print("🪨 乱石数量: %d" % obstacle_manager.rock_count)
-	print("📏 乱石半径范围: %.1f - %.1f" % [obstacle_manager.rock_radius_min, obstacle_manager.rock_radius_max])
-	print("🎯 生成区域大小: %s" % obstacle_manager.spawn_area_size)
-	print("📐 障碍物间最小距离: %.1f" % obstacle_manager.min_distance_between_obstacles)
-	print("👥 角色最小距离: %.1f" % obstacle_manager.min_distance_from_characters)
+	print("🪨 障碍物数量: %d" % obstacle_manager.get_obstacle_count())
+	# 注意：以下配置属性已在重构中移除，因为不再动态生成障碍物
+	# print("📏 乱石半径范围: %.1f - %.1f" % [obstacle_manager.rock_radius_min, obstacle_manager.rock_radius_max])
+	# print("🎯 生成区域大小: %s" % obstacle_manager.spawn_area_size)
+	# print("📐 障碍物间最小距离: %.1f" % obstacle_manager.min_distance_between_obstacles)
+	# print("👥 角色最小距离: %.1f" % obstacle_manager.min_distance_from_characters)
 	
 	# 检查当前障碍物数量
 	var current_obstacles = obstacle_manager.get_children()

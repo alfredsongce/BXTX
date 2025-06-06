@@ -1,0 +1,10 @@
+id,name,description,effect_type
+技能ID,技能名称,技能描述,效果类型
+御剑飞行,御剑飞行,能够御剑在空中飞行无视地面约束,flight
+铁布衫,铁布衫,提高物理防御力,defense
+内力深厚,内力深厚,增加法力上限,mana
+轻功大师,轻功大师,增加移动距离,movement
+凌波微步,凌波微步,提高闪避能力,dodge
+金钟罩,金钟罩,减少受到的伤害,damage_reduction
+九阳神功,九阳神功,持续恢复生命值,health_regen
+易筋经,易筋经,提高所有属性,all_stats

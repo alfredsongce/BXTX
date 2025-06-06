@@ -1,3 +1,39 @@
-[gd_scene format=3 uid="uid://du3ukqo80vmxx"]
+[gd_scene load_steps=5 format=3 uid="uid://bvkxqwj8hn2ys"]
+
+[ext_resource type="PackedScene" uid="uid://cav4d0frquyw3" path="res://Scenes/Obstacles/PlatformObstacle.tscn" id="1_platform"]
+[ext_resource type="PackedScene" uid="uid://bqxvw8y7x8qkr" path="res://Scenes/Obstacles/RockObstacle.tscn" id="2_rock"]
+[ext_resource type="PackedScene" uid="uid://c2yvxa080arlr" path="res://Scenes/Obstacles/WallObstacle.tscn" id="3_wall"]
+[ext_resource type="PackedScene" uid="uid://d30wx0ba00sms" path="res://Scenes/Obstacles/WaterObstacle.tscn" id="4_water"]
 
 [node name="Level_1_序幕" type="Node2D"]
+
+[node name="Obstacles" type="Node2D" parent="."]
+
+[node name="PlatformObstacle" parent="Obstacles" instance=ExtResource("1_platform")]
+position = Vector2(1000, 1005)
+scale = Vector2(10, 1)
+
+[node name="TestPlatformObstacle" parent="Obstacles" instance=ExtResource("1_platform")]
+position = Vector2(500, 1005)
+scale = Vector2(3, 1)
+
+[node name="RockObstacle1" parent="Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(400, 980)
+
+[node name="RockObstacle2" parent="Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(600, 950)
+
+[node name="RockObstacle3" parent="Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(800, 970)
+
+[node name="RockObstacle4" parent="Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(1200, 960)
+
+[node name="RockObstacle5" parent="Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(1400, 980)
+
+[node name="WallObstacle1" parent="Obstacles" instance=ExtResource("3_wall")]
+position = Vector2(900, 980)
+
+[node name="WaterObstacle1" parent="Obstacles" instance=ExtResource("4_water")]
+position = Vector2(1050, 980)

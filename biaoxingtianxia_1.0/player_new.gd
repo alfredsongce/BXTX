@@ -192,7 +192,7 @@ func _on_action_menu_requested() -> void:
 	print("请求打开行动菜单")
 	
 	# 🚀 检查是否是当前回合的角色
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_method("get_node_or_null"):
 		var battle_manager = battle_scene.get_node_or_null("BattleManager")
 		if battle_manager and battle_manager.turn_manager:
@@ -211,17 +211,8 @@ func _on_action_selected(action_type: String) -> void:
 	# 特殊处理移动行动
 	if action_type == "move":
 		# 在关闭菜单前先获取行动系统
-		var action_system = get_tree().current_scene.get_node_or_null("ActionSystem")
-		
-		# 如果没找到，尝试其他路径
-		if not action_system:
-			action_system = get_tree().current_scene.get_node_or_null("/root/ActionSystem")
-		
-		if not action_system:
-			print("警告：无法找到行动系统节点，尝试在父场景中搜索...")
-			var parent = get_parent()
-			if parent:
-				action_system = parent.get_node_or_null("ActionSystem")
+		var battle_scene = AutoLoad.get_battle_scene()
+		var action_system = battle_scene.get_node_or_null("ActionSystem") if battle_scene else null
 		
 		if action_system:
 			print("找到行动系统，通知选择移动行动")
@@ -237,14 +228,15 @@ func _on_action_selected(action_type: String) -> void:
 					ui_component.current_open_menu.menu_closed.disconnect(ui_component._on_menu_closed)
 				ui_component.current_open_menu.close_menu()
 				ui_component.current_open_menu = null
-			# 最后显示移动范围
-			show_move_range()
+			# 注意：不需要手动调用show_move_range()，因为ActionSystem.select_action("move")会自动调用
 		else:
 			push_error("严重错误：无法找到行动系统！")
 		return
 		
 	# 获取行动系统，通知行动选择
-	var action_system = get_tree().current_scene.get_node_or_null("ActionSystem")
+	var battle_scene = AutoLoad.get_battle_scene()
+	var action_system = battle_scene.get_node_or_null("ActionSystem") if battle_scene else null
+	
 	if action_system:
 		action_system.select_action(action_type)
 	else:

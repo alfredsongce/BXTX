@@ -40,7 +40,7 @@ func _ready() -> void:
 
 func _find_component_references() -> void:
 	# 查找BattleScene引用
-	battle_scene = get_node_or_null("/root/BattleScene")
+	battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene:
 		# 尝试通过父节点查找
 		var current = get_parent()
@@ -53,17 +53,17 @@ func _find_component_references() -> void:
 	# 查找ActionSystem
 	action_system = get_node_or_null("../ActionSystem")
 	if not action_system:
-		action_system = get_node_or_null("/root/BattleScene/ActionSystem")
+		action_system = AutoLoad.get_battle_scene().get_node_or_null("ActionSystem") if AutoLoad.get_battle_scene() else null
 	
 	# 查找BattleFlowManager
 	battle_flow_manager = get_node_or_null("../BattleFlowManager")
 	if not battle_flow_manager:
-		battle_flow_manager = get_node_or_null("/root/BattleScene/BattleSystems/BattleFlowManager")
+		battle_flow_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/BattleFlowManager") if AutoLoad.get_battle_scene() else null
 	
 	# 查找BattleCombatManager
 	battle_combat_manager = get_node_or_null("../BattleCombatManager")
 	if not battle_combat_manager:
-		battle_combat_manager = get_node_or_null("/root/BattleScene/BattleSystems/BattleCombatManager")
+		battle_combat_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/BattleCombatManager") if AutoLoad.get_battle_scene() else null
 
 func _connect_signals() -> void:
 	# 连接信号

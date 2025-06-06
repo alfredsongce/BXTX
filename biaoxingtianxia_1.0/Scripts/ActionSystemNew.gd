@@ -209,7 +209,7 @@ func select_action(action: String):
 			
 			if character_data:
 				# 委托给BattleScene处理技能选择
-				var battle_scene = get_tree().current_scene
+				var battle_scene = AutoLoad.get_battle_scene()
 				# if battle_scene and battle_scene.has_method("show_skill_selection_menu"):  # 已移除SkillSelectionMenu
 				#	var skill_manager = battle_scene.get_node_or_null("SkillManager")
 				#	if skill_manager:
@@ -266,7 +266,8 @@ func _execute_rest_action():
 		}
 		
 		# 🚀 通知BattleManager行动完成
-		var battle_manager = get_tree().current_scene.get_node_or_null("BattleManager")
+		var battle_scene = AutoLoad.get_battle_scene()
+		var battle_manager = battle_scene.get_node_or_null("BattleManager") if battle_scene else null
 		if battle_manager:
 			print("😴 [行动系统] 通知BattleManager休息行动完成")
 			battle_manager.character_action_completed.emit(character_data, action_result)
@@ -309,7 +310,8 @@ func _execute_non_move_action(action: String):
 			action_result.message = "执行了未知行动"
 	
 	# 🚀 通知BattleManager行动完成
-	var battle_manager = get_tree().current_scene.get_node_or_null("BattleManager")
+	var battle_scene = AutoLoad.get_battle_scene()
+	var battle_manager = battle_scene.get_node_or_null("BattleManager") if battle_scene else null
 	if battle_manager and character_data:
 		print("🎯 [行动系统] 通知BattleManager行动完成: %s" % action_result.message)
 		battle_manager.character_action_completed.emit(character_data, action_result)

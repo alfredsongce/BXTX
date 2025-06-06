@@ -218,7 +218,7 @@ func _play_skill_effects(skill: SkillData, caster: GameCharacter, targets: Array
 # 🎬 技能效果系统
 func _setup_skill_effects():
 	# 从场景中获取SkillEffects节点
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_node("SkillEffects"):
 		print("✨ [技能系统] 找到场景中的SkillEffects节点")
 	else:

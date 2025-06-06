@@ -15,6 +15,7 @@ var max_size: int = 4:
 
 # 添加角色到队伍
 func add_member(character_id: String) -> bool:
+	print("👥 [GameParty] 尝试添加角色ID: %s" % character_id)
 	if _members.size() >= max_size:
 		push_error("队伍已满，无法添加角色: %s" % character_id)
 		return false
@@ -24,9 +25,11 @@ func add_member(character_id: String) -> bool:
 		return false
 	
 	# 从数据库创建基础角色
+	print("📊 [GameParty] 正在获取角色数据: %s" % character_id)
 	var base_data = DataManager.get_data("character", character_id)
+	print("📊 [GameParty] 角色数据获取结果: %s" % str(base_data))
 	if not base_data or (base_data is Dictionary and base_data.is_empty()):
-		push_error("无效的角色ID: %s" % character_id)
+		push_error("无效的角色ID: %s，数据为: %s" % [character_id, str(base_data)])
 		return false
 	
 	var new_char = GameCharacter.new()

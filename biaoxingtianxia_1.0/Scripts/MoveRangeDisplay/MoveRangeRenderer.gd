@@ -37,7 +37,7 @@ signal texture_ready(texture: ImageTexture)
 
 # 🔧 组件引用
 var config  # 改为动态类型
-var validator: MoveRangeValidator  # 🚀 新增：验证器节点引用
+var position_collision_manager  # 🚀 新增：位置碰撞管理器引用
 
 func _ready():
 	# print("🎨 [Renderer] 渲染组件初始化完成")
@@ -53,7 +53,7 @@ func _ready():
 	
 	# 获取配置组件引用
 	call_deferred("_setup_config_reference")
-	call_deferred("_setup_validator_reference")
+	call_deferred("_setup_position_collision_manager_reference")
 	call_deferred("_initialize_visual_effects")
 	call_deferred("_initialize_gpu_compute")
 
@@ -62,10 +62,10 @@ func _setup_config_reference():
 	if not config:
 		push_warning("[Renderer] 未找到Config组件")
 
-func _setup_validator_reference():
-	validator = get_node("../Validator")
-	if not validator:
-		push_warning("[Renderer] 未找到Validator组件")
+func _setup_position_collision_manager_reference():
+	position_collision_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/PositionCollisionManager") if AutoLoad.get_battle_scene() else null
+	if not position_collision_manager:
+		push_warning("[Renderer] 未找到PositionCollisionManager组件")
 
 # 🚀 初始化GPU计算系统
 func _initialize_gpu_compute():
@@ -82,7 +82,8 @@ func _initialize_gpu_compute():
 func update_display(texture: ImageTexture, character: GameCharacter, position: Vector2):
 	_current_texture = texture
 	_current_character = character
-	global_position = character.position
+	# 🔧 修复：使用传入的position参数而不是character.position
+	global_position = position
 	visible = true
 	queue_redraw()
 	range_shown.emit()
@@ -168,23 +169,25 @@ func _generate_range_texture_gpu_optimized(character: GameCharacter, resolution:
 		return null
 	
 	var max_range = character.qinggong_skill
-	var char_position = character.position
+	# 🔧 修复：获取角色节点的实际位置
+	var character_node = _get_character_node(character)
+	var char_position = character_node.position if character_node else character.position
 	var char_ground_y = character.ground_position.y
 	var pixel_scale = float(max_range * 2) / resolution
 	var half_resolution = resolution / 2
 	
-	# 🔧 获取障碍物数据（使用验证器节点）
+	# 🔧 获取障碍物数据（使用位置碰撞管理器）
 	var obstacle_characters = []
-	if validator:
-		obstacle_characters = validator._get_obstacle_characters(character.id)
+	if position_collision_manager:
+		obstacle_characters = position_collision_manager._get_obstacle_characters_cached(character.id)
 	
 	# 🚀 GPU友好的块处理（模拟并行计算）
 	var chunk_size = 32  # 减小块大小以提高精度
 	for chunk_x in range(0, resolution, chunk_size):
 		for chunk_y in range(0, resolution, chunk_size):
 			_process_gpu_chunk_precise(image, chunk_x, chunk_y, chunk_size, resolution, 
-									 half_resolution, pixel_scale, max_range, 
-									 char_position, char_ground_y, obstacle_characters)
+										 half_resolution, pixel_scale, max_range, 
+										 char_position, char_ground_y, obstacle_characters)
 	
 	var texture = ImageTexture.new()
 	if texture:
@@ -207,23 +210,20 @@ func _process_gpu_chunk_precise(image: Image, start_x: int, start_y: int, chunk_
 			var local_y = (y - half_resolution) * pixel_scale
 			var world_pos = char_position + Vector2(local_x, local_y)
 			
-			# 执行所有检查 - 使用验证器节点
+			# 执行所有检查 - 使用位置碰撞管理器（移除高度限制检查）
 			var is_movable = true
-			if validator:
+			if position_collision_manager:
 				# 检查1：圆形范围
-				if not validator._check_circular_range(char_position, world_pos, max_range):
+				if not position_collision_manager._check_circular_range(char_position, world_pos, max_range):
 					is_movable = false
-				# 检查2：高度限制
-				elif not validator._check_height_limit(world_pos, char_ground_y, max_range):
+				# 检查2：地面限制
+				elif not position_collision_manager._check_ground_limit_comprehensive(world_pos, char_ground_y):
 					is_movable = false
-				# 检查3：地面限制
-				elif not validator._check_ground_limit(world_pos, char_ground_y):
-					is_movable = false
-				# 检查4：障碍物碰撞
-				elif not validator._check_capsule_obstacles(world_pos, obstacles):
+				# 检查3：障碍物碰撞
+				elif not position_collision_manager._check_capsule_obstacles_comprehensive(world_pos, obstacles):
 					is_movable = false
 			else:
-				is_movable = false  # 如果验证器不可用，标记为不可移动
+				is_movable = false  # 如果位置碰撞管理器不可用，标记为不可移动
 			
 			# 设置像素颜色
 			if is_movable:
@@ -243,14 +243,14 @@ func _process_gpu_chunk_precise(image: Image, start_x: int, start_y: int, chunk_
 					color.a = 0.6  # 固定透明度
 					image.set_pixel(x, y, color)
 
-# 🚀 真实的移动能力检查（使用验证器节点）
+# 🚀 真实的移动能力检查（使用位置碰撞管理器）
 func _is_position_movable_realistic(world_pos: Vector2, char_height: float, max_range: int, char_position: Vector2) -> bool:
 	if not _current_character:
 		return false
 	
-	# 🚀 使用验证器节点进行验证
-	if validator:
-		var validation_result = validator.validate_position_comprehensive(
+	# 🚀 使用位置碰撞管理器进行验证
+	if position_collision_manager:
+		var validation_result = position_collision_manager.validate_position_comprehensive(
 			_current_character, 
 			world_pos, 
 			char_position
@@ -259,7 +259,7 @@ func _is_position_movable_realistic(world_pos: Vector2, char_height: float, max_
 	else:
 		return false
 
-# 🚀 CPU精确纹理计算（使用验证器节点优化版）
+# 🚀 CPU精确纹理计算（使用位置碰撞管理器优化版）
 func _compute_range_texture_cpu(character: GameCharacter, resolution: int) -> ImageTexture:
 	if not character:
 		return null
@@ -269,7 +269,9 @@ func _compute_range_texture_cpu(character: GameCharacter, resolution: int) -> Im
 	# 🎯 第1步：创建与移动范围大小相同的图像
 	var image = Image.create(resolution, resolution, false, Image.FORMAT_RGBA8)
 	var max_range = character.qinggong_skill
-	var char_position = character.position
+	# 🔧 修复：获取角色节点的实际位置
+	var character_node = _get_character_node(character)
+	var char_position = character_node.position if character_node else character.position
 	var pixel_scale = float(max_range * 2) / resolution  # 每像素对应的游戏单位
 	var half_resolution = resolution / 2
 	
@@ -281,10 +283,10 @@ func _compute_range_texture_cpu(character: GameCharacter, resolution: int) -> Im
 			var local_y = (y - half_resolution) * pixel_scale
 			var world_pos = char_position + Vector2(local_x, local_y)
 			
-			# 🎯 第4步：使用验证器节点进行验证
+			# 🎯 第4步：使用位置碰撞管理器进行验证
 			var is_valid = false
-			if validator:
-				var validation_result = validator.validate_position_comprehensive(
+			if position_collision_manager:
+				var validation_result = position_collision_manager.validate_position_comprehensive(
 					character, 
 					world_pos, 
 					char_position
@@ -328,9 +330,11 @@ func _process(delta):
 			# 检查动画是否完成，如果有等待的纹理则开始淡入
 			if _animation_progress >= 1.0:
 				_current_radius = _target_radius
+				print("🎨 [DEBUG] 扩张动画完成 - 当前global_position: %s" % global_position)
 				
 				# 🚀 修复：扩张动画完成后，检查是否有等待的淡入纹理
 				if _pending_fade_texture:
+					print("🎨 [DEBUG] 开始淡入等待的纹理")
 					_start_fade_in_with_pending_texture()
 		
 		elif _animation_type == "fade_in":
@@ -342,8 +346,8 @@ func _process(delta):
 				_fade_alpha = 1.0
 				_animation_active = false
 				_animation_type = ""
+				print("🎨 [DEBUG] 淡入动画完成 - 最终global_position: %s" % global_position)
 				_notify_animation_complete()
-				# print("🎨 [Renderer] 淡入动画完成")
 	
 	# 原有的视觉效果更新
 	if visible and config and config.is_visual_effects_enabled():
@@ -398,7 +402,9 @@ func _draw_enhanced_range_texture(local_center: Vector2):
 	
 	var max_range = _current_character.qinggong_skill
 	var texture_size = Vector2(max_range * 2, max_range * 2)
-	var texture_rect = Rect2(local_center - texture_size / 2, texture_size)
+	# 🔧 修复：使用渲染器自身的中心点
+	var renderer_center = Vector2.ZERO
+	var texture_rect = Rect2(renderer_center - texture_size / 2, texture_size)
 	
 	# 基础纹理
 	draw_texture_rect(_current_texture, texture_rect, false)
@@ -408,7 +414,7 @@ func _draw_enhanced_range_texture(local_center: Vector2):
 		# 边缘光晕效果
 		var glow_color = Color(config.movable_color.r, config.movable_color.g, config.movable_color.b, 0.3)
 		var glow_size = texture_size * 1.1
-		var glow_rect = Rect2(local_center - glow_size / 2, glow_size)
+		var glow_rect = Rect2(renderer_center - glow_size / 2, glow_size)
 		
 		if _edge_gradient_texture:
 			draw_texture_rect(_edge_gradient_texture, glow_rect, false, glow_color)
@@ -418,7 +424,9 @@ func _draw_static_border(local_center: Vector2):
 		return
 	
 	var max_range = _current_character.qinggong_skill
-	draw_arc(local_center, max_range, 0, 2 * PI, 36, Color.WHITE, 2.0)
+	# 🔧 修复：使用渲染器自身的中心点
+	var renderer_center = Vector2.ZERO
+	draw_arc(renderer_center, max_range, 0, 2 * PI, 36, Color.WHITE, 2.0)
 
 func _draw_animated_border(local_center: Vector2):
 	if not _current_character:
@@ -427,8 +435,12 @@ func _draw_animated_border(local_center: Vector2):
 	var max_range = _current_character.qinggong_skill
 	var time_offset = _visual_effects_time * 1.5  # 适中的转动速度
 	
+	# 🔧 修复：使用渲染器自身的中心点，而不是角色位置
+	# 这样确保流光边框与纹理的圆心一致
+	var renderer_center = Vector2.ZERO  # 渲染器的本地坐标中心
+	
 	# 🎯 先绘制完整的基础圆圈（确保底色）
-	draw_arc(local_center, max_range, 0, 2 * PI, 64, Color(0.6, 0.7, 0.9, 0.5), 2.0)
+	draw_arc(renderer_center, max_range, 0, 2 * PI, 64, Color(0.6, 0.7, 0.9, 0.5), 2.0)
 	
 	# 🌟 然后只在光点位置绘制亮色段，不覆盖其他位置
 	for light_id in range(3):
@@ -453,7 +465,7 @@ func _draw_animated_border(local_center: Vector2):
 			# 只绘制足够亮的点
 			if brightness > 0.3:
 				# 计算该点在圆周上的位置
-				var point_pos = local_center + Vector2(cos(actual_angle), sin(actual_angle)) * max_range
+				var point_pos = renderer_center + Vector2(cos(actual_angle), sin(actual_angle)) * max_range
 				
 				# 绘制光点（使用小圆点而不是弧段）
 				var light_color = Color.WHITE.lerp(Color.CYAN, 0.3)
@@ -467,7 +479,7 @@ func _draw_animated_border(local_center: Vector2):
 		var inner_radius = max_range - 6
 		var inner_alpha = 0.1 + 0.05 * sin(time_offset * 2.0)
 		var inner_color = Color(0.7, 0.8, 1.0, inner_alpha)
-		draw_arc(local_center, inner_radius, 0, 2 * PI, 32, inner_color, 1.5)
+		draw_arc(renderer_center, inner_radius, 0, 2 * PI, 32, inner_color, 1.5)
 
 # 🚀 增强的鼠标指示器
 func _draw_enhanced_mouse_indicator():
@@ -608,10 +620,13 @@ func start_expanding_circle_animation(character: GameCharacter, center_position:
 	_animation_duration = config.expanding_animation_duration if config else 0.5  # 从配置获取时长
 	visible = true
 	
-	# print("🎨 [Renderer] 开始圆形扩张动画 - 目标半径: %.0f, 时长: %.1f秒" % [_target_radius, _animation_duration])
+	print("🎨 [DEBUG] 开始圆形扩张动画 - 中心位置: %s, 目标半径: %.0f" % [center_position, _target_radius])
+	print("🎨 [DEBUG] 设置global_position为: %s" % global_position)
 
 # 🚀 新增：完成动画并淡入纹理
 func complete_animation_and_fade_in_texture(texture: ImageTexture, character: GameCharacter, position: Vector2):
+	print("🎨 [DEBUG] complete_animation_and_fade_in_texture - 传入位置: %s" % position)
+	print("🎨 [DEBUG] complete_animation_and_fade_in_texture - 设置前global_position: %s" % global_position)
 	if _animation_type == "expanding_circle":
 		# 完成扩张动画
 		_current_radius = _target_radius
@@ -624,7 +639,15 @@ func complete_animation_and_fade_in_texture(texture: ImageTexture, character: Ga
 	_animation_progress = 0.0
 	_animation_type = "fade_in"
 	_animation_duration = config.fade_in_animation_duration if config else 0.4  # 从配置获取淡入时长
-	global_position = position
+	
+	# 🔧 修复：只有当位置确实不同时才设置新位置，避免不必要的跳动
+	var position_diff = global_position.distance_to(position)
+	print("🎨 [DEBUG] complete_animation_and_fade_in_texture - 位置差距: %s" % position_diff)
+	if position_diff > 1.0:  # 只有差距大于1像素时才更新位置
+		print("🎨 [DEBUG] complete_animation_and_fade_in_texture - 位置差距较大，更新位置从 %s 到 %s" % [global_position, position])
+		global_position = position
+	else:
+		print("🎨 [DEBUG] complete_animation_and_fade_in_texture - 位置差距很小，保持当前位置: %s" % global_position)
 	
 	# print("🎨 [Renderer] 开始淡入真实纹理")
 
@@ -640,6 +663,13 @@ func _stop_all_animations():
 func _start_fade_in_with_pending_texture():
 	if not _pending_fade_texture or not _current_character:
 		return
+	
+	print("🎨 [DEBUG] _start_fade_in_with_pending_texture - 进入时global_position: %s" % global_position)
+	
+	# 🔧 修复：保持扩张动画时的位置，不要重新设置global_position
+	# 因为扩张动画已经将位置设置为正确的动画中心位置
+	# global_position应该保持不变，避免位置跳动
+	print("🎨 [DEBUG] 保持位置不变，当前global_position: %s" % global_position)
 	
 	# 开始淡入动画
 	_fade_in_texture = _pending_fade_texture
@@ -693,10 +723,11 @@ func _draw_fade_in_texture():
 	if not _fade_in_texture or not _current_character:
 		return
 	
-	var local_center = to_local(_current_character.position)
+	# 🔧 修复：使用渲染器自身的中心点
+	var renderer_center = Vector2.ZERO
 	var max_range = _current_character.qinggong_skill
 	var texture_size = Vector2(max_range * 2, max_range * 2)
-	var texture_rect = Rect2(local_center - texture_size / 2, texture_size)
+	var texture_rect = Rect2(renderer_center - texture_size / 2, texture_size)
 	
 	# 绘制淡入的纹理
 	var fade_color = Color(1.0, 1.0, 1.0, _fade_alpha)
@@ -707,10 +738,10 @@ func _draw_fade_in_texture():
 		var border_alpha = (_fade_alpha - 0.5) * 2.0
 		var border_color = Color.WHITE
 		border_color.a = border_alpha
-		draw_arc(local_center, max_range, 0, 2 * PI, 36, border_color, 2.0)
+		draw_arc(renderer_center, max_range, 0, 2 * PI, 36, border_color, 2.0)
 
 # 🚀 新增：带障碍物数据的CPU纹理计算
-func _compute_range_texture_cpu_with_obstacles(character: GameCharacter, resolution: int, obstacles_data: Array) -> ImageTexture:
+func _compute_range_texture_cpu_with_obstacles(character: GameCharacter, resolution: int, obstacles_data: Array, char_position: Vector2, char_ground_y: float) -> ImageTexture:
 	var start_time = Time.get_ticks_msec()
 	
 	# 创建图像
@@ -718,8 +749,7 @@ func _compute_range_texture_cpu_with_obstacles(character: GameCharacter, resolut
 	var half_size = int(resolution / 2)
 	var max_range = character.qinggong_skill
 	var pixel_scale = float(max_range * 2) / resolution
-	var char_position = character.position
-	var char_ground_y = character.ground_position.y
+	# 🔧 修复：使用传入的角色地面Y坐标（线程安全）
 	
 	# 逐像素计算
 	for y in range(resolution):
@@ -758,10 +788,11 @@ func _compute_range_texture_cpu_with_obstacles(character: GameCharacter, resolut
 	return texture
 
 # 🚀 新增：带障碍物数据的GPU纹理计算
-func compute_range_texture_gpu_with_obstacles(character: GameCharacter, resolution: int, obstacles_data: Array) -> ImageTexture:
-	# GPU计算暂时未实现，回退到CPU计算
+func compute_range_texture_gpu_with_obstacles(character: GameCharacter, resolution: int, obstacles_data: Array, char_position: Vector2) -> ImageTexture:
 	# print("⚠️ [Renderer] GPU计算暂未支持障碍物数据，回退到CPU")
-	return _compute_range_texture_cpu_with_obstacles(character, resolution, obstacles_data)
+	# 🔧 修复：传递角色地面Y坐标参数
+	var char_ground_y = character.ground_position.y
+	return _compute_range_texture_cpu_with_obstacles(character, resolution, obstacles_data, char_position, char_ground_y)
 
 # 🚀 新增：纹理生成的快速位置验证
 func _validate_position_for_texture(char_pos: Vector2, target_pos: Vector2, max_range: int, char_ground_y: float, obstacles_data: Array) -> bool:
@@ -770,16 +801,11 @@ func _validate_position_for_texture(char_pos: Vector2, target_pos: Vector2, max_
 	if distance > max_range:
 		return false
 	
-	# 检查2：高度限制检查
-	var target_height = char_ground_y - target_pos.y
-	if target_height < 0 or target_height > max_range:
-		return false
-	
-	# 检查3：地面限制检查
+	# 检查2：地面限制检查
 	if target_pos.y > char_ground_y:
 		return false
 	
-	# 检查4：障碍物碰撞检查（使用预先收集的数据）
+	# 检查3：障碍物碰撞检查（使用预先收集的数据）
 	for obstacle_data in obstacles_data:
 		if _point_intersects_capsule_for_texture(target_pos, obstacle_data):
 			return false
@@ -816,6 +842,19 @@ func _point_in_capsule_for_texture(point: Vector2, capsule_pos: Vector2, capsule
 				local_point.distance_to(bottom_center) <= radius)
 	else:
 		return local_point.length() <= radius
+
+# 🔧 获取角色节点的辅助方法
+func _get_character_node(character: GameCharacter):
+	"""根据角色数据获取对应的节点"""
+	if not character:
+		return null
+	
+	# 尝试通过BattleScene查找角色节点
+	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+	if battle_scene and battle_scene.has_method("_find_character_node_by_id"):
+		return battle_scene._find_character_node_by_id(character.id)
+	
+	return null
 
 func _point_in_circle_for_texture(point: Vector2, circle_pos: Vector2, circle: CircleShape2D) -> bool:
 	var distance = point.distance_to(circle_pos)

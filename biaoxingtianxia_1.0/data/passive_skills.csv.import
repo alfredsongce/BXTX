@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://byjwn4qu0mell"
+
+[deps]
+
+files=["res://data/passive_skills.name.translation", "res://data/passive_skills.description.translation", "res://data/passive_skills.effect.translation"]
+
+source_file="res://data/passive_skills.csv"
+dest_files=["res://data/passive_skills.name.translation", "res://data/passive_skills.description.translation", "res://data/passive_skills.effect.translation"]
+
+[params]
+
+compress=true
+delimiter=0

@@ -50,7 +50,7 @@ func _ready() -> void:
 func _find_component_references() -> void:
 	"""查找组件引用"""
 	# 查找BattleScene
-	battle_scene = get_node_or_null("/root/BattleScene")
+	battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene:
 		battle_scene = get_parent()
 	

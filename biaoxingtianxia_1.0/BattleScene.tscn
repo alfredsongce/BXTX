@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://b52xgjrbhdaid"]
+[gd_scene load_steps=26 format=3 uid="uid://b52xgjrbhdaid"]
 
 [ext_resource type="Script" uid="uid://t8vo420x2ral" path="res://Scripts/BattleScene.gd" id="1_ttbo7"]
 [ext_resource type="Script" uid="uid://cb1pjbgdf4lc6" path="res://Scripts/MoveRangeDisplay/MoveRangeConfig.gd" id="3_config"]
@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://b2apje2r642e7" path="res://Scripts/MoveRangeDisplay/MoveRangeController.gd" id="7_controller"]
 [ext_resource type="Script" uid="uid://drypleef3f15s" path="res://Scripts/ActionSystemNew.gd" id="8_action"]
 [ext_resource type="Script" uid="uid://dbtg7gs3xt72p" path="res://Scripts/MoveRangeDisplay/MovePreviewArea.gd" id="9_preview_area"]
-[ext_resource type="Script" uid="uid://dyh75kx3tamj8" path="res://Scripts/MoveRangeDisplay/MoveRangeValidator.gd" id="9_validator"]
 [ext_resource type="Script" uid="uid://cnhfc1l0oimui" path="res://Scripts/BattleManager.gd" id="10_battle_manager"]
 [ext_resource type="Script" uid="uid://cap64rn2tse11" path="res://Scripts/Battle/TurnManager.gd" id="11_turn_manager"]
 [ext_resource type="Script" uid="uid://bjs8q4dytq56d" path="res://Scripts/Battle/ParticipantManager.gd" id="12_participant_manager"]
@@ -27,7 +26,7 @@
 [ext_resource type="Script" uid="uid://73ell8m44daj" path="res://Scripts/ObstacleManager.gd" id="25_obstacle_manager"]
 [ext_resource type="Script" uid="uid://bk6udgex28ra8" path="res://Scripts/PositionCollisionManager.gd" id="26_position_collision_manager"]
 
-[node name="战斗场景" type="Node2D"]
+[node name="战斗场景" type="Node2D" groups=["battle_scene"]]
 texture_filter = 1
 script = ExtResource("1_ttbo7")
 
@@ -35,6 +34,8 @@ script = ExtResource("1_ttbo7")
 
 [node name="ObstacleManager" type="Node2D" parent="TheLevel"]
 script = ExtResource("25_obstacle_manager")
+
+[node name="DynamicsLevel" type="Node2D" parent="TheLevel"]
 
 [node name="Players" type="Node" parent="."]
 
@@ -81,12 +82,10 @@ script = ExtResource("26_position_collision_manager")
 
 [node name="Config" type="Node" parent="MoveRange"]
 script = ExtResource("3_config")
+ground_height_offset = 1
 
 [node name="Cache" type="Node" parent="MoveRange"]
 script = ExtResource("4_cache")
-
-[node name="Validator" type="Node2D" parent="MoveRange"]
-script = ExtResource("9_validator")
 
 [node name="Renderer" type="Node2D" parent="MoveRange"]
 script = ExtResource("5_renderer")

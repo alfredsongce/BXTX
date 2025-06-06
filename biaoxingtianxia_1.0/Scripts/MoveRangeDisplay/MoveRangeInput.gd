@@ -7,8 +7,9 @@ var _is_handling_input: bool = false
 var _input_enabled: bool = true  # 🚀 新增：输入启用状态
 var _current_character: GameCharacter = null
 var _mouse_position: Vector2 = Vector2.ZERO
-var _is_valid_position: bool = true
-var _movement_cost: float = 0.0
+# 🚀 移除冗余状态变量，统一使用PositionCollisionManager的缓存
+# var _is_valid_position: bool = true  # 已移除
+# var _movement_cost: float = 0.0      # 已移除
 
 # 🔧 性能优化
 var _last_mouse_update_time: int = 0
@@ -26,8 +27,7 @@ signal validation_changed(is_valid: bool, reason: String)
 
 # 🔧 组件引用
 var config  # 改为动态类型
-var validator: MoveRangeValidator  # 🚀 新增：验证器节点引用
-var position_collision_manager: Node2D
+var position_collision_manager: Node2D  # 🚀 统一位置碰撞管理器
 
 # 📊 统计变量
 var input_events: int = 0
@@ -44,7 +44,7 @@ func _ready():
 	
 	# 获取配置组件引用
 	call_deferred("_setup_config_reference")
-	call_deferred("_setup_validator_reference")
+	# 延迟调用position_collision_manager设置
 	call_deferred("_setup_position_collision_manager")
 	
 	print("✅ [MoveRangeInput] 移动范围输入处理器已初始化 (物理查询: %s)" % str(_use_physics_query))
@@ -56,30 +56,97 @@ func _setup_config_reference():
 	else:
 		print("✅ [MoveRangeInput] Config组件连接成功")
 
-func _setup_validator_reference():
-	validator = get_node("../Validator")
-	if not validator:
-		push_warning("[MoveRangeInput] 未找到Validator组件")
-	else:
-		print("✅ [MoveRangeInput] Validator组件连接成功")
+# 🚀 移除Validator引用设置函数（已不需要）
 
 func _setup_position_collision_manager():
 	print("🔍 [MoveRangeInput] 开始查找统一位置碰撞管理器...")
 	# 获取位置碰撞管理器引用
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene:
-		position_collision_manager = battle_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
-		if position_collision_manager:
-			print("✅ [MoveRangeInput] 成功连接到统一位置碰撞管理器!")
-			print("📍 [MoveRangeInput] 管理器路径: BattleSystems/PositionCollisionManager")
-			print("🔗 [MoveRangeInput] 管理器类型: ", position_collision_manager.get_class())
-		else:
-			print("❌ [MoveRangeInput] 警告: 未找到统一位置碰撞管理器")
-			push_error("[MoveRangeInput] 统一位置碰撞管理器不可用，系统无法正常工作")
+		print("🔍 [MoveRangeInput] 当前场景名称: ", battle_scene.name)
+		print("🔍 [MoveRangeInput] 当前场景类型: ", battle_scene.get_class())
+		
+		# 尝试多种路径查找PositionCollisionManager
+		var paths_to_try = [
+			"BattleSystems/PositionCollisionManager",
+			"PositionCollisionManager",
+			"./BattleSystems/PositionCollisionManager"
+		]
+		
+		for path in paths_to_try:
+			print("🔍 [MoveRangeInput] 尝试路径: ", path)
+			position_collision_manager = battle_scene.get_node_or_null(path)
+			if position_collision_manager:
+				print("✅ [MoveRangeInput] 成功连接到统一位置碰撞管理器!")
+				print("📍 [MoveRangeInput] 管理器路径: ", path)
+				print("🔗 [MoveRangeInput] 管理器类型: ", position_collision_manager.get_class())
+				break
+		
+		if not position_collision_manager:
+			print("🔍 [MoveRangeInput] 常规路径查找失败，尝试递归查找...")
+			position_collision_manager = _find_node_recursive(battle_scene, "PositionCollisionManager")
+			if position_collision_manager:
+				print("✅ [MoveRangeInput] 递归查找成功!")
+			else:
+				print("❌ [MoveRangeInput] 警告: 未找到统一位置碰撞管理器，尝试重试...")
+				# 延迟重试，给PositionCollisionManager更多时间初始化
+				get_tree().create_timer(0.1).timeout.connect(_retry_setup_position_collision_manager)
 	else:
 		print("❌ [MoveRangeInput] 错误: 无法获取当前场景")
 	
 	print("📊 [MoveRangeInput] 统一管理器状态: ", "已连接" if position_collision_manager else "未连接")
+
+# 重试计数器
+var _retry_count: int = 0
+var _max_retries: int = 5
+
+func _retry_setup_position_collision_manager():
+	_retry_count += 1
+	print("🔄 [MoveRangeInput] 重试连接统一位置碰撞管理器... (第%d次/共%d次)" % [_retry_count, _max_retries])
+	var battle_scene = AutoLoad.get_battle_scene()
+	if battle_scene:
+		# 尝试多种路径查找PositionCollisionManager
+		var paths_to_try = [
+			"BattleSystems/PositionCollisionManager",
+			"PositionCollisionManager",
+			"./BattleSystems/PositionCollisionManager"
+		]
+		
+		for path in paths_to_try:
+			position_collision_manager = battle_scene.get_node_or_null(path)
+			if position_collision_manager:
+				print("✅ [MoveRangeInput] 重试成功！连接到统一位置碰撞管理器")
+				print("📍 [MoveRangeInput] 管理器路径: ", path)
+				print("🔗 [MoveRangeInput] 管理器类型: ", position_collision_manager.get_class())
+				break
+		
+		if not position_collision_manager:
+			# 尝试递归查找
+			position_collision_manager = _find_node_recursive(battle_scene, "PositionCollisionManager")
+		
+		if not position_collision_manager:
+			if _retry_count < _max_retries:
+				print("⏳ [MoveRangeInput] 第%d次重试失败，将在0.5秒后再次重试..." % _retry_count)
+				get_tree().create_timer(0.5).timeout.connect(_retry_setup_position_collision_manager)
+			else:
+				print("❌ [MoveRangeInput] 所有重试都失败，统一位置碰撞管理器不可用")
+				printerr("[MoveRangeInput] 统一位置碰撞管理器不可用，系统无法正常工作")
+	else:
+		print("❌ [MoveRangeInput] 无法获取当前场景")
+	
+	print("📊 [MoveRangeInput] 统一管理器状态: ", "已连接" if position_collision_manager else "未连接")
+
+# 递归查找节点的辅助函数
+func _find_node_recursive(parent: Node, node_name: String) -> Node:
+	if parent.name == node_name:
+		return parent
+	
+	for child in parent.get_children():
+		var result = _find_node_recursive(child, node_name)
+		if result:
+			return result
+	
+	return null
 
 # 🎯 输入处理控制
 func start_input_handling(character: GameCharacter):
@@ -123,6 +190,8 @@ func _input(event):
 	# ⌨️ 键盘输入处理
 	elif event is InputEventKey and event.pressed:
 		_handle_keyboard_input(event)
+		if event.keycode == KEY_W:
+			_output_physical_validation_debug()
 
 # 🖱️ 鼠标移动处理（优化版）
 func _handle_mouse_motion(event: InputEventMouseMotion):
@@ -164,23 +233,27 @@ func _validate_target_position_async():
 	if actual_character_position == Vector2.ZERO:
 		# 无法获取节点位置时直接报错，不使用fallback
 		push_error("[MoveRangeInput] 无法获取角色实际位置，移动验证失败")
-		_is_valid_position = false
+		# 已移除 _is_valid_position 状态变量
 		return
 	
-	# 🚀 使用实际位置计算移动成本
-	_movement_cost = actual_character_position.distance_to(target_position)
+	# 🚀 优化后的验证流程 - 使用统一的PositionCollisionManager引用
+	if not position_collision_manager:
+		validation_changed.emit(false, "位置碰撞管理器不可用")
+		return
 	
-	# 🚀 使用统一的PositionCollisionManager进行验证（与MovementCoordinator保持一致）
-	var validation_result = _validate_position_comprehensive(target_position)
-	_is_valid_position = validation_result.is_valid
+	var character_node = _get_character_node(_current_character)
+	if not character_node:
+		validation_changed.emit(false, "无法找到角色节点")
+		return
+	
+	# 使用统一的验证接口获取详细结果
+	var validation_details = position_collision_manager.get_validation_details(target_position, character_node)
 	
 	# 🐛 添加详细的验证对比日志
-	# print("🔍 [显示验证] 位置: %s, 角色: %s, 验证结果: %s, 原因: %s" % [target_position, _current_character.name, validation_result.is_valid, validation_result.reason])
-
-	if not validation_result.is_valid:
-		validation_changed.emit(false, validation_result.reason)
-	else:
-		validation_changed.emit(true, "")
+	# print("🔍 [优化验证] 位置: %s, 角色: %s, 验证结果: %s, 原因: %s" % [target_position, _current_character.name, validation_details.is_valid, validation_details.reason])
+	
+	# 发送验证结果信号
+	validation_changed.emit(validation_details.is_valid, validation_details.reason)
 
 # 🚀 获取角色节点的实际位置
 func _get_character_actual_position() -> Vector2:
@@ -219,31 +292,8 @@ func _get_character_actual_position() -> Vector2:
 	# print("⚠️ [Input] 获取角色节点位置失败，返回Vector2.ZERO")  # 移除频繁打印
 	return Vector2.ZERO
 
-# 🚀 综合位置验证（使用统一的PositionCollisionManager）
-func _validate_position_comprehensive(target_position: Vector2) -> Dictionary:
-	# 获取统一的位置碰撞管理器（与MovementCoordinator使用相同路径）
-	var position_collision_manager = get_node_or_null("/root/战斗场景/BattleSystems/PositionCollisionManager")
-	# 移除频繁的管理器获取调试输出
-	if not position_collision_manager:
-		return {"is_valid": false, "reason": "位置碰撞管理器不可用"}
-	
-	# 获取角色节点（与MovementCoordinator使用相同的方式）
-	var character_node = _get_character_node(_current_character)
-	# 移除频繁的角色节点获取调试输出
-	if not character_node:
-		return {"is_valid": false, "reason": "无法找到角色节点"}
-	
-	# 使用与MovementCoordinator完全相同的验证方法
-	var validation_result = position_collision_manager.validate_position(target_position, character_node)
-	
-	# 🐛 添加详细的PositionCollisionManager验证日志
-	# print("🔍 [PositionCollisionManager验证] 位置: %s, 角色节点: %s, 验证结果: %s" % [target_position, character_node.name if character_node else "null", validation_result])
-	
-	# 转换为Dictionary格式以保持兼容性
-	if validation_result:
-		return {"is_valid": true, "reason": "位置有效"}
-	else:
-		return {"is_valid": false, "reason": "位置被统一管理器阻止"}
+# 🚀 已删除 _validate_position_comprehensive 方法
+# 该方法已被优化，现在直接使用 PositionCollisionManager.get_validation_details()
 
 # 🖱️ 鼠标点击处理
 func _handle_mouse_click(event: InputEventMouseButton):
@@ -328,11 +378,10 @@ func _confirm_move():
 	# 🚀 步骤2：使用统一的PositionCollisionManager进行验证（与MovementCoordinator保持一致）
 	var target_position = _mouse_position
 	
-	# 获取统一的位置碰撞管理器（与MovementCoordinator使用相同路径）
-	var position_collision_manager = get_node_or_null("/root/战斗场景/BattleSystems/PositionCollisionManager")
+	# 使用统一的位置碰撞管理器引用
 	print("🐛 [调试-移动确认] 获取PositionCollisionManager: %s" % ("成功" if position_collision_manager else "失败"))
 	if not position_collision_manager:
-		_is_valid_position = false
+		# 已移除 _is_valid_position 状态变量
 		validation_changed.emit(false, "位置碰撞管理器不可用")
 		print("🔥 [信号追踪] 移动确认失败：位置碰撞管理器不可用")
 		return
@@ -342,7 +391,7 @@ func _confirm_move():
 	print("🐛 [调试-移动确认] 获取角色节点: %s" % ("成功" if character_node else "失败"))
 	if not character_node:
 		print("🐛 [调试-移动确认] 无法找到角色节点")
-		_is_valid_position = false
+		# 已移除 _is_valid_position 状态变量
 		validation_changed.emit(false, "无法找到角色节点")
 		print("🔥 [信号追踪] 移动确认失败：无法找到角色节点")
 		return
@@ -355,7 +404,7 @@ func _confirm_move():
 	if not final_validation:
 		print("🐛 [调试-移动确认] 验证失败 - 使用统一验证器")
 		print("🚨 [Input] 统一验证器确认位置无效")
-		_is_valid_position = false
+		# 已移除 _is_valid_position 状态变量
 		validation_changed.emit(false, "位置被统一管理器阻止")
 		print("🔥 [信号追踪] 移动确认失败：位置被统一管理器阻止")
 		return
@@ -370,7 +419,7 @@ func _confirm_move():
 	# 🚀 步骤4：最后一道防线：确保距离不超过轻功限制
 	if final_distance > _current_character.qinggong_skill:
 		print("🐛 [调试-移动确认] 距离检查失败: %.1f > %d" % [final_distance, _current_character.qinggong_skill])
-		_is_valid_position = false
+		# 已移除 _is_valid_position 状态变量
 		validation_changed.emit(false, "移动距离超出轻功限制")
 		print("🔥 [信号追踪] 移动确认失败：移动距离超出轻功限制")
 		return
@@ -399,21 +448,43 @@ func get_current_target_position() -> Vector2:
 func get_target_height() -> float:
 	return 0.0  # 因为已经包含在position中
 
+# 🚀 优化后的位置验证 - 直接使用PositionCollisionManager
 func is_position_valid() -> bool:
-	return _is_valid_position
+	if not _current_character:
+		return false
+	
+	var target_position = get_global_mouse_position()
+	if not position_collision_manager:
+		return false
+	
+	var character_node = _get_character_node(_current_character)
+	if not character_node:
+		return false
+	
+	# 直接使用PositionCollisionManager的缓存结果
+	return position_collision_manager.validate_position(target_position, character_node)
 
+# 🚀 优化后的移动成本获取 - 直接使用PositionCollisionManager
 func get_movement_cost() -> float:
-	return _movement_cost
+	if not _current_character:
+		return 0.0
+	
+	var target_position = get_global_mouse_position()
+	var actual_character_position = _get_character_actual_position()
+	if position_collision_manager:
+		return position_collision_manager.get_movement_cost(actual_character_position, target_position)
+	return 0.0
 
 # 🚀 性能监控
+# 🚀 优化后的性能监控 - 使用新的获取方法
 func get_input_stats() -> Dictionary:
 	return {
 		"is_handling_input": _is_handling_input,
 		"mouse_update_interval": _mouse_update_interval,
 		"last_update_time": _last_mouse_update_time,
 		"target_height": 0.0,
-		"is_valid_position": _is_valid_position,
-		"movement_cost": _movement_cost
+		"is_valid_position": is_position_valid(),  # 使用新方法
+		"movement_cost": get_movement_cost()      # 使用新方法
 	}
 
 func set_mouse_update_interval(interval_ms: int):
@@ -422,23 +493,30 @@ func set_mouse_update_interval(interval_ms: int):
 
 # 🧲 地面吸附功能
 func _apply_ground_snap():
-	# 地面线位置（平台上边缘）
-	var ground_y = 1000.0
+	# 动态检测最近的平台上边缘
+	var platform_top_y = _find_nearest_platform_top()
+	if platform_top_y == null:
+		print("🧲 [Input] 吸附失败: 没有找到平台")
+		return  # 没有找到平台，不进行吸附
+	
 	# 获取实际的GroundAnchor偏移量
 	var ground_offset = _get_ground_anchor_offset()
 	# 吸附范围（像素）
 	var snap_range = 30.0
+	# Delta偏移量，避免精确贴合导致的边界检测问题
+	var snap_delta = 1.0
 	
 	# 计算角色GroundAnchor应该对齐到地面线时，鼠标应该在的位置
-	# 鼠标位置应该是角色中心位置，即地面线位置向上偏移GroundAnchor的Y值
-	var target_mouse_y = ground_y - ground_offset.y
+	# 鼠标位置应该是角色中心位置，即地面线位置向上偏移GroundAnchor的Y值，再加上Delta偏移
+	var target_mouse_y = platform_top_y - ground_offset.y - snap_delta
 	
 	# 检查鼠标是否在吸附范围内
 	var distance_to_target = abs(_mouse_position.y - target_mouse_y)
+	# print("🧲 [Input] 吸附检查: 鼠标Y=%.1f, 目标Y=%.1f, 距离=%.1f, 范围=%.1f" % [_mouse_position.y, target_mouse_y, distance_to_target, snap_range])
 	if distance_to_target <= snap_range:
 		# 设置鼠标位置为角色中心位置，这样GroundAnchor会正确对齐到地面线
 		_mouse_position.y = target_mouse_y
-		# print("🧲 [Input] 鼠标吸附到角色中心位置: Y=%.1f (GroundAnchor将对齐到地面线Y=%.1f)" % [_mouse_position.y, ground_y])
+		# print("🧲 [Input] 鼠标吸附到角色中心位置: Y=%.1f (GroundAnchor将对齐到平台顶部Y=%.1f，Delta=%.1f)" % [_mouse_position.y, platform_top_y, snap_delta])
 
 # 🔧 获取地面锚点偏移
 func _get_ground_anchor_offset() -> Vector2:
@@ -454,6 +532,46 @@ func _get_ground_anchor_offset() -> Vector2:
 	# 如果没有找到GroundAnchor，尝试从player.tscn的默认配置获取
 	# 默认偏移量（胶囊高度的一半，21像素）
 	return Vector2(0, 21.0)
+
+# 🔍 查找最近的平台顶部位置
+func _find_nearest_platform_top():
+	"""动态查找最近的PlatformObstacle的上边缘位置"""
+	# 获取障碍物管理器
+	# 通过场景树查找障碍物管理器
+	var battle_scene = AutoLoad.get_battle_scene()
+	var obstacle_manager = battle_scene.get_node_or_null("TheLevel/ObstacleManager")
+	if not obstacle_manager:
+		print("🔍 [Input] 未找到障碍物管理器")
+		return null
+	
+	# 获取所有平台障碍物
+	var platforms = []
+	for obstacle in obstacle_manager.obstacles:
+		# 检查是否是平台类型（枚举值4对应PLATFORM）
+		if obstacle.obstacle_type == Obstacle.ObstacleType.PLATFORM:
+			platforms.append(obstacle)
+	
+	# print("🔍 [Input] 找到 %d 个平台障碍物" % platforms.size())
+	if platforms.is_empty():
+		printerr("🚫 [Input] 没有找到平台障碍物")
+		return null
+	
+	# 找到最接近鼠标Y坐标的平台
+	var nearest_platform = null
+	var min_distance = INF
+	
+	for platform in platforms:
+		# 计算平台顶部Y坐标（平台位置 - 碰撞形状高度的一半）
+		var platform_top = platform.position.y - (platform.collision_shape.shape.size.y * platform.collision_shape.scale.y) / 2.0
+		var distance = abs(_mouse_position.y - platform_top)
+		# print("🔍 [Input] 平台位置: Y=%.1f, 顶部: Y=%.1f, 距离: %.1f" % [platform.position.y, platform_top, distance])
+		
+		if distance < min_distance:
+			min_distance = distance
+			nearest_platform = platform_top
+	
+	# print("🔍 [Input] 找到最近平台顶部: Y=%.1f, 距离: %.1f" % [nearest_platform, min_distance])
+	return nearest_platform
 
 # 🔧 工具方法
 func force_validate_position():
@@ -554,12 +672,12 @@ func _get_character_node(character: GameCharacter) -> Node2D:
 	
 	# 获取character_manager（与MovementCoordinator使用完全相同的方式）
 	# 首先尝试绝对路径
-	var character_manager = get_node_or_null("/root/战斗场景/BattleCharacterManager")
+	var character_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleCharacterManager") if AutoLoad.get_battle_scene() else null
 	# 移除频繁的角色节点获取调试输出
 	
 	# 如果找不到，尝试通过BattleScene获取
 	if not character_manager:
-		var battle_scene = get_node_or_null("/root/战斗场景")
+		var battle_scene = AutoLoad.get_battle_scene()
 		if battle_scene and battle_scene.has_method("get_character_manager"):
 			character_manager = battle_scene.get_character_manager()
 	
@@ -578,9 +696,9 @@ func _get_character_node(character: GameCharacter) -> Node2D:
 	
 	return character_node
 
-# 🚀 优化的位置验证流程
+# 🚀 优化的位置验证流程 - 使用PositionCollisionManager
 func _validate_position_optimized(position: Vector2, character: GameCharacter) -> Dictionary:
-	"""优化的位置验证流程，结合快速预检测和详细验证"""
+	"""优化的位置验证流程，直接使用PositionCollisionManager"""
 	# 第一步：快速碰撞预检测
 	if not _quick_collision_precheck(position, character):
 		return {
@@ -589,8 +707,23 @@ func _validate_position_optimized(position: Vector2, character: GameCharacter) -
 			"reason": "collision_detected_precheck"
 		}
 	
-	# 第二步：详细验证
-	return _validate_position_comprehensive(position)
+	# 第二步：使用统一的PositionCollisionManager引用进行详细验证
+	if not position_collision_manager:
+		return {"is_valid": false, "cost": float('inf'), "reason": "位置碰撞管理器不可用"}
+	
+	var character_node = _get_character_node(character)
+	if not character_node:
+		return {"is_valid": false, "cost": float('inf'), "reason": "无法找到角色节点"}
+	
+	var validation_details = position_collision_manager.get_validation_details(position, character_node)
+	var actual_position = _get_character_actual_position()
+	var movement_cost = position_collision_manager.get_movement_cost(actual_position, position)
+	
+	return {
+		"is_valid": validation_details.is_valid,
+		"cost": movement_cost if validation_details.is_valid else float('inf'),
+		"reason": validation_details.reason
+	}
 
 # 🐛 调试信息输出（按T键触发）
 func _output_debug_info():
@@ -608,8 +741,31 @@ func _output_debug_info():
 	if character_node:
 		print("🎭 角色节点: %s" % character_node.name)
 		print("📍 角色节点位置: %s" % character_node.global_position)
-	else:
+
+# 🐛 物理验证详细调试信息输出（按W键触发）
+func _output_physical_validation_debug():
+	if not _current_character or _mouse_position == Vector2.ZERO:
+		print("🐛 [调试-W键] 当前无角色或鼠标位置无效")
+		return
+	
+	print("\n=== 🐛 物理验证详细调试 (W键触发) ===")
+	
+	# 使用统一的PositionCollisionManager引用
+	if not position_collision_manager:
+		print("❌ 无法获取PositionCollisionManager")
+		return
+	
+	# 获取角色节点
+	var character_node = _get_character_node(_current_character)
+	if not character_node:
 		print("❌ 无法获取角色节点")
+		return
+	
+	# 调用PositionCollisionManager的详细调试方法
+	if position_collision_manager.has_method("output_physical_validation_debug"):
+		position_collision_manager.output_physical_validation_debug(_mouse_position, character_node)
+	else:
+		print("❌ PositionCollisionManager没有output_physical_validation_debug方法")
 	
 	# 轻功技能检查
 	if "qinggong_skill" in _current_character:
@@ -669,12 +825,12 @@ func _output_debug_info():
 	# 位置碰撞管理器详细调试
 	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
 	if battle_scene:
-		var position_collision_manager = battle_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
-		if position_collision_manager:
+		var collision_manager = battle_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
+		if collision_manager:
 			print("🔗 位置碰撞管理器: 已连接")
 			# 调用详细调试信息输出
-			if position_collision_manager.has_method("output_debug_info_for_position"):
-				position_collision_manager.output_debug_info_for_position(_mouse_position, character_node)
+			if collision_manager.has_method("output_debug_info_for_position"):
+				collision_manager.output_debug_info_for_position(_mouse_position, character_node)
 			else:
 				print("❌ 位置碰撞管理器没有调试信息输出方法")
 		else:

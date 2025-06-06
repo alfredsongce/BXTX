@@ -65,7 +65,7 @@ func _update_button_states(character_data):
 		return
 	
 	# 获取ActionSystem
-	var action_system = get_tree().current_scene.get_node_or_null("ActionSystem")
+	var action_system = AutoLoad.get_battle_scene().get_node_or_null("ActionSystem")
 	if not action_system:
 		return
 	

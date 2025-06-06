@@ -35,7 +35,7 @@ func _setup_position_collision_manager():
 	# 尝试获取统一位置碰撞管理器
 	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
 	if not battle_scene:
-		battle_scene = get_node_or_null("/root/战斗场景")
+		battle_scene = AutoLoad.get_battle_scene()
 	
 	if battle_scene:
 		position_collision_manager = battle_scene.get_node_or_null("BattleSystems/PositionCollisionManager")
@@ -93,7 +93,7 @@ func setup_movement_preview_area(character_node: Node2D) -> Area2D:
 	preview_area.add_child(preview_collision_shape)
 	if visual_drawer:
 		preview_area.add_child(visual_drawer)
-	get_tree().current_scene.add_child(preview_area)
+	AutoLoad.get_battle_scene().add_child(preview_area)
 	
 	# 连接信号
 	preview_area.area_entered.connect(_on_preview_collision_entered)

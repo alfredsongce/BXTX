@@ -68,7 +68,7 @@ func _initialize():
 
 # 设置外部依赖
 func _setup_dependencies():
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene:
 		# 直接通过节点路径获取BattleUIManager
 		battle_ui_manager = battle_scene.get_node_or_null("BattleSystems/BattleUIManager")

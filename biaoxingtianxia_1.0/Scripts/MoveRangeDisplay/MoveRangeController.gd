@@ -7,7 +7,7 @@ var config  # 改为动态类型
 var cache  # 改为动态类型
 var renderer  # 改为动态类型
 var input_handler  # 改为动态类型
-var validator  # 🚀 新增：验证器组件
+# validator组件已移除，现在直接使用PositionCollisionManager
 var preview_area  # 🚀 新增：Area2D预检测组件
 
 # 📡 信号 - 对外接口
@@ -53,7 +53,7 @@ func _setup_component_references():
 	cache = get_node("../Cache")
 	renderer = get_node("../Renderer")
 	input_handler = get_node("../Input")
-	validator = get_node("../Validator")  # 🚀 新增
+	# validator组件已移除
 	
 	# 🚀 新增：预览区域组件（从场景中获取）
 	preview_area = get_node("../PreviewArea")
@@ -63,7 +63,7 @@ func _setup_component_references():
 		preview_area.name = "PreviewArea"
 		get_parent().add_child(preview_area)
 	
-	if not config or not cache or not renderer or not input_handler or not validator:
+	if not config or not cache or not renderer or not input_handler:
 		push_error("[Controller] 缺少必要的子组件")
 	# else:
 		# print("🔧 [Controller] 组件引用设置完成（包含优化组件）")
@@ -104,7 +104,10 @@ func show_move_range(character: GameCharacter):
 	
 	# 🎨 UX优化：启动圆形扩张动画 + 异步计算
 	if renderer:
-		renderer.start_expanding_circle_animation(character, character.position)
+		# 🔧 修复：使用角色节点的实际位置而不是GameCharacter的position
+		var character_node = _get_character_node(character)
+		var actual_position = character_node.position if character_node else character.position
+		renderer.start_expanding_circle_animation(character, actual_position)
 	
 	# 🚀 异步清理缓存，不阻塞显示
 	call_deferred("_clear_character_related_cache_async", character)
@@ -156,12 +159,15 @@ func _calculate_range_texture_with_animation(character: GameCharacter):
 
 # 🚀 新增：带动画的后台纹理计算
 func _start_background_texture_computation_with_animation(character: GameCharacter, cache_key: String):
-	# 🚀 修复：在主线程中预先收集障碍物数据
+	# 🚀 修复：在主线程中预先收集障碍物数据和角色位置
 	var obstacles_data = _collect_obstacle_data_safely(character)
+	# 🔧 修复：在主线程中获取角色节点的实际位置
+	var character_node = _get_character_node(character)
+	var char_position = character_node.position if character_node else character.position
 	
 	# 使用WorkerThreadPool进行真正的后台计算
 	if config and config.enable_threading:
-		var callable = _compute_texture_in_background_animated.bind(character, cache_key, obstacles_data)
+		var callable = _compute_texture_in_background_animated.bind(character, cache_key, obstacles_data, char_position)
 		WorkerThreadPool.add_task(callable)
 		# print("🧵 [Controller] 启动后台纹理计算（动画模式）")
 	else:
@@ -169,15 +175,15 @@ func _start_background_texture_computation_with_animation(character: GameCharact
 		_start_framewise_computation_animated(character, cache_key)
 
 # 🚀 新增：带动画的后台纹理计算方法
-func _compute_texture_in_background_animated(character: GameCharacter, cache_key: String, obstacles_data: Array):
+func _compute_texture_in_background_animated(character: GameCharacter, cache_key: String, obstacles_data: Array, char_position: Vector2):
 	var start_time = Time.get_ticks_msec()
 	
-	# 在后台线程中计算纹理（使用预先收集的障碍物数据）
+	# 在后台线程中计算纹理（使用预先收集的障碍物数据和角色位置）
 	var texture: ImageTexture = null
 	if _should_use_gpu_computation(character):
-		texture = _calculate_range_texture_gpu_with_obstacles(character, obstacles_data)
+		texture = _calculate_range_texture_gpu_with_obstacles(character, obstacles_data, char_position)
 	else:
-		texture = _calculate_range_texture_cpu_with_obstacles(character, obstacles_data)
+		texture = _calculate_range_texture_cpu_with_obstacles(character, obstacles_data, char_position)
 	
 	var computation_time = (Time.get_ticks_msec() - start_time) / 1000.0
 	
@@ -223,20 +229,22 @@ func _collect_obstacle_data_safely(character: GameCharacter) -> Array:
 	return obstacles
 
 # 🚀 新增：带障碍物数据的CPU纹理计算
-func _calculate_range_texture_cpu_with_obstacles(character: GameCharacter, obstacles_data: Array) -> ImageTexture:
+func _calculate_range_texture_cpu_with_obstacles(character: GameCharacter, obstacles_data: Array, char_position: Vector2) -> ImageTexture:
 	if not renderer:
 		return null
 	
 	var resolution = _get_adaptive_resolution(character)
-	return renderer._compute_range_texture_cpu_with_obstacles(character, resolution, obstacles_data)
+	# 🔧 修复：传递角色地面Y坐标参数
+	var char_ground_y = character.ground_position.y
+	return renderer._compute_range_texture_cpu_with_obstacles(character, resolution, obstacles_data, char_position, char_ground_y)
 
 # 🚀 新增：带障碍物数据的GPU纹理计算
-func _calculate_range_texture_gpu_with_obstacles(character: GameCharacter, obstacles_data: Array) -> ImageTexture:
+func _calculate_range_texture_gpu_with_obstacles(character: GameCharacter, obstacles_data: Array, char_position: Vector2) -> ImageTexture:
 	if not renderer:
-		return _calculate_range_texture_cpu_with_obstacles(character, obstacles_data)
+		return _calculate_range_texture_cpu_with_obstacles(character, obstacles_data, char_position)
 	
 	var resolution = _get_adaptive_resolution(character)
-	return renderer.compute_range_texture_gpu_with_obstacles(character, resolution, obstacles_data)
+	return renderer.compute_range_texture_gpu_with_obstacles(character, resolution, obstacles_data, char_position)
 
 # 🚀 新增：纹理准备完成回调（带动画）
 func _on_texture_ready_with_animation(texture: ImageTexture, computation_time: float):
@@ -263,7 +271,13 @@ func _on_texture_ready_with_animation(texture: ImageTexture, computation_time: f
 			# print("🎨 [Controller] 纹理准备完成，等待扩张动画结束")
 		else:
 			# 扩张动画已完成或不在扩张状态，立即开始淡入
-			renderer.complete_animation_and_fade_in_texture(texture, _current_character, _current_character.position)
+			# 🔧 修复：使用角色节点的实际位置
+			var character_node = _get_character_node(_current_character)
+			var actual_position = character_node.position if character_node else _current_character.position
+			print("🎨 [DEBUG] Controller调用complete_animation - character_node: %s" % character_node)
+			print("🎨 [DEBUG] Controller调用complete_animation - actual_position: %s" % actual_position)
+			print("🎨 [DEBUG] Controller调用complete_animation - renderer当前位置: %s" % renderer.global_position)
+			renderer.complete_animation_and_fade_in_texture(texture, _current_character, actual_position)
 			_enable_input_after_animation()
 	
 	var time_str = "%.1fms" % (computation_time * 1000) if computation_time > 0 else "缓存"
@@ -382,16 +396,11 @@ func _validate_position_fast(char_pos: Vector2, target_pos: Vector2, max_range: 
 	if distance > max_range:
 		return false
 	
-	# 检查2：高度限制检查
-	var target_height = char_ground_y - target_pos.y
-	if target_height < 0 or target_height > max_range:
-		return false
-	
-	# 检查3：地面限制检查
+	# 检查2：地面限制检查
 	if target_pos.y > char_ground_y:
 		return false
 	
-	# 检查4：障碍物碰撞检查（使用预先收集的数据）
+	# 检查3：障碍物碰撞检查（使用预先收集的数据）
 	for obstacle_data in obstacles_data:
 		if _point_intersects_capsule_fast(target_pos, obstacle_data):
 			return false
@@ -488,7 +497,10 @@ func _on_background_texture_ready(texture: ImageTexture, cache_key: String, comp
 	
 	# 更新显示
 	if renderer and _current_character:
-		renderer.update_display(texture, _current_character, _current_character.position)
+		# 🔧 修复：使用角色节点的实际位置
+		var character_node = _get_character_node(_current_character)
+		var actual_position = character_node.position if character_node else _current_character.position
+		renderer.update_display(texture, _current_character, actual_position)
 	
 	# print("🧮 [Controller] 后台计算完成，用时: %.1fms" % (computation_time * 1000))
 

@@ -115,7 +115,7 @@ func start_skill_casting(skill: SkillData, caster: GameCharacter) -> void:
 	print("🎯 [可视化技能] 开始技能释放: %s (施法者: %s)" % [skill.name, caster.name])
 	
 	# 🚀 修复：通知BattleScene更新UI状态
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_method("_update_battle_ui"):
 		battle_scene._update_battle_ui("技能释放", "正在释放: %s" % skill.name, "skill_action")
 	
@@ -144,7 +144,7 @@ func cancel_skill_casting() -> void:
 	_clear_hud()
 	
 	# 🚀 修复：通知BattleScene恢复正常UI状态
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_method("_restore_current_turn_ui"):
 		battle_scene._restore_current_turn_ui()
 	
@@ -325,7 +325,7 @@ func _calculate_valid_targets() -> void:
 		return
 	
 	# 获取所有角色
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene or not battle_scene.has_method("get_all_characters"):
 		print("❌ [可视化技能] 无法获取角色列表")
 		return
@@ -448,7 +448,7 @@ func _handle_left_click() -> void:
 	_clear_hud()
 	
 	# 🚀 修复：通知BattleScene恢复正常UI状态
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_method("_restore_current_turn_ui"):
 		print("🔧 [调试] 调用battle_scene._restore_current_turn_ui()")
 		battle_scene._restore_current_turn_ui()
@@ -532,7 +532,7 @@ func _get_targets_in_area(center_position: Vector2, radius: float) -> Array:
 	var targets_in_area = []
 	
 	# 获取所有角色
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene or not battle_scene.has_method("get_all_characters"):
 		return targets_in_area
 	
@@ -675,7 +675,7 @@ func _get_targets_in_mouse_range() -> Array:
 				return []  # 没有悬停目标
 	
 	# 获取所有角色
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if not battle_scene or not battle_scene.has_method("get_all_characters"):
 		return []
 	
@@ -726,7 +726,7 @@ func _output_debug_info() -> void:
 		print("  - 圆圈存在: 否")
 	
 	print("\n📋 所有角色控制类型:")
-	var battle_scene = get_tree().current_scene
+	var battle_scene = AutoLoad.get_battle_scene()
 	if battle_scene and battle_scene.has_method("get_all_characters"):
 		var all_characters = battle_scene.get_all_characters()
 		for character in all_characters:

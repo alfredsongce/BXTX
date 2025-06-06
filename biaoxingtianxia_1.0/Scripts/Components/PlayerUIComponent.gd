@@ -219,13 +219,13 @@ func _on_action_selected(action_type: String) -> void:
 		print("🎯 [UI组件] 角色选择了技能行动")
 		
 		# 🚀 检查ActionSystem的状态，如果已经在处理技能，则不重复处理
-		var action_system = player_node.get_tree().current_scene.get_node_or_null("ActionSystem")
+		var battle_scene = AutoLoad.get_battle_scene()
+		var action_system = battle_scene.get_node_or_null("ActionSystem") if battle_scene else null
 		if action_system and action_system.current_state == action_system.SystemState.EXECUTING_ACTION:
 			print("🔧 [UI组件] ActionSystem已处理技能选择，跳过重复处理")
 			return
 		
 		# 只有当ActionSystem没有处理时，才调用BattleScene的技能菜单
-		var battle_scene = player_node.get_tree().current_scene
 		if battle_scene and battle_scene.has_method("show_skill_menu"):
 			battle_scene.show_skill_menu(character_data)
 		else:
