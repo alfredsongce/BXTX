@@ -107,7 +107,11 @@ class_name MoveRangeConfig
 # 🚀 轻功配置
 @export_group("轻功配置")
 ## 角色踩在地面上时的固定高度偏移，与轻功能力无关，单位为像素
-@export var ground_height_offset: int = 30  # 角色踩在地面上的固定高度偏移（像素）
+@export var ground_height_offset: int = 1  # 角色踩在地面上的固定高度偏移（像素）
+## 障碍物顶端自动吸附的距离阈值，单位为像素
+@export var obstacle_top_snap_distance: int = 8  # 障碍物顶端吸附距离（像素）
+## 地面平台自动吸附的距离阈值，单位为像素
+@export var ground_platform_snap_distance: int = 8  # 地面平台吸附距离（像素）
 
 
 # 🚀 性能优化配置
@@ -182,6 +186,11 @@ func _validate_configuration():
 		warnings.append("脉冲强度应在0.0-20.0之间")
 		pulse_intensity = clamp(pulse_intensity, 0.0, 20.0)
 	
+	# 🚀 验证地面平台吸附距离配置
+	if ground_platform_snap_distance < 5 or ground_platform_snap_distance > 100:
+		warnings.append("地面平台吸附距离应在5-100像素之间")
+		ground_platform_snap_distance = clamp(ground_platform_snap_distance, 5, 100)
+	
 	if warnings.size() > 0:
 		for warning in warnings:
 			push_warning("[Config] " + warning)
@@ -228,6 +237,16 @@ func set_ground_height_offset(offset: int):
 func get_ground_height_offset() -> int:
 	"""获取角色踩在地面上的固定高度偏移"""
 	return ground_height_offset
+
+func set_ground_platform_snap_distance(distance: int):
+	var old_value = ground_platform_snap_distance
+	ground_platform_snap_distance = clamp(distance, 5, 100)
+	config_changed.emit("ground_platform_snap_distance", old_value, ground_platform_snap_distance)
+	print("🔧 [Config] 地面平台吸附距离: %d像素" % ground_platform_snap_distance)
+
+func get_ground_platform_snap_distance() -> int:
+	"""获取地面平台自动吸附的距离阈值"""
+	return ground_platform_snap_distance
 
 
 

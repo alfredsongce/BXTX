@@ -284,16 +284,72 @@ func _handle_visual_skill_selection_cancelled(event_data: Dictionary) -> void:
 	else:
 		print("⚠️ [事件管理器] 技能管理器不可用或没有reset_state方法")
 	
-	# 恢复UI到行动菜单状态
-	if battle_ui_manager and battle_ui_manager.has_method("show_action_menu"):
-		var current_character = _get_current_character()
-		if current_character:
-			print("🎯 [事件管理器] 恢复行动菜单，角色: %s" % current_character.name)
-			battle_ui_manager.show_action_menu(current_character)
-		else:
-			print("⚠️ [事件管理器] 无法获取当前角色")
+	# 🚀 修复：查找技能选择协调器 (根据新的启动方式调整路径)
+	var skill_selection_coordinator_node = null
+	
+	# 尝试多种路径查找 SkillSelectionCoordinator
+	if battle_scene:
+		# 尝试直接子节点
+		skill_selection_coordinator_node = battle_scene.get_node_or_null("SkillSelectionCoordinator")
+		if not skill_selection_coordinator_node:
+			# 尝试在UI层查找
+			skill_selection_coordinator_node = battle_scene.get_node_or_null("UI/SkillSelectionCoordinator")
+		if not skill_selection_coordinator_node:
+			# 尝试在Manager层查找
+			skill_selection_coordinator_node = battle_scene.get_node_or_null("Managers/SkillSelectionCoordinator")
+	
+	# 如果还是找不到，尝试通过已有的引用
+	if not skill_selection_coordinator_node:
+		skill_selection_coordinator_node = skill_selection_coordinator
+	
+	if skill_selection_coordinator_node and skill_selection_coordinator_node.has_method("restore_action_menu"):
+		print("🔙 [事件管理器] 通过技能选择协调器恢复行动菜单")
+		skill_selection_coordinator_node.restore_action_menu()
 	else:
-		print("⚠️ [事件管理器] BattleUIManager不可用或没有show_action_menu方法")
+		print("⚠️ [事件管理器] 技能选择协调器不可用或没有restore_action_menu方法")
+		
+		# 🚀 备选方案：直接实现恢复逻辑，避免循环调用
+		_restore_action_menu_directly()
+
+func _restore_action_menu_directly() -> void:
+	"""直接恢复行动菜单，避免循环调用"""
+	print("🔙 [事件管理器] 直接恢复行动菜单")
+	
+	# 获取当前角色
+	var current_character_node = null
+	
+	# 首先尝试从 battle_scene 的 action_system 获取
+	if battle_scene and battle_scene.has_method("get") and battle_scene.get("action_system"):
+		var action_system = battle_scene.action_system
+		if action_system and action_system.selected_character:
+			current_character_node = action_system.selected_character
+			print("🔙 [事件管理器] 从ActionSystem获取角色节点")
+	
+	# 如果没有找到，尝试从 battle_manager 获取当前回合角色
+	if not current_character_node and battle_manager and battle_manager.has_method("get") and battle_manager.get("turn_manager"):
+		var turn_manager = battle_manager.turn_manager
+		if turn_manager and turn_manager.has_method("get_current_character"):
+			var current_character = turn_manager.get_current_character()
+			if current_character and battle_scene and battle_scene.has_method("_find_character_node_by_character_data"):
+				current_character_node = battle_scene._find_character_node_by_character_data(current_character)
+				print("🔙 [事件管理器] 从BattleManager获取当前回合角色: %s" % current_character.name)
+	
+	# 如果找到了角色节点，尝试恢复行动菜单
+	if current_character_node:
+		var ui_component = current_character_node.get_node_or_null("ComponentContainer/UIComponent")
+		if ui_component and ui_component.has_method("open_action_menu"):
+			print("✅ [事件管理器] 重新打开行动菜单")
+			ui_component.open_action_menu()
+		else:
+			print("⚠️ [事件管理器] 无法找到UI组件或open_action_menu方法")
+			# 最后的备选方案：重置行动系统
+			if battle_scene and battle_scene.has_method("get") and battle_scene.get("action_system"):
+				var action_system = battle_scene.action_system
+				if action_system and action_system.has_method("reset_action_system"):
+					print("🔄 [事件管理器] 重置行动系统")
+					action_system.reset_action_system()
+	else:
+		print("⚠️ [事件管理器] 无法找到当前角色节点")
 
 func _handle_character_action_completed(event_data: Dictionary) -> void:
 	"""处理角色行动完成"""

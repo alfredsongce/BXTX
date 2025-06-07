@@ -385,13 +385,13 @@ func _load_passive_skills(character_id: String) -> void:
 # 🚀 新增：检查是否拥有指定被动技能
 func has_passive_skill(skill_id: String) -> bool:
 	var has_skill = skill_id in passive_skills
-	print("🔍 [GameCharacter] 检查角色 %s 是否拥有被动技能 '%s': %s (当前技能列表: %s)" % [name, skill_id, "是" if has_skill else "否", passive_skills])
+	# 移除过度日志输出 - 技能检查时不输出
 	return has_skill
 
 # 🚀 新增：检查是否能够飞行（拥有御剑飞行技能）
 func can_fly() -> bool:
 	var flying_ability = has_passive_skill("御剑飞行")
-	print("✈️ [GameCharacter] 角色 %s 的飞行能力检查结果: %s" % [name, "可以飞行" if flying_ability else "不能飞行"])
+	# 移除过度日志输出 - 飞行能力检查时不输出
 	return flying_ability
 
 # 🚀 新增：添加被动技能

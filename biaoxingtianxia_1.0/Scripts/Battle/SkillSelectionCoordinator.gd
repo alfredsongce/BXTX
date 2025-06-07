@@ -309,23 +309,51 @@ func get_current_skill() -> SkillData:
 
 # 查找角色节点（从BattleScene迁移）
 func _find_character_node_by_character_data(character_data: GameCharacter):
+	print("🔍 [技能选择协调器] 开始查找角色节点，角色: %s" % character_data.name)
+	
 	if not character_manager:
-		return null
+		print("⚠️ [技能选择协调器] character_manager为空")
+		# 🚀 修复：如果character_manager为空，尝试重新获取
+		_setup_dependencies()
+		if not character_manager:
+			print("❌ [技能选择协调器] 无法获取character_manager")
+			return null
+	
+	print("✅ [技能选择协调器] character_manager可用")
 	
 	# 尝试从友方角色中查找
-	var ally_nodes = character_manager.get_ally_nodes()
+	var ally_nodes = character_manager.get_party_member_nodes()
+	print("🔍 [技能选择协调器] 友方角色数量: %d" % ally_nodes.size())
 	for ally_id in ally_nodes:
 		var ally_node = ally_nodes[ally_id]
 		if ally_node and ally_node.get_character_data() == character_data:
+			print("✅ [技能选择协调器] 在友方中找到角色: %s" % character_data.name)
 			return ally_node
 	
 	# 尝试从敌方角色中查找
 	var enemy_nodes = character_manager.get_enemy_nodes()
+	print("🔍 [技能选择协调器] 敌方角色数量: %d" % enemy_nodes.size())
 	for enemy_id in enemy_nodes:
 		var enemy_node = enemy_nodes[enemy_id]
 		if enemy_node and enemy_node.get_character_data() == character_data:
+			print("✅ [技能选择协调器] 在敌方中找到角色: %s" % character_data.name)
 			return enemy_node
 	
+	# 🚀 修复：如果在正常位置找不到，尝试通过所有角色查找
+	if character_manager.has_method("get_all_characters"):
+		var all_characters = character_manager.get_all_characters()
+		print("🔍 [技能选择协调器] 在所有角色中查找，总数: %d" % all_characters.size())
+		for character in all_characters:
+			if character == character_data:
+				# 找到了角色数据，现在需要找到对应的节点
+				# 通过character的ID来查找节点
+				var character_id = str(character.id)
+				var all_party_nodes = character_manager.get_party_member_nodes()
+				if character_id in all_party_nodes:
+					print("✅ [技能选择协调器] 通过ID在队伍成员中找到角色节点: %s" % character_data.name)
+					return all_party_nodes[character_id]
+	
+	print("⚠️ [技能选择协调器] 未能找到角色节点: %s" % character_data.name)
 	return null
 
 # 恢复行动菜单（从BattleScene迁移的逻辑）
@@ -335,23 +363,45 @@ func restore_action_menu() -> void:
 	# 获取当前角色节点
 	var character_node = null
 	
+	# 🚀 修复：增强节点查找逻辑，适应从Main场景启动的情况
+	
 	# 首先尝试从ActionSystem获取选中的角色
 	if action_system and action_system.selected_character:
 		character_node = action_system.selected_character
-		print("🔙 [技能选择协调器] 从ActionSystem获取角色节点")
+		print("🔙 [技能选择协调器] 从ActionSystem获取角色节点: %s" % character_node.name)
 	else:
 		# 如果ActionSystem的选中角色为空，从BattleManager获取当前回合角色
 		if battle_manager and battle_manager.turn_manager:
 			var current_character_data = battle_manager.turn_manager.get_current_character()
 			if current_character_data:
+				print("🔍 [技能选择协调器] 从BattleManager获取角色数据: %s" % current_character_data.name)
 				character_node = _find_character_node_by_character_data(current_character_data)
-				print("🔙 [技能选择协调器] 从BattleManager获取当前回合角色: %s" % current_character_data.name)
+				if character_node:
+					print("🔙 [技能选择协调器] 从BattleManager获取当前回合角色: %s" % current_character_data.name)
+				else:
+					print("⚠️ [技能选择协调器] 无法通过角色数据找到角色节点")
 				
 				# 重新设置ActionSystem的状态
-				if action_system:
+				if action_system and character_node:
 					action_system.selected_character = character_node
 					action_system.current_state = ActionSystemScript.SystemState.SELECTING_ACTION
 					print("🔧 [技能选择协调器] 重新设置ActionSystem状态")
+	
+	# 🚀 如果还是找不到，尝试通过current_character（可能在初始化时设置过）
+	if not character_node and current_character:
+		print("🔍 [技能选择协调器] 尝试通过current_character查找节点: %s" % current_character.name)
+		character_node = _find_character_node_by_character_data(current_character)
+		if character_node:
+			print("✅ [技能选择协调器] 通过current_character找到角色节点")
+	
+	# 🚀 最后的备选方案：尝试通过BattleScene直接查找
+	if not character_node:
+		print("🔍 [技能选择协调器] 尝试通过BattleScene查找角色节点")
+		var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+		if battle_scene and battle_scene.has_method("get_current_turn_character_node"):
+			character_node = battle_scene.get_current_turn_character_node()
+			if character_node:
+				print("✅ [技能选择协调器] 通过BattleScene找到当前回合角色节点")
 	
 	if character_node:
 		print("🔙 [技能选择协调器] 技能选择取消，重新显示行动菜单")
@@ -362,9 +412,15 @@ func restore_action_menu() -> void:
 			print("✅ [技能选择协调器] 重新打开行动菜单")
 			ui_component.open_action_menu()
 		else:
-			print("⚠️ [技能选择协调器] 无法恢复行动菜单，重置行动系统")
+			print("⚠️ [技能选择协调器] 无法找到UI组件或open_action_menu方法")
+			print("🔍 [调试] 角色节点: %s" % character_node)
+			print("🔍 [调试] UI组件: %s" % ui_component)
 			# 最后的备选方案
 			if action_system:
+				print("🔄 [技能选择协调器] 重置行动系统作为备选方案")
 				action_system.reset_action_system()
 	else:
 		print("⚠️ [技能选择协调器] 无法找到当前角色节点")
+		print("🔍 [调试] battle_manager: %s" % (battle_manager != null))
+		print("🔍 [调试] action_system: %s" % (action_system != null))
+		print("🔍 [调试] character_manager: %s" % (character_manager != null))

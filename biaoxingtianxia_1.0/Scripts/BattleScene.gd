@@ -498,14 +498,14 @@ func _input(event):
 	if event is InputEventKey and event.pressed:
 		if event.keycode == KEY_F12:
 			if obstacle_manager:
-				obstacle_manager.regenerate_obstacles()
+				obstacle_manager._register_existing_obstacles()
 			else:
 				pass
 		# 🚀 按Q键刷新障碍物
-		elif event.keycode == KEY_Q:
+		elif event.keycode == KEY_R:
 			if obstacle_manager:
-				print("🔄 [BattleScene] Q键触发 - 重新生成障碍物")
-				obstacle_manager.regenerate_obstacles()
+				print("🔄 [BattleScene] R键触发 - 重新扫描障碍物")
+				obstacle_manager._register_existing_obstacles()
 			else:
 				printerr("❌ [BattleScene] 障碍物管理器不存在")
 		# 🚀 按W键输出障碍物系统状态信息（不刷新障碍物）
@@ -1197,10 +1197,8 @@ func _on_visual_skill_cast_completed(skill: SkillData, caster: GameCharacter, ta
 		await skill_manager._execute_skill(targets)
 
 func _on_visual_skill_selection_cancelled() -> void:
-	# 委托给BattleEventManager处理
-	if battle_event_manager and battle_event_manager.has_method("_on_visual_skill_selection_cancelled"):
-		battle_event_manager._on_visual_skill_selection_cancelled()
-	else:
+	# 🚀 修复：不再委托给BattleEventManager，避免循环调用
+	# BattleEventManager会通过信号机制自动处理，这里直接执行本地逻辑
 		# 回退到原有逻辑
 		print("❌ [可视化技能选择器] 技能选择被取消")
 		

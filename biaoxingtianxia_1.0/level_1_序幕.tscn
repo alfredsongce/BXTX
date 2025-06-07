@@ -14,8 +14,9 @@ position = Vector2(1000, 1005)
 scale = Vector2(10, 1)
 
 [node name="TestPlatformObstacle" parent="Obstacles" instance=ExtResource("1_platform")]
-position = Vector2(500, 1005)
+position = Vector2(500, 905)
 scale = Vector2(3, 1)
+obstacle_color = Color(0.501961, 0.137255, 0.501961, 1)
 
 [node name="RockObstacle1" parent="Obstacles" instance=ExtResource("2_rock")]
 position = Vector2(400, 980)

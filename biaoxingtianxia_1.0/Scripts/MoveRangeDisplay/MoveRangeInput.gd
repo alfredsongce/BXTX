@@ -36,7 +36,7 @@ var successful_validations: int = 0
 var failed_validations: int = 0
 
 func _ready():
-	print("🎮 [MoveRangeInput] 移动范围输入处理器初始化开始")
+	# 移除过度日志输出 - 初始化时不输出
 	
 	# 🚀 初始化物理空间
 	_physics_space = get_world_2d().direct_space_state
@@ -47,7 +47,7 @@ func _ready():
 	# 延迟调用position_collision_manager设置
 	call_deferred("_setup_position_collision_manager")
 	
-	print("✅ [MoveRangeInput] 移动范围输入处理器已初始化 (物理查询: %s)" % str(_use_physics_query))
+	# 移除过度日志输出 - 初始化完成时不输出
 
 func _setup_config_reference():
 	config = get_node("../Config")
@@ -150,7 +150,7 @@ func _find_node_recursive(parent: Node, node_name: String) -> Node:
 
 # 🎯 输入处理控制
 func start_input_handling(character: GameCharacter):
-	print("\n🎮 [MoveRangeInput] 开始输入处理")
+	# 移除过度日志输出 - 开始输入时不输出
 	print("👤 [MoveRangeInput] 处理角色: ", character.name if character else "null", " (ID: ", character.id if character else "null", ")")
 	
 	if not character:
@@ -173,7 +173,7 @@ func stop_input_handling():
 # 🎯 输入启用控制
 func set_input_enabled(enabled: bool):
 	_input_enabled = enabled
-	print("🎮 [MoveRangeInput] 输入状态设置为: ", "启用" if enabled else "禁用")
+	# 移除过度日志输出 - 状态切换时不输出
 
 func _input(event):
 	if not _is_handling_input or not _current_character or not _input_enabled:
@@ -247,7 +247,36 @@ func _validate_target_position_async():
 		return
 	
 	# 使用统一的验证接口获取详细结果
+	# 移除过度日志输出 - 调用验证时不输出
 	var validation_details = position_collision_manager.get_validation_details(target_position, character_node)
+	# 移除过度日志输出 - 验证结果时不输出
+	
+	# 🔧 修复：保持真实鼠标位置，不要被调整后位置覆盖
+	if validation_details.is_valid and validation_details.has("adjusted_position"):
+		var adjusted_pos = validation_details.adjusted_position
+		if adjusted_pos != target_position:
+			# 🎯 关键修复：保持_mouse_position为真实鼠标位置，不要替换为调整后位置
+			# 这样Renderer就能收到真实的原始位置和调整后位置，实现"所见即所得"的视觉效果
+			# _mouse_position = adjusted_pos  # ❌ 删除这行！这是问题根源
+			# 发送位置更新信号（使用调整后位置用于实际移动）
+			mouse_moved.emit(adjusted_pos)
+			# 移除过度日志 - 仅在按键调试时输出
+			if Input.is_key_pressed(KEY_D):
+				print("🔍 [调试] 已发送mouse_moved信号，位置: %s" % adjusted_pos)
+			# 验证渲染器是否存在 - 移除过度日志
+			var renderer = get_node("../Renderer")
+			if not renderer and Input.is_key_pressed(KEY_D):
+				print("🚨 [错误] 渲染器不存在！")
+		else:
+			# 移除过度日志输出 - 位置无需调整时不输出
+			pass
+	else:
+		if validation_details.is_valid:
+			# 移除过度日志输出 - 验证通过但无调整位置时不输出
+			pass
+		else:
+			# 移除过度日志输出 - 验证失败时不输出，只在F2调试时显示
+			pass
 	
 	# 🐛 添加详细的验证对比日志
 	# print("🔍 [优化验证] 位置: %s, 角色: %s, 验证结果: %s, 原因: %s" % [target_position, _current_character.name, validation_details.is_valid, validation_details.reason])
@@ -312,9 +341,19 @@ func _handle_keyboard_input(event: InputEventKey):
 		KEY_ESCAPE:
 			_cancel_move()
 		
+		KEY_C:  # 清空缓存
+			_clear_position_cache()
 
 		KEY_T:  # 调试信息输出
 			_output_debug_info()
+		
+		KEY_D:  # 按住D键移动鼠标可查看详细的位置更新调试信息
+			if event.pressed:
+				print("🔍 [调试模式] 按住D键移动鼠标可查看详细的位置更新流程")
+		
+		KEY_Q:  # Q键调试WALL障碍物吸附问题
+			if event.pressed:
+				_debug_wall_obstacle_snap()
 
 # 🎯 调整鼠标高度（简化版）
 func _adjust_mouse_height(delta_y: float):
@@ -365,7 +404,7 @@ func _toggle_batch_mode():
 func _confirm_move():
 	print("🔥 [信号追踪] ========== _confirm_move() 开始执行 ==========\n")
 	print("🔥 [信号追踪] 调用栈信息: %s" % str(get_stack()))
-	print("🎮 [Input] 确认移动到: %s" % _mouse_position)
+	# 移除过度日志输出 - 确认移动时不输出位置信息
 	
 	if not _current_character or _mouse_position == Vector2.ZERO:
 		print("🔥 [信号追踪] 移动确认失败：角色或位置无效")
@@ -501,8 +540,8 @@ func _apply_ground_snap():
 	
 	# 获取实际的GroundAnchor偏移量
 	var ground_offset = _get_ground_anchor_offset()
-	# 吸附范围（像素）
-	var snap_range = 30.0
+	# 🚀 第三步修复：从配置文件获取吸附范围
+	var snap_range = float(_get_ground_platform_snap_distance())  # 吸附范围（像素）
 	# Delta偏移量，避免精确贴合导致的边界检测问题
 	var snap_delta = 1.0
 	
@@ -520,18 +559,34 @@ func _apply_ground_snap():
 
 # 🔧 获取地面锚点偏移
 func _get_ground_anchor_offset() -> Vector2:
-	"""获取GroundAnchor节点的偏移量"""
-	# 从当前角色节点获取GroundAnchor
-	if _current_character:
-		var character_node = _get_character_node(_current_character)
-		if character_node:
-			var ground_anchor = character_node.get_node_or_null("GroundAnchor")
-			if ground_anchor:
-				return ground_anchor.position
+	"""从当前角色节点获取GroundAnchor偏移量"""
+	if not _current_character:
+		push_error("当前角色为空，无法获取GroundAnchor")
+		return Vector2.ZERO
 	
-	# 如果没有找到GroundAnchor，尝试从player.tscn的默认配置获取
-	# 默认偏移量（胶囊高度的一半，21像素）
-	return Vector2(0, 21.0)
+	var character_node = _get_character_node(_current_character)
+	if not character_node:
+		push_error("无法获取角色节点，无法获取GroundAnchor")
+		return Vector2.ZERO
+	
+	var ground_anchor = character_node.get_node_or_null("GroundAnchor")
+	if ground_anchor:
+		# 移除过度日志输出 - 只在按键调试时输出
+		return ground_anchor.position
+	else:
+		push_error("角色 %s 缺少GroundAnchor节点" % character_node.name)
+		return Vector2.ZERO  # 🚀 强制要求每个角色都有GroundAnchor
+
+# 🚀 第三步修复：获取地面平台吸附距离
+func _get_ground_platform_snap_distance() -> int:
+	"""从配置文件获取地面平台吸附距离"""
+	# 尝试从config获取
+	var config = get_node("../Config")
+	if config and config.has_method("get_ground_platform_snap_distance"):
+		return config.get_ground_platform_snap_distance()
+	else:
+		print("⚠️ [Input] 无法获取ground_platform_snap_distance配置，使用默认值: 30像素")
+		return 30  # 默认值
 
 # 🔍 查找最近的平台顶部位置
 func _find_nearest_platform_top():
@@ -748,7 +803,10 @@ func _output_physical_validation_debug():
 		print("🐛 [调试-W键] 当前无角色或鼠标位置无效")
 		return
 	
+	var target_position = _mouse_position
 	print("\n=== 🐛 物理验证详细调试 (W键触发) ===")
+	print("🎯 目标位置: %s" % target_position)
+	print("👤 当前角色: %s (ID: %s)" % [_current_character.name, _current_character.id])
 	
 	# 使用统一的PositionCollisionManager引用
 	if not position_collision_manager:
@@ -761,21 +819,84 @@ func _output_physical_validation_debug():
 		print("❌ 无法获取角色节点")
 		return
 	
+	print("🏃 角色节点位置: %s" % character_node.position)
+	
+	# GroundAnchor偏移测试
+	var ground_anchor_offset = position_collision_manager.get_character_ground_anchor_offset(character_node)
+	print("📍 GroundAnchor偏移量: %s" % ground_anchor_offset)
+	print("📍 目标位置的GroundAnchor实际位置: %s" % (target_position + ground_anchor_offset))
+	
+	# 轻功范围检查调试
+	print("\n🏃 轻功范围检查:")
+	var character_position = character_node.position
+	var distance = character_position.distance_to(target_position)
+	var max_range = _current_character.qinggong_skill
+	print("  - 距离: %.1f" % distance)
+	print("  - 限制: %d" % max_range)
+	print("  - 结果: %s" % ("✅通过" if distance <= max_range else "❌失败"))
+	
+	# 地面约束验证调试
+	print("\n🏔️ 地面约束验证:")
+	print("  - 开始验证位置: %s" % target_position)
+	
+	# 获取角色数据
+	var character_data = null
+	if character_node.has_method("get_character_data"):
+		character_data = character_node.get_character_data()
+		print("  - 角色数据获取: %s" % ("✅成功" if character_data else "❌失败"))
+	else:
+		print("  - 角色数据获取: ❌角色节点没有get_character_data方法")
+	
+	# 飞行能力检查
+	if character_data and character_data.has_method("can_fly"):
+		var can_fly = character_data.can_fly()
+		print("  - 飞行能力检查: %s" % ("✅可以飞行" if can_fly else "❌不能飞行"))
+		if can_fly:
+			print("  - ✈️ 角色拥有飞行能力，跳过地面约束检查")
+	else:
+		print("  - 飞行能力检查: ❌角色数据无效或没有can_fly方法")
+	
+	# 🎯 第二步验证：统一高度差计算基准
+	print("\n🎯 [第二步验证] 统一高度差计算基准:")
+	var ground_anchor_position = target_position + ground_anchor_offset
+	print("  - GroundAnchor位置计算: %s + %s = %s" % [target_position, ground_anchor_offset, ground_anchor_position])
+	print("  - ✅ 第二步修复生效：高度差计算基于GroundAnchor位置")
+	
+	# 🎯 第三步验证：统一吸附距离配置
+	print("\n🎯 [第三步验证] 统一吸附距离配置:")
+	var platform_snap_distance = _get_ground_platform_snap_distance()
+	print("  - 地面平台吸附距离: %d像素" % platform_snap_distance)
+	var config = get_node("../Config")
+	if config and config.has_method("get_ground_platform_snap_distance"):
+		print("  - ✅ 第三步修复生效：从配置文件读取吸附距离")
+		print("  - 配置路径: ../Config.ground_platform_snap_distance")
+	else:
+		print("  - ⚠️ 使用默认值，配置文件不可用")
+	
+	# 位置验证详细信息
+	print("\n🔍 位置验证调试:")
+	var validation_details = position_collision_manager.get_validation_details(target_position, character_node)
+	print("  - 调用get_validation_details - 位置: %s, 角色: %s" % [target_position, character_node.name])
+	print("  - 🔧 内部使用GroundAnchor位置: %s 进行表面检测" % ground_anchor_position)
+	print("  - 验证结果: %s" % validation_details)
+	
+	if validation_details.is_valid and validation_details.has("adjusted_position"):
+		var adjusted_pos = validation_details.adjusted_position
+		if adjusted_pos != target_position:
+			print("  - 🧲 位置吸附调整: %s -> %s" % [target_position, adjusted_pos])
+		else:
+			print("  - ✅ 验证通过，位置无需调整")
+	else:
+		if validation_details.is_valid:
+			print("  - ⚠️ 验证通过但没有adjusted_position字段")
+		else:
+			print("  - ❌ 验证失败: %s" % validation_details.reason)
+	
 	# 调用PositionCollisionManager的详细调试方法
 	if position_collision_manager.has_method("output_physical_validation_debug"):
 		position_collision_manager.output_physical_validation_debug(_mouse_position, character_node)
 	else:
 		print("❌ PositionCollisionManager没有output_physical_validation_debug方法")
-	
-	# 轻功技能检查
-	if "qinggong_skill" in _current_character:
-		var qinggong_skill = _current_character.qinggong_skill
-		var distance = _current_character.position.distance_to(_mouse_position)
-		print("🏃 轻功技能值: %d" % qinggong_skill)
-		print("📏 移动距离: %.1f" % distance)
-		print("✅ 轻功检查结果: %s" % ("通过" if distance <= qinggong_skill else "失败"))
-	else:
-		print("❌ 角色没有轻功技能属性")
 	
 	# 获取预览区域的X号显示状态
 	# 获取MovePreviewArea管理器实例
@@ -839,4 +960,545 @@ func _output_physical_validation_debug():
 		print("❌ 战斗场景: 未找到")
 	
 	print("=== 调试信息输出结束 ===\n")
- 
+
+# 🧹 清空位置缓存
+func _clear_position_cache():
+	if position_collision_manager and position_collision_manager.has_method("clear_cache"):
+		position_collision_manager.clear_cache()
+		print("🧹 [MoveRangeInput] 位置缓存已清空")
+	else:
+		print("❌ [MoveRangeInput] 无法清空缓存：位置碰撞管理器未找到或方法不存在")
+
+# 🧱 障碍物吸附调试（按Q键触发）
+func _debug_wall_obstacle_snap():
+	print("\n=== 🏗️ 障碍物吸附问题调试 (Q键触发) ===")
+	
+	# 获取PositionCollisionManager
+	if not position_collision_manager:
+		print("❌ 无法找到PositionCollisionManager")
+		return
+	
+	# 获取玩家角色
+	if not _current_character:
+		print("❌ 当前无选中角色")
+		return
+	
+	var character_node = _get_character_node(_current_character)
+	if not character_node:
+		print("❌ 无法获取角色节点")
+		return
+	
+	print("✅ 找到PositionCollisionManager和玩家角色")
+	
+	# 查找所有障碍物
+	var all_obstacles = _find_all_obstacles()
+	if all_obstacles.is_empty():
+		print("❌ 场景中未找到任何障碍物")
+		return
+	
+	print("✅ 找到 %d 个障碍物:" % all_obstacles.size())
+	var wall_obstacles = []
+	var platform_obstacles = []
+	
+	for i in range(all_obstacles.size()):
+		var obstacle = all_obstacles[i]
+		print("  [%d] %s 位置: %s, 碰撞层: %d" % [i, obstacle.name, obstacle.global_position, obstacle.collision_layer])
+		
+		if obstacle.name.contains("WALL"):
+			wall_obstacles.append(obstacle)
+		elif obstacle.name.contains("PLATFORM"):
+			platform_obstacles.append(obstacle)
+	
+	# 只测试平台障碍物
+	if not platform_obstacles.is_empty():
+		var test_platform = platform_obstacles[0]
+		print("\n🏢 选择平台障碍物进行测试: %s (位置: %s)" % [test_platform.name, test_platform.global_position])
+		_test_obstacle_snap(test_platform, character_node, "PLATFORM")
+	else:
+		print("❌ 没有找到平台障碍物")
+	
+	print("\n=== 障碍物吸附调试完成 ===\n")
+	
+	# 🔍 关键问题调试（简化版）
+	print("=== 🔍 关键问题调试 ===")
+	var current_pos = character_node.global_position
+	print("📍 角色当前位置: %s" % current_pos)
+	
+	# 获取角色轻功值
+	var character_data = character_node.get_character_data() if character_node.has_method("get_character_data") else null
+	if character_data and "qinggong_skill" in character_data:
+		print("⚡ 角色轻功值: %d" % character_data.qinggong_skill)
+	
+	# 测试实际鼠标位置验证
+	var mouse_pos = get_global_mouse_position()
+	print("\n🏢 测试鼠标位置 %s:" % mouse_pos)
+	var platform_test_pos = mouse_pos
+	
+	# 手动计算轻功范围
+	var distance = current_pos.distance_to(platform_test_pos)
+	if character_data and "qinggong_skill" in character_data:
+		var max_range = character_data.qinggong_skill
+		print("  📏 计算距离: %.2f像素 (当前位置%s -> 目标位置%s)" % [distance, current_pos, platform_test_pos])
+		print("  ⚡ 轻功范围: %d像素" % max_range)
+		print("  📊 距离比较: %s" % ("✅在范围内" if distance <= max_range else "❌超出范围"))
+		
+		# 详细调试轻功验证逻辑
+		print("\\n🔍 详细轻功验证:")
+		print("  角色节点类型: %s" % character_node.get_class())
+		print("  角色节点有get_character_data方法: %s" % character_node.has_method("get_character_data"))
+		if character_node.has_method("get_character_data"):
+			var test_character_data = character_node.get_character_data()
+			print("  get_character_data返回: %s" % test_character_data)
+			if test_character_data:
+				print("  轻功值属性存在: %s" % ("qinggong_skill" in test_character_data))
+				if "qinggong_skill" in test_character_data:
+					print("  轻功值: %d" % test_character_data.qinggong_skill)
+					print("  计算验证: %.2f %s %d = %s" % [distance, ">" if distance > test_character_data.qinggong_skill else "<=", test_character_data.qinggong_skill, "超出范围" if distance > test_character_data.qinggong_skill else "在范围内"])
+	
+	var validation_result = position_collision_manager.get_validation_details(platform_test_pos, character_node)
+	print("  验证结果: %s" % ("✅有效" if validation_result.is_valid else "❌无效"))
+	print("  验证原因: %s" % validation_result.reason)
+	
+	# 手动测试地面约束验证
+	print("\n🔍 详细地面约束验证:")
+	if position_collision_manager.has_method("_get_ground_anchor_position"):
+		var ground_anchor_pos = position_collision_manager._get_ground_anchor_position(platform_test_pos, character_node)
+		print("  GroundAnchor位置: %s" % ground_anchor_pos)
+		
+		if position_collision_manager.has_method("_check_unified_surface"):
+			var surface_result = position_collision_manager._check_unified_surface(ground_anchor_pos)
+			print("  表面检测结果: %s" % ("✅有效" if surface_result.is_valid else "❌无效"))
+			print("  表面类型: %s" % surface_result.surface_type)
+			print("  表面Y坐标: %.1f" % surface_result.surface_y)
+			
+			if surface_result.has("collider") and surface_result.collider:
+				print("  碰撞体: %s" % surface_result.collider.name)
+	
+	# 直接调用轻功范围验证函数
+	print("\n🔍 直接轻功验证测试:")
+	if position_collision_manager.has_method("_validate_qinggong_range"):
+		var qinggong_result = position_collision_manager._validate_qinggong_range(platform_test_pos, character_node)
+		print("  轻功验证结果: %s" % ("✅通过" if qinggong_result else "❌失败"))
+	else:
+		print("  无法访问_validate_qinggong_range方法")
+	
+	# 直接检查平台障碍物的碰撞形状
+	print("\n🔍 检查平台碰撞形状:")
+	var platform_obstacles_check = _find_all_obstacles()
+	for obstacle in platform_obstacles_check:
+		if "PLATFORM" in obstacle.name and obstacle.global_position.x == 1000.0:
+			print("  平台: %s, 位置: %s" % [obstacle.name, obstacle.global_position])
+			for child in obstacle.get_children():
+				if child is CollisionShape2D and child.shape is RectangleShape2D:
+					var shape = child.shape
+					var actual_top = obstacle.global_position.y - shape.size.y / 2.0
+					print("  实际顶部Y: %.1f, 形状大小: %.0fx%.0f" % [actual_top, shape.size.x, shape.size.y])
+			break
+	
+	print("=== 关键问题调试完成 ===\n")
+
+# 🔍 查找场景中的WALL类型障碍物
+func _find_wall_obstacles() -> Array:
+	var wall_obstacles = []
+	
+	# 查找战斗场景
+	var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+	if not battle_scene:
+		print("❌ 无法找到战斗场景")
+		return wall_obstacles
+	
+	print("✅ 找到战斗场景: %s" % battle_scene.name)
+	
+	# 递归搜索所有节点，查找WALL类型障碍物
+	_find_wall_obstacles_recursive(battle_scene, wall_obstacles)
+	
+	return wall_obstacles
+
+# 🔍 递归查找WALL障碍物
+func _find_wall_obstacles_recursive(node: Node, wall_obstacles: Array) -> void:
+	# 检查当前节点是否是WALL障碍物
+	if node.name.contains("WALL") and node is StaticBody2D:
+		wall_obstacles.append(node)
+		print("🎯 找到WALL障碍物: %s (位置: %s)" % [node.name, node.global_position])
+	
+	# 递归检查子节点
+	for child in node.get_children():
+		_find_wall_obstacles_recursive(child, wall_obstacles)
+
+# 🎯 获取障碍物顶部吸附距离配置
+func _get_obstacle_top_snap_distance() -> int:
+	var config = get_node("../Config")
+	if config and config.has_method("get_obstacle_top_snap_distance"):
+		return config.get_obstacle_top_snap_distance()
+	else:
+		return 8  # 默认值
+
+# 🔍 查找场景中的所有障碍物
+func _find_all_obstacles() -> Array:
+	var obstacles = []
+	_find_all_obstacles_recursive(get_tree().current_scene, obstacles)
+	return obstacles
+
+# 递归查找所有障碍物
+func _find_all_obstacles_recursive(node: Node, obstacles: Array):
+	# 检查当前节点是否是障碍物
+	if (node.name.contains("Obstacle") or node.name.contains("WALL") or node.name.contains("PLATFORM")) and (node is RigidBody2D or node is StaticBody2D):
+		obstacles.append(node)
+	
+	# 递归搜索子节点
+	for child in node.get_children():
+		_find_all_obstacles_recursive(child, obstacles)
+
+# 🧪 测试单个障碍物的吸附效果
+func _test_obstacle_snap(obstacle: Node, character_node: Node2D, obstacle_type: String):
+	# 获取障碍物的碰撞体信息
+	var collision_shape = null
+	for child in obstacle.get_children():
+		if child is CollisionShape2D:
+			collision_shape = child
+			break
+	
+	if not collision_shape:
+		print("❌ %s障碍物没有碰撞体" % obstacle_type)
+		return
+	
+	var shape = collision_shape.shape
+	if not shape:
+		print("❌ %s障碍物碰撞体没有形状" % obstacle_type)
+		return
+	
+	print("✅ %s碰撞体类型: %s" % [obstacle_type, shape.get_class()])
+	
+	# 计算障碍物顶部位置
+	var obstacle_top_y = obstacle.global_position.y
+	if shape is RectangleShape2D:
+		obstacle_top_y = obstacle.global_position.y - shape.size.y / 2.0
+		print("📏 %s顶部Y坐标: %.1f (RectangleShape2D)" % [obstacle_type, obstacle_top_y])
+	else:
+		print("⚠️ 非RectangleShape2D类型，使用障碍物中心Y坐标")
+	
+	# 获取GroundAnchor偏移
+	var ground_anchor_offset = position_collision_manager.get_character_ground_anchor_offset(character_node)
+	print("📍 角色GroundAnchor偏移: %s" % ground_anchor_offset)
+	
+	# 在障碍物顶部附近测试不同高度的吸附效果
+	var obstacle_x = obstacle.global_position.x
+	var test_positions = [
+		Vector2(obstacle_x, obstacle_top_y - 20),  # 障碍物顶部上方20像素
+		Vector2(obstacle_x, obstacle_top_y - 10),  # 障碍物顶部上方10像素
+		Vector2(obstacle_x, obstacle_top_y - 5),   # 障碍物顶部上方5像素
+		Vector2(obstacle_x, obstacle_top_y - 1),   # 障碍物顶部上方1像素
+		Vector2(obstacle_x, obstacle_top_y),       # 障碍物顶部精确位置
+		Vector2(obstacle_x, obstacle_top_y + 1),   # 障碍物顶部下方1像素
+		Vector2(obstacle_x, obstacle_top_y + 5),   # 障碍物顶部下方5像素
+		Vector2(obstacle_x, obstacle_top_y + 10),  # 障碍物顶部下方10像素
+	]
+	
+	print("\n🔍 在%s顶部附近测试吸附效果:" % obstacle_type)
+	for i in range(test_positions.size()):
+		var test_pos = test_positions[i]
+		var ground_anchor_pos = test_pos + ground_anchor_offset
+		var height_diff = ground_anchor_pos.y - obstacle_top_y
+		
+		print("\n  [测试%d] 角色位置: %s" % [i+1, test_pos])
+		print("         GroundAnchor位置: %s" % ground_anchor_pos)
+		print("         与%s顶部高度差: %.1f像素" % [obstacle_type, height_diff])
+		
+		# 使用PositionCollisionManager验证位置
+		var validation_result = position_collision_manager.get_validation_details(test_pos, character_node)
+		print("         验证结果: %s" % ("✅有效" if validation_result.is_valid else "❌无效"))
+		print("         验证原因: %s" % validation_result.reason)
+		
+		if validation_result.is_valid and validation_result.has("adjusted_position"):
+			var adjusted_pos = validation_result.adjusted_position
+			if adjusted_pos != test_pos:
+				var adjustment = adjusted_pos - test_pos
+				print("         🧲 位置调整: %s -> %s (调整量: %s)" % [test_pos, adjusted_pos, adjustment])
+			else:
+				print("         ✅ 位置无需调整")
+		
+		# 检查是否识别为障碍物顶部
+		if validation_result.has("surface_type"):
+			print("         表面类型: %s" % validation_result.surface_type)
+		
+		# 分析吸附距离
+		var obstacle_snap_distance = _get_obstacle_top_snap_distance()
+		print("         障碍物顶部吸附距离配置: %d像素" % obstacle_snap_distance)
+		
+		if abs(height_diff) <= obstacle_snap_distance:
+			print("         🎯 在吸附范围内 (≤%d像素)" % obstacle_snap_distance)
+		else:
+			print("         🚫 超出吸附范围 (>%d像素)" % obstacle_snap_distance)
+
+# 🥋 轻功范围问题调试
+func _debug_movement_range_issue(character_node: Node2D):
+	print("🎯 开始轻功范围问题调试...")
+	
+	# 获取角色当前位置
+	var current_pos = character_node.global_position
+	print("📍 角色当前位置: %s" % current_pos)
+	
+	# 获取角色数据
+	var character_data = null
+	if character_node.has_method("get_character_data"):
+		character_data = character_node.get_character_data()
+	elif "character_data" in character_node:
+		character_data = character_node.character_data
+	
+	if character_data:
+		print("✅ 成功获取角色数据: %s" % character_data.get_class())
+		
+		# 安全地获取角色属性
+		if "qinggong_skill" in character_data:
+			print("⚡ 角色轻功值: %d" % character_data.qinggong_skill)
+		elif "movement_points" in character_data:
+			print("⚡ 角色轻功值: %d" % character_data.movement_points)
+		elif "light_skill_points" in character_data:
+			print("⚡ 角色轻功值: %d" % character_data.light_skill_points)
+		elif character_data.has_method("get_movement_points"):
+			print("⚡ 角色轻功值: %d" % character_data.get_movement_points())
+		else:
+			print("❓ 未找到轻功值属性")
+		
+		if "name" in character_data:
+			print("👤 角色名称: %s" % character_data.name)
+		elif character_data.has_method("get_name"):
+			print("👤 角色名称: %s" % character_data.get_name())
+		else:
+			print("❓ 未找到角色名称")
+			
+		# 列出所有可用属性
+		print("🔍 角色数据可用属性:")
+		if character_data.has_method("get_property_list"):
+			var props = character_data.get_property_list()
+			for prop in props:
+				if prop.has("name"):
+					print("  - %s" % prop.name)
+	else:
+		print("❌ 无法获取角色数据")
+		print("🔍 角色节点类型: %s" % character_node.get_class())
+		print("🔍 角色节点名称: %s" % character_node.name)
+		
+		# 尝试获取轻功组件
+		if character_node.has_method("get_movement_component"):
+			var movement_comp = character_node.get_movement_component()
+			if movement_comp:
+				print("📱 找到移动组件: %s" % movement_comp.get_class())
+		
+		# 尝试查找子节点中的数据
+		for child in character_node.get_children():
+			if "character" in child.name.to_lower() or "data" in child.name.to_lower():
+				print("🔍 找到可能的数据子节点: %s (%s)" % [child.name, child.get_class()])
+	
+	# 测试几个简单的地面位置
+	var test_positions = [
+		current_pos + Vector2(0, 0),      # 当前位置
+		current_pos + Vector2(50, 0),     # 右侧50像素
+		current_pos + Vector2(-50, 0),    # 左侧50像素
+		current_pos + Vector2(0, 50),     # 下方50像素
+		current_pos + Vector2(0, -50),    # 上方50像素
+	]
+	
+	print("\n🔍 测试简单地面位置的轻功范围验证:")
+	for i in range(test_positions.size()):
+		var test_pos = test_positions[i]
+		var offset_desc = ""
+		if i == 0: offset_desc = "当前位置"
+		elif i == 1: offset_desc = "右侧50px"
+		elif i == 2: offset_desc = "左侧50px"
+		elif i == 3: offset_desc = "下方50px"
+		elif i == 4: offset_desc = "上方50px"
+		
+		print("\n  [轻功测试%d] %s: %s" % [i+1, offset_desc, test_pos])
+		
+		# 使用PositionCollisionManager验证
+		var validation_result = position_collision_manager.get_validation_details(test_pos, character_node)
+		print("         验证结果: %s" % ("✅有效" if validation_result.is_valid else "❌无效"))
+		print("         验证原因: %s" % validation_result.reason)
+		
+		# 如果有详细信息，输出更多调试数据
+		if validation_result.has("details"):
+			print("         详细信息: %s" % validation_result.details)
+		
+		# 检查是否有轻功范围相关的信息
+		if validation_result.has("movement_cost"):
+			print("         移动消耗: %s" % validation_result.movement_cost)
+		if validation_result.has("remaining_movement"):
+			print("         剩余轻功: %s" % validation_result.remaining_movement)
+	
+	# 检查缓存状态
+	print("\n🧹 检查缓存状态:")
+	if position_collision_manager.has_method("get_cache_stats"):
+		var cache_stats = position_collision_manager.get_cache_stats()
+		print("  缓存统计: %s" % cache_stats)
+	else:
+		print("  缓存统计方法不可用")
+	
+	# 强制清空缓存重试
+	print("\n🔄 清空缓存后重新测试:")
+	_clear_position_cache()
+	
+	# 重新测试当前位置
+	var retry_result = position_collision_manager.get_validation_details(current_pos, character_node)
+	print("  当前位置重试结果: %s" % ("✅有效" if retry_result.is_valid else "❌无效"))
+	print("  重试验证原因: %s" % retry_result.reason)
+	
+	print("=== 轻功范围问题调试完成 ===\n")
+	
+	# 🚨 地面约束问题深度调试
+	print("=== 🚨 地面约束问题深度调试 ===")
+	_debug_ground_constraint_issue(character_node)
+
+# 🚨 地面约束问题深度调试
+func _debug_ground_constraint_issue(character_node: Node2D):
+	print("🚨 开始地面约束问题调试...")
+	
+	var current_pos = character_node.global_position
+	print("📍 当前角色位置: %s" % current_pos)
+	
+	# 获取GroundAnchor偏移
+	var ground_anchor_offset = position_collision_manager.get_character_ground_anchor_offset(character_node)
+	var ground_anchor_pos = current_pos + ground_anchor_offset
+	print("⚓ GroundAnchor偏移: %s" % ground_anchor_offset)
+	print("⚓ GroundAnchor位置: %s" % ground_anchor_pos)
+	
+	# 检查地面高度配置
+	var config = get_node("../Config")
+	if config:
+		print("\n📋 地面约束配置检查:")
+		if config.has_method("get_ground_height_offset"):
+			var ground_height_offset = config.get_ground_height_offset()
+			print("  ground_height_offset: %s" % ground_height_offset)
+		if config.has_method("get_ground_platform_snap_distance"):
+			var snap_distance = config.get_ground_platform_snap_distance()
+			print("  ground_platform_snap_distance: %s" % snap_distance)
+	
+	# 使用PositionCollisionManager的内部调试方法
+	print("\n🔍 使用PositionCollisionManager内部调试:")
+	if position_collision_manager.has_method("debug_ground_constraint_at_position"):
+		position_collision_manager.debug_ground_constraint_at_position(current_pos, character_node)
+	elif position_collision_manager.has_method("output_physical_validation_debug"):
+		position_collision_manager.output_physical_validation_debug(current_pos, character_node)
+	else:
+		print("❌ PositionCollisionManager没有调试方法")
+	
+	# 手动检查物理空间
+	print("\n🌍 手动物理空间检查:")
+	var space_state = get_world_2d().direct_space_state
+	if space_state:
+		# 在GroundAnchor位置向下检测
+		var query = PhysicsRayQueryParameters2D.create(
+			ground_anchor_pos,
+			ground_anchor_pos + Vector2(0, 100)  # 向下100像素
+		)
+		query.collision_mask = 31  # 检测所有层
+		
+		var result = space_state.intersect_ray(query)
+		if result:
+			var hit_object = result.collider
+			print("  ✅ 检测到碰撞:")
+			print("    碰撞对象: %s" % hit_object.name)
+			print("    碰撞位置: %s" % result.position)
+			print("    碰撞距离: %.1f像素" % ground_anchor_pos.distance_to(result.position))
+			print("    碰撞层: %d" % hit_object.collision_layer)
+			
+			# 检查是否是地面平台
+			if hit_object.collision_layer & 1:  # 检查第1层（地面平台）
+				print("    🏢 这是地面平台 (层1)")
+			elif hit_object.collision_layer & 8:  # 检查第4层（障碍物）
+				print("    🧱 这是障碍物 (层4)")
+			else:
+				print("    ❓ 未知碰撞层类型")
+		else:
+			print("  ❌ 没有检测到任何碰撞")
+			print("    GroundAnchor可能悬空!")
+	
+	print("=== 地面约束问题调试完成 ===\n")
+	
+	# 🧪 测试平台位置验证
+	print("=== 🧪 测试已知平台位置验证 ===")
+	var platform_positions = [
+		Vector2(500.0, 978.0),   # 平台1上方
+		Vector2(1000.0, 978.0),  # 平台2上方
+	]
+	
+	for i in range(platform_positions.size()):
+		var test_pos = platform_positions[i]
+		print("\n🏢 测试平台%d位置: %s" % [i+1, test_pos])
+		
+		var validation_result = position_collision_manager.get_validation_details(test_pos, character_node)
+		print("  验证结果: %s" % ("✅有效" if validation_result.is_valid else "❌无效"))
+		print("  验证原因: %s" % validation_result.reason)
+		
+		# 检查这个位置的GroundAnchor
+		var test_ground_anchor_pos = test_pos + ground_anchor_offset
+		print("  GroundAnchor位置: %s" % test_ground_anchor_pos)
+		
+		# 手动检测这个位置下方的地面
+		var test_space_state = get_world_2d().direct_space_state
+		var query = PhysicsRayQueryParameters2D.create(
+			test_ground_anchor_pos,
+			test_ground_anchor_pos + Vector2(0, 50)
+		)
+		query.collision_mask = 31
+		var result = test_space_state.intersect_ray(query)
+		if result:
+			print("  ✅ 检测到地面: %s, 距离: %.1f像素" % [result.collider.name, test_ground_anchor_pos.distance_to(result.position)])
+		else:
+			print("  ❌ 没有检测到地面")
+	
+	print("=== 平台位置测试完成 ===\n")
+	
+	# 🔍 直接检查平台障碍物
+	print("=== 🔍 直接检查平台障碍物 ===")
+	var all_obstacles = _find_all_obstacles()
+	for obstacle in all_obstacles:
+		if "PLATFORM" in obstacle.name:
+			print("\n🏢 检查平台: %s" % obstacle.name)
+			print("  位置: %s" % obstacle.global_position)
+			print("  碰撞层: %d" % obstacle.collision_layer)
+			
+			# 获取碰撞形状
+			for child in obstacle.get_children():
+				if child is CollisionShape2D:
+					var shape = child.shape
+					if shape is RectangleShape2D:
+						var size = shape.size
+						var actual_top = obstacle.global_position.y - size.y / 2.0
+						var actual_bottom = obstacle.global_position.y + size.y / 2.0
+						print("  碰撞形状: 矩形 %.0fx%.0f" % [size.x, size.y])
+						print("  实际顶部Y: %.1f" % actual_top)
+						print("  实际底部Y: %.1f" % actual_bottom)
+						
+						# 测试从GroundAnchor到平台顶部的检测
+						var test_from = Vector2(obstacle.global_position.x, 990.0)  # 平台上方10像素
+						var test_to = Vector2(obstacle.global_position.x, actual_bottom + 10)  # 平台底部下方10像素
+						
+						print("  🔍 测试射线从 %s 到 %s" % [test_from, test_to])
+						var test_space = get_world_2d().direct_space_state
+						var ray_query = PhysicsRayQueryParameters2D.create(test_from, test_to)
+						ray_query.collision_mask = 31
+						
+						var ray_result = test_space.intersect_ray(ray_query)
+						if ray_result:
+							print("  ✅ 射线命中: %s 在 %s" % [ray_result.collider.name, ray_result.position])
+						else:
+							print("  ❌ 射线未命中任何对象")
+						
+						# 测试形状检测
+						var shape_query = PhysicsShapeQueryParameters2D.new()
+						var test_shape = RectangleShape2D.new()
+						test_shape.size = Vector2(10, 10)
+						shape_query.shape = test_shape
+						shape_query.transform = Transform2D(0, Vector2(obstacle.global_position.x, actual_top - 5))
+						shape_query.collision_mask = 31
+						
+						var shape_results = test_space.intersect_shape(shape_query)
+						if shape_results.size() > 0:
+							print("  ✅ 形状检测命中 %d 个对象" % shape_results.size())
+							for result in shape_results:
+								print("    - %s" % result.collider.name)
+						else:
+							print("  ❌ 形状检测未命中")
+	
+	print("=== 平台障碍物检查完成 ===\n")

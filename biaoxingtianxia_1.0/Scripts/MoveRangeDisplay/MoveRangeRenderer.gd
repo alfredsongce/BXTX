@@ -98,10 +98,21 @@ func hide_range():
 	# print("🎨 [Renderer] 隐藏移动范围")
 
 func update_mouse_indicator(mouse_pos: Vector2):
+	# 🔍 [调试] 按D键输出详细的渲染器更新信息
+	if Input.is_key_pressed(KEY_D):
+		print("🔍 [Renderer] 更新前_mouse_position: %s" % _mouse_position)
+		print("🔍 [Renderer] 接收到新位置: %s" % mouse_pos)
+	
 	_mouse_position = mouse_pos
+	
+	if Input.is_key_pressed(KEY_D):
+		print("🔍 [Renderer] 更新后_mouse_position: %s" % _mouse_position)
 	
 	# 检查位置有效性
 	var is_valid = _check_mouse_position_validity()
+	
+	if Input.is_key_pressed(KEY_D):
+		print("🔍 [Renderer] 位置有效性: %s" % is_valid)
 	
 	# 🐛 调试X号显示问题
 	# 调试输出已禁用以减少控制台输出
@@ -113,6 +124,9 @@ func update_mouse_indicator(mouse_pos: Vector2):
 	
 	# 触发重绘
 	queue_redraw()
+	
+	if Input.is_key_pressed(KEY_D):
+		print("🔍 [Renderer] 已触发重绘和信号发送")
 	
 	mouse_indicator_updated.emit(mouse_pos)
 
@@ -393,7 +407,8 @@ func _draw():
 	else:
 		_draw_static_border(local_center)
 	
-	# 原有的鼠标指示器已移除，现在使用可视化碰撞体作为指示器
+	# 🎯 绘制增强的鼠标指示器（显示当前位置和调整后位置）
+	_draw_enhanced_mouse_indicator()
 
 # 🎨 增强的范围纹理绘制
 func _draw_enhanced_range_texture(local_center: Vector2):
@@ -486,52 +501,84 @@ func _draw_enhanced_mouse_indicator():
 	if _mouse_position == Vector2.ZERO or not _current_character:
 		return
 	
-	var local_target = to_local(_mouse_position)
-	var circle_radius: float = 20.0
+	# 🎯 关键修复：使用真实鼠标位置作为原始位置，而不是可能被污染的_mouse_position
+	var real_mouse_position = get_global_mouse_position()
+	var validation_result = _get_position_validation_with_adjustment(real_mouse_position)
+	var original_position = real_mouse_position  # 使用真实鼠标位置
+	var adjusted_position = validation_result.get("adjusted_position", original_position)
+	var is_valid_position = validation_result.get("is_valid", false)
 	
-	# 🚀 关键增强：根据位置有效性确定颜色
-	var is_valid_position = _check_mouse_position_validity()
-	var base_color = Color.GREEN if is_valid_position else Color.RED
+	# 🔧 调试输出：检查吸附效果
+	var position_adjusted = original_position.distance_to(adjusted_position) > 1.0
+	if Input.is_key_pressed(KEY_F3):  # 按F3键显示详细的渲染调试信息
+		print("\n🎨 [Renderer调试] 鼠标指示器渲染:")
+		print("  - 原始位置: %s" % original_position)
+		print("  - 调整位置: %s" % adjusted_position)
+		print("  - 位置是否调整: %s" % position_adjusted)
+		print("  - 位置是否有效: %s" % is_valid_position)
+		if validation_result.has("reason"):
+			print("  - 验证原因: %s" % validation_result.reason)
 	
-	# 🚀 增强的脉冲动画
-	if config and config.is_visual_effects_enabled():
-		var pulse = sin(_visual_effects_time * 4.0) * 0.3 + 0.7
-		circle_radius *= pulse
-		
-		# 根据有效性选择颜色效果
-		if is_valid_position:
-			# 可移动位置：彩虹颜色效果
-			var hue = fmod(_visual_effects_time * 0.5, 1.0)
-			base_color = Color.from_hsv(hue, 0.8, 1.0)
-		else:
-			# 不可移动位置：红色脉冲警告
-			var warning_intensity = sin(_visual_effects_time * 8.0) * 0.3 + 0.7
-			base_color = Color.RED * warning_intensity
+	# 转换为本地坐标
+	var local_original = to_local(original_position)
+	var local_adjusted = to_local(adjusted_position)
 	
-	if circle_radius > 0:
-		# 外圈半透明
-		draw_circle(local_target, circle_radius, Color(base_color.r, base_color.g, base_color.b, 0.3))
+	# 🎨 简化视觉效果：与平台障碍物保持一致，只显示白色胶囊
+	# 不再绘制复杂的圆圈、箭头等，让预览胶囊自然出现在调整后位置即可
+	
+	if Input.is_key_pressed(KEY_F3):
+		print("🎨 [Renderer调试] 鼠标指示器渲染完成\n")
+
+# 🎯 获取位置验证信息，包括调整后的位置
+func _get_position_validation_with_adjustment(position: Vector2) -> Dictionary:
+	"""获取位置验证信息，包括调整后的位置"""
+	if not position_collision_manager or not _current_character:
+		if Input.is_key_pressed(KEY_F3):
+			print("🚨 [Renderer] 缺少position_collision_manager或_current_character")
+		return {"is_valid": false, "adjusted_position": position}
+	
+	# 🔧 修复：获取角色对应的节点，而不是直接传递GameCharacter资源
+	var character_node = _get_character_node(_current_character)
+	if not character_node:
+		if Input.is_key_pressed(KEY_F3):
+			print("🚨 [Renderer] 无法找到角色节点，角色ID: %s" % _current_character.id)
+		return {"is_valid": false, "adjusted_position": position}
+	
+	# 🔧 F3调试：显示详细的验证调用过程
+	if Input.is_key_pressed(KEY_F3):
+		# 🎯 用户建议：读取真实的实时鼠标坐标作为对比
+		var real_mouse_pos = get_global_mouse_position()
+		print("🔧 [Renderer] 调用position_collision_manager.get_validation_details:")
+		print("  - 📍 真实鼠标位置: %s" % real_mouse_pos)
+		print("  - 📊 传入验证位置: %s" % position)  
+		print("  - 🎭 角色节点: %s" % character_node.name)
+		if real_mouse_pos != position:
+			print("  - ⚠️ 位置差异: %.1f像素" % real_mouse_pos.distance_to(position))
 		
-		# 边框
-		var border_width = 4.0 if not is_valid_position else 3.0
-		draw_arc(local_target, circle_radius, 0, 2 * PI, 32, base_color, border_width)
+		# 🔧 临时启用PositionCollisionManager的调试模式
+		position_collision_manager.debug_obstacle_detection = true
+	
+	# 🔧 直接使用传入的position进行验证（现在传入的是真实鼠标位置）
+	if Input.is_key_pressed(KEY_F3):
+		print("🔧 [Renderer] 直接使用真实鼠标位置进行验证: %s" % position)
+	
+	# 调用位置碰撞管理器获取详细验证信息
+	var validation_details = position_collision_manager.get_validation_details(position, character_node)
+	
+	# 🔧 F3调试：显示返回的验证结果
+	if Input.is_key_pressed(KEY_F3):
+		print("🔧 [Renderer] 收到验证结果:")
+		print("  - is_valid: %s" % validation_details.get("is_valid", false))
+		print("  - adjusted_position: %s" % validation_details.get("adjusted_position", "无"))
+		print("  - reason: %s" % validation_details.get("reason", "无"))
+		if validation_details.has("adjusted_position"):
+			var adjustment_distance = position.distance_to(validation_details.adjusted_position)
+			print("  - 调整距离: %.1f像素 (相对于实际验证位置)" % adjustment_distance)
 		
-		# 中心点
-		draw_circle(local_target, 4 if not is_valid_position else 3, base_color)
-		
-		# 🚀 十字标记
-		var cross_size = 10.0 if not is_valid_position else 8.0
-		var cross_width = 3.0 if not is_valid_position else 2.0
-		draw_line(local_target + Vector2(-cross_size, 0), local_target + Vector2(cross_size, 0), base_color, cross_width)
-		draw_line(local_target + Vector2(0, -cross_size), local_target + Vector2(0, cross_size), base_color, cross_width)
-		
-		# 🚀 无效位置额外警告标记
-		if not is_valid_position:
-			var x_size = 6.0
-			var x_color = Color.WHITE
-			# 绘制X标记
-			draw_line(local_target + Vector2(-x_size, -x_size), local_target + Vector2(x_size, x_size), x_color, 2.0)
-			draw_line(local_target + Vector2(-x_size, x_size), local_target + Vector2(x_size, -x_size), x_color, 2.0)
+		# 🔧 恢复PositionCollisionManager的调试模式
+		position_collision_manager.debug_obstacle_detection = false
+	
+	return validation_details
 
 # 🚀 检查鼠标位置的移动有效性（简化版）
 func _check_mouse_position_validity() -> bool:

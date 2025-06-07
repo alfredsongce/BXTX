@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvq8x7y2n8wqr"]
+
+[ext_resource type="Script" path="res://Scripts/ObstacleTopMovementTest.gd" id="1_x8k9m"]
+
+[node name="ObstacleTopMovementTestScene" type="Node2D"]
+script = ExtResource("1_x8k9m")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(250, 150)
+zoom = Vector2(0.5, 0.5)

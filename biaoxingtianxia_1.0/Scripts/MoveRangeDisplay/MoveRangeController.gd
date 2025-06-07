@@ -672,11 +672,44 @@ func _on_move_cancelled():
 	hide_move_range()
 
 func _on_mouse_moved(position: Vector2):
+	# 🔍 [调试] 按D键输出详细的鼠标移动调试信息 - 移除过度日志输出
+	if Input.is_key_pressed(KEY_D):
+		print("🔍 [Controller] 接收到mouse_moved信号，位置: %s" % position)
+	
+	# 🎨 更新渲染器鼠标位置
+	if renderer:
+		if Input.is_key_pressed(KEY_D):
+			print("🔍 [Controller] 更新渲染器前，渲染器鼠标位置: %s" % renderer._mouse_position)
+		renderer.update_mouse_indicator(position)
+		if Input.is_key_pressed(KEY_D):
+			print("🔍 [Controller] 更新渲染器后，渲染器鼠标位置: %s" % renderer._mouse_position)
+	else:
+		if Input.is_key_pressed(KEY_D):
+			print("🚨 [Controller] 渲染器不存在！")
+	
 	# 🎨 更新可视化碰撞体位置
 	if preview_area:
-		preview_area.update_preview_position(position)
+		# 🎯 统一视觉效果：预览胶囊应该显示在调整后的位置（如果有调整的话）
+		# 获取位置验证详情以确定最终位置
+		if renderer and renderer.position_collision_manager and _current_character:
+			var character_node = renderer._get_character_node(_current_character)
+			if character_node:
+				var validation_details = renderer.position_collision_manager.get_validation_details(position, character_node)
+				if validation_details.is_valid and validation_details.has("adjusted_position"):
+					# 使用调整后的位置显示预览胶囊
+					preview_area.update_preview_position(validation_details.adjusted_position)
+				else:
+					# 使用原始位置
+					preview_area.update_preview_position(position)
+			else:
+				preview_area.update_preview_position(position)
+		else:
+			preview_area.update_preview_position(position)
+	
+	# 🐛 调试：在鼠标移动时触发验证以查看障碍物顶端吸附日志
+		# 移除过度日志输出 - 不在鼠标移动时进行验证输出
+	pass
 		
-
 func _on_texture_ready(texture: ImageTexture):
 	# 纹理计算完成的回调
 	if renderer:
