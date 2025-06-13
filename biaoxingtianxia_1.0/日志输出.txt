@@ -1,0 +1,913 @@
+Godot Engine v4.4.1.stable.official.49a5bc7b6 - https://godotengine.org
+Vulkan 1.4.303 - Forward Mobile - Using Device #0: NVIDIA - NVIDIA GeForce RTX 4090
+
+🚀 [DataManager] 开始初始化数据管理器
+🔍 [DataManager] load_data被调用，数据类型: character
+📋 [DataManager] 当前加载状态: false
+🔍 [DataManager] 开始处理数据类型: character
+📋 [DataManager] 请检查路径配置文件: res://data/PathConfiguration.csv
+🗂️ [DataManager] 加载路径配置: res://data/PathConfiguration.csv
+📋 [DataManager] 使用英文表头: ["path_type", "path_key", "file_path", "description"]
+📝 [DataManager] 跳过中文注释行: ["路径类型", "路径键", "文件路径", "描述"]
+📁 [DataManager] 注册路径: data.character -> res://data/CharacterData.csv
+📁 [DataManager] 注册路径: data.skills -> res://data/skill_database.csv
+📁 [DataManager] 注册路径: data.skill_learning -> res://data/skill_learning.csv
+📁 [DataManager] 注册路径: data.passive_skills -> res://data/passive_skills.csv
+📁 [DataManager] 注册路径: data.character_passive_skills -> res://data/character_passive_skills.csv
+📁 [DataManager] 注册路径: data.level_configuration -> res://data/LevelConfiguration.csv
+📁 [DataManager] 注册路径: data.spawn_configuration -> res://data/SpawnConfiguration.csv
+📁 [DataManager] 注册路径: data.items -> res://data/Items.csv
+📁 [DataManager] 注册路径: scene.player -> res://player.tscn
+📁 [DataManager] 注册路径: scene.action_menu -> res://UI/ActionMenu.tscn
+📁 [DataManager] 注册路径: scene.character_tooltip -> res://UI/CharacterTooltip.tscn
+📁 [DataManager] 注册路径: scene.target_selection_menu -> res://UI/TargetSelectionMenu.tscn
+📁 [DataManager] 注册路径: scene.level_sequence -> res://Scenes/Levels/LEVEL_1_序幕.tscn
+📁 [DataManager] 注册路径: script.action_system -> res://Scripts/ActionSystemNew.gd
+📁 [DataManager] 注册路径: script.collision_shape_drawer -> res://Scripts/CollisionShapeDrawer.gd
+📁 [DataManager] 注册路径: script.skill_range_display -> res://Scripts/SkillRangeDisplay.gd
+📁 [DataManager] 注册路径: script.visual_skill_selector -> res://UI/VisualSkillSelector.gd
+📁 [DataManager] 注册路径: script.visual_skill_caster -> res://Scripts/VisualSkillCaster.gd
+📁 [DataManager] 注册路径: script.skill_casting_hud -> res://UI/SkillCastingHUD.gd
+📁 [DataManager] 注册路径: script.menu_helper -> res://Scripts/MenuHelper.gd
+✅ [DataManager] 路径配置加载完成，共 20 个路径
+🚀 [DataManager] 开始加载角色数据，文件路径: res://data/CharacterData.csv
+📋 [DataManager] 使用英文表头: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+📝 [DataManager] 跳过中文注释行: ["角色ID", "角色名称", "最大生命值", "攻击力", "防御力", "等级", "轻功值", "场景文件路径"]
+📊 [DataManager] CSV数据加载完成，共 6 行数据
+🔍 [DataManager] 处理第 0 行数据: { "id": "1", "name": "觉远", "max_hp": "150", "attack": "25", "defense": "15", "level": "1", "qinggong_skill": "280", "scene_path": "res://Scenes/Characters/Party/JueYuan.tscn" }
+🔍 [DataManager] 可用的字段名: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+🆔 [DataManager] 提取角色ID: '1'
+📋 [DataManager] 加载角色数据: ID=1, 名称=觉远, 等级=1, 轻功=280
+🔍 [DataManager] 处理第 1 行数据: { "id": "2", "name": "柳生", "max_hp": "40", "attack": "8", "defense": "1", "level": "", "qinggong_skill": "280", "scene_path": "res://Scenes/Characters/Party/LiuSheng.tscn" }
+🔍 [DataManager] 可用的字段名: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+🆔 [DataManager] 提取角色ID: '2'
+📋 [DataManager] 加载角色数据: ID=2, 名称=柳生, 等级=1, 轻功=280
+🔍 [DataManager] 处理第 2 行数据: { "id": "3", "name": "兰斯洛特", "max_hp": "120", "attack": "30", "defense": "12", "level": "1", "qinggong_skill": "120", "scene_path": "res://Scenes/Characters/Party/Lancelot.tscn" }
+🔍 [DataManager] 可用的字段名: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+🆔 [DataManager] 提取角色ID: '3'
+📋 [DataManager] 加载角色数据: ID=3, 名称=兰斯洛特, 等级=1, 轻功=120
+🔍 [DataManager] 处理第 3 行数据: { "id": "101", "name": "山贼头目", "max_hp": "80", "attack": "20", "defense": "8", "level": "2", "qinggong_skill": "400", "scene_path": "res://Scenes/Characters/Enemies/Bandit_101.tscn" }
+🔍 [DataManager] 可用的字段名: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+🆔 [DataManager] 提取角色ID: '101'
+📋 [DataManager] 加载角色数据: ID=101, 名称=山贼头目, 等级=2, 轻功=400
+🔍 [DataManager] 处理第 4 行数据: { "id": "102", "name": "野狼", "max_hp": "60", "attack": "15", "defense": "5", "level": "1", "qinggong_skill": "400", "scene_path": "res://Scenes/Characters/Enemies/Wolf_102.tscn" }
+🔍 [DataManager] 可用的字段名: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+🆔 [DataManager] 提取角色ID: '102'
+📋 [DataManager] 加载角色数据: ID=102, 名称=野狼, 等级=1, 轻功=400
+🔍 [DataManager] 处理第 5 行数据: { "id": "103", "name": "骷髅战士", "max_hp": "70", "attack": "18", "defense": "10", "level": "1", "qinggong_skill": "400", "scene_path": "res://Scenes/Characters/Enemies/Skeleton_103.tscn" }
+🔍 [DataManager] 可用的字段名: ["id", "name", "max_hp", "attack", "defense", "level", "qinggong_skill", "scene_path"]
+🆔 [DataManager] 提取角色ID: '103'
+📋 [DataManager] 加载角色数据: ID=103, 名称=骷髅战士, 等级=1, 轻功=400
+✅ [DataManager] 角色数据加载完成，共加载 6 个角色
+📝 [DataManager] 已加载的角色ID列表: ["1", "2", "3", "101", "102", "103"]
+🔍 [DataManager] load_data被调用，数据类型: skills
+📋 [DataManager] 当前加载状态: false
+🔍 [DataManager] 开始处理数据类型: skills
+📋 [DataManager] 请检查路径配置文件: res://data/PathConfiguration.csv
+📋 [DataManager] 使用英文表头: ["id", "name", "description", "mp_cost", "cooldown", "cast_time", "targeting_type", "targeting_range", "range_type", "range_distance", "target_type", "effect_ids", "damage_formula", "base_damage", "animation_id", "sound_id"]
+📝 [DataManager] 跳过中文注释行: ["技能ID", "技能名称", "技能描述", "MP消耗", "冷却时间", "施法时间", "目标选择类型", "目标选择范围", "范围类型", "范围距离", "目标类型", "效果ID列表", "伤害公式", "基础伤害", "动画ID", "音效ID"]
+🔍 [DataManager] load_data被调用，数据类型: skill_learning
+📋 [DataManager] 当前加载状态: false
+🔍 [DataManager] 开始处理数据类型: skill_learning
+📋 [DataManager] 请检查路径配置文件: res://data/PathConfiguration.csv
+📚 [DataManager] 加载技能学习配置: res://data/skill_learning.csv
+📋 [DataManager] 使用英文表头: ["character_id", "skill_id", "learn_type", "learn_level", "description"]
+📝 [DataManager] 跳过中文注释行: ["角色ID", "技能ID", "学习类型", "学习等级", "描述说明"]
+✅ [DataManager] 技能学习配置加载完成，共 20 条记录
+🔍 [DataManager] load_data被调用，数据类型: passive_skills
+📋 [DataManager] 当前加载状态: false
+🔍 [DataManager] 开始处理数据类型: passive_skills
+📋 [DataManager] 请检查路径配置文件: res://data/PathConfiguration.csv
+🎯 [DataManager] 加载被动技能配置: res://data/passive_skills.csv
+📋 [DataManager] 使用英文表头: ["id", "name", "description", "effect_type"]
+📝 [DataManager] 跳过中文注释行: ["技能ID", "技能名称", "技能描述", "效果类型"]
+🔍 [DataManager] CSV数据行数: 8
+📋 [DataManager] 第1行数据: { "id": "御剑飞行", "name": "御剑飞行", "description": "能够御剑在空中飞行无视地面约束", "effect_type": "flight" }
+✅ [DataManager] 成功解析技能: { "id": "御剑飞行", "name": "御剑飞行", "description": "能够御剑在空中飞行无视地面约束", "effect_type": "flight" }
+📋 [DataManager] 第2行数据: { "id": "铁布衫", "name": "铁布衫", "description": "提高物理防御力", "effect_type": "defense" }
+✅ [DataManager] 成功解析技能: { "id": "铁布衫", "name": "铁布衫", "description": "提高物理防御力", "effect_type": "defense" }
+📋 [DataManager] 第3行数据: { "id": "内力深厚", "name": "内力深厚", "description": "增加法力上限", "effect_type": "mana" }
+✅ [DataManager] 成功解析技能: { "id": "内力深厚", "name": "内力深厚", "description": "增加法力上限", "effect_type": "mana" }
+📋 [DataManager] 第4行数据: { "id": "轻功大师", "name": "轻功大师", "description": "增加移动距离", "effect_type": "movement" }
+✅ [DataManager] 成功解析技能: { "id": "轻功大师", "name": "轻功大师", "description": "增加移动距离", "effect_type": "movement" }
+📋 [DataManager] 第5行数据: { "id": "凌波微步", "name": "凌波微步", "description": "提高闪避能力", "effect_type": "dodge" }
+✅ [DataManager] 成功解析技能: { "id": "凌波微步", "name": "凌波微步", "description": "提高闪避能力", "effect_type": "dodge" }
+📋 [DataManager] 第6行数据: { "id": "金钟罩", "name": "金钟罩", "description": "减少受到的伤害", "effect_type": "damage_reduction" }
+✅ [DataManager] 成功解析技能: { "id": "金钟罩", "name": "金钟罩", "description": "减少受到的伤害", "effect_type": "damage_reduction" }
+📋 [DataManager] 第7行数据: { "id": "九阳神功", "name": "九阳神功", "description": "持续恢复生命值", "effect_type": "health_regen" }
+✅ [DataManager] 成功解析技能: { "id": "九阳神功", "name": "九阳神功", "description": "持续恢复生命值", "effect_type": "health_regen" }
+📋 [DataManager] 第8行数据: { "id": "易筋经", "name": "易筋经", "description": "提高所有属性", "effect_type": "all_stats" }
+✅ [DataManager] 成功解析技能: { "id": "易筋经", "name": "易筋经", "description": "提高所有属性", "effect_type": "all_stats" }
+✅ [DataManager] 被动技能配置加载完成，共 8 个技能
+🔍 [DataManager] load_data被调用，数据类型: character_passive_skills
+📋 [DataManager] 当前加载状态: false
+🔍 [DataManager] 开始处理数据类型: character_passive_skills
+📋 [DataManager] 请检查路径配置文件: res://data/PathConfiguration.csv
+📋 [DataManager] 使用英文表头: ["character_id", "passive_skill_id", "learn_level"]
+📝 [DataManager] 跳过中文注释行: ["角色ID", "被动技能ID", "学习等级"]
+✅ [DataManager] 数据管理器初始化完成
+⚙️ [GameSettings] 游戏设置管理器初始化完成
+👥 [GamePartyManager] 队伍管理器初始化
+自动加载脚本初始化完成
+✅ [BattleUIManager] 战斗UI管理器初始化
+✅ [BattleUIManager] 开始战斗按钮已创建，位置: (1780.0, 1000.0)
+✅ [BattleUIManager] 鼠标坐标显示组件已创建
+✅ [BattleUIManager] 战斗UI初始化完成
+🎯 [技能选择协调器] 初始化开始
+🔍 [技能选择协调器] 开始_initialize方法
+🔍 [技能选择协调器] 调用_setup_dependencies
+🔍 [技能选择协调器] 调用_setup_target_selection_menu
+✅ [技能选择协调器] 目标选择菜单初始化完成
+🔍 [技能选择协调器] 调用_setup_skill_range_display
+✅ [技能选择协调器] 技能范围显示组件初始化完成
+🔍 [技能选择协调器] 调用_setup_visual_skill_selector
+🔍 [技能选择协调器] 开始初始化可视化技能选择器
+🔍 [技能选择协调器] battle_ui_manager状态: 存在
+🔍 [技能选择协调器] 尝试加载VisualSkillSelector脚本
+🔍 [技能选择协调器] 创建VisualSkillSelector实例
+🔍 [技能选择协调器] 连接VisualSkillSelector信号
+🔍 [技能选择协调器] 添加VisualSkillSelector到UI容器
+🎯 [可视化技能] VisualSkillCaster系统初始化完成
+🎯 [可视化技能选择器] VisualSkillSelector初始化完成
+✅ [技能选择协调器] 可视化技能选择器初始化完成
+✅ [技能选择协调器] 初始化完成
+🎬 [MovementCoordinator] 移动协调器初始化开始
+🔍 [MovementCoordinator] 开始设置节点引用...
+📍 [MovementCoordinator] MoveRange控制器: 找到
+⚡ [MovementCoordinator] 行动系统: 找到
+🎯 [MovementCoordinator] 统一位置碰撞管理器: 找到
+✅ [MovementCoordinator] 成功连接到统一位置碰撞管理器!
+📍 [MovementCoordinator] 管理器路径: ../PositionCollisionManager
+🔗 [MovementCoordinator] 管理器类型: Node2D
+📡 [MovementCoordinator] 初始化完成，等待通过BattleScene委托的信号
+✅ [MovementCoordinator] 移动协调器初始化完成
+✅ [BattleFlowManager] next_character_requested信号连接成功
+🔧 [BattleFlowManager] 跳过skill_execution_completed信号连接，由BattleEventManager统一处理
+🚀 [BattleFlowManager] 跳过visual_skill_cast_completed连接，避免重复处理
+🔄 [BattleFlowManager] 状态变更: IDLE -> IDLE
+🚀 [BattleInputHandler] 开始初始化
+✅ [BattleInputHandler] 初始化完成
+🎬 [动画管理器] 初始化完成
+🎨 [视觉效果管理器] BattleVisualEffectsManager 初始化
+✅ [战斗管理器] BattleCombatManager 初始化完成
+✅ [AI管理器] BattleAIManager 初始化完成
+🔧 [事件管理器] 开始连接信号
+🔧 [事件管理器] skill_manager节点: SkillManager:<Node#58753811903>
+🔧 [事件管理器] skill_manager找到，开始连接信号
+✅ [事件管理器] skill_execution_completed信号连接成功
+✅ [事件管理器] skill_cancelled信号连接成功
+🔧 [事件管理器] battle_flow_manager找到，但不连接next_character_requested信号
+🔧 [PositionCollisionManager] 初始化基于物理空间查询的统一碰撞检测管理器
+✅ [PositionCollisionManager] 物理空间状态获取成功: true
+✅ [PositionCollisionManager] 成功获取MoveRangeConfig引用: MoveRange/Config
+✅ [PositionCollisionManager] 物理查询参数配置完成:
+  - 碰撞掩码: 31
+  - 检测Area2D: true
+  - 检测Bodies: true
+🎯 [PositionCollisionManager] 基于物理查询的统一管理器初始化完成
+🧹 [缓存管理] 自动清理计时器已启动（每2秒清理过期缓存）
+🔧 [Config] 配置组件初始化完成
+🚀 [Cache] 缓存组件初始化完成
+🌍 [MoveRangeInput] 物理空间状态获取完成
+🚀 [PreviewArea] 移动预览系统初始化完成
+📋 [行动系统] 行动系统初始化...
+✅ [行动系统] 成功连接移动确认信号
+🎯 [技能系统] SkillManager初始化...
+📚 [技能系统] 加载技能数据库...
+🔍 [DataManager] load_data被调用，数据类型: skills
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据类型 skills 已加载，跳过
+🎯 [DataManager] get_data被调用，数据类型: skills, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: skills
+📦 [DataManager] 返回整个数据集，数据类型: skills, 记录数: 11
+✅ [技能系统] 技能数据库加载完成，共 11 个技能
+✨ [技能系统] 找到场景中的SkillEffects节点
+✨ [技能效果] SkillEffects系统初始化完成
+🎯 [TurnManager] 回合管理器初始化
+⚔️ [BattleManager] 战斗协调器初始化
+🔗 [BattleManager] 子系统连接完成
+🚀 [BattleScene] 开始初始化
+🚀 [BattleSystemInitializer] 开始初始化所有战斗系统
+🚀 [BattleSystemInitializer] 开始初始化角色管理器
+🔍 [DataManager] load_data被调用，数据类型: character
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据类型 character 已加载，跳过
+✅ [BattleSystemInitializer] 角色管理器已创建并添加到场景树
+⏳ [BattleSystemInitializer] 角色管理器等待关卡配置加载角色
+🚀 [BattleSystemInitializer] 初始化移动范围系统
+✅ [BattleSystemInitializer] 移动范围系统初始化完成（信号已委托给MovementCoordinator）
+🚀 [BattleSystemInitializer] 初始化碰撞可视化
+⚠️ [BattleSystemInitializer] VisualizationManager不存在，跳过碰撞可视化
+🎨 [BattleSystemInitializer] 设置UI协调器
+🎨 [BattleUICoordinator] 开始初始化UI协调器
+🎨 [BattleUICoordinator] 设置战斗UI
+✅ [BattleUICoordinator] 已连接SkillManager的skill_selection_started信号
+✅ [BattleUICoordinator] 战斗UI设置完成
+🎨 [BattleUICoordinator] 开始设置技能选择协调器
+✅ [BattleUICoordinator] 技能选择协调器设置完成
+✅ [BattleUICoordinator] UI协调器初始化完成
+🎯 [BattleSystemInitializer] 设置行动协调器
+🎯 [BattleActionCoordinator] 开始初始化行动协调器
+✅ [BattleActionCoordinator] 行动协调器初始化完成
+🎨 [BattleSystemInitializer] 设置可视化管理器
+🎨 [BattleVisualizationManager] 初始化可视化管理器
+🗺️ [BattleSystemInitializer] 设置关卡管理器
+🗺️ [BattleLevelManager] 初始化关卡管理器
+🚀 [BattleSystemInitializer] 初始化技能效果系统
+✅ [BattleSystemInitializer] 技能效果系统初始化完成
+🚀 [BattleSystemInitializer] 初始化MovementCoordinator
+🚀 [BattleSystemInitializer] 初始化BattleFlowManager
+🚀 [BattleSystemInitializer] 初始化BattleInputHandler
+🚀 [BattleSystemInitializer] 初始化BattleAnimationManager
+✅ [BattleSystemInitializer] BattleAnimationManager初始化完成
+🚀 [BattleSystemInitializer] 初始化BattleVisualEffectsManager
+✅ [BattleSystemInitializer] BattleVisualEffectsManager初始化完成
+🚀 [BattleSystemInitializer] 初始化BattleCombatManager
+🔗 [战斗管理器] 组件引用设置完成
+✅ [BattleSystemInitializer] BattleCombatManager初始化完成
+🚀 [BattleSystemInitializer] 初始化BattleAIManager
+🔗 [AI管理器] 组件引用设置完成
+✅ [BattleSystemInitializer] BattleAIManager初始化完成
+🚀 [BattleSystemInitializer] 加载初始关卡
+🗺️ [BattleLevelManager] 开始动态加载关卡: res://Scenes/Levels/LEVEL_1_序幕.tscn
+🗺️ [BattleLevelManager] 关卡数据准备完成
+🏗️ 障碍物设置完成: PLATFORM, 碰撞层: 1
+✅ 障碍物碰撞形状已加载: RectangleShape2D
+🏗️ 障碍物设置完成: PLATFORM, 碰撞层: 1
+✅ 障碍物碰撞形状已加载: RectangleShape2D
+🏗️ 障碍物设置完成: ROCK, 碰撞层: 8
+✅ 障碍物碰撞形状已加载: CircleShape2D
+🏗️ 障碍物设置完成: ROCK, 碰撞层: 8
+✅ 障碍物碰撞形状已加载: CircleShape2D
+🏗️ 障碍物设置完成: ROCK, 碰撞层: 8
+✅ 障碍物碰撞形状已加载: CircleShape2D
+🏗️ 障碍物设置完成: ROCK, 碰撞层: 8
+✅ 障碍物碰撞形状已加载: CircleShape2D
+🏗️ 障碍物设置完成: ROCK, 碰撞层: 8
+✅ 障碍物碰撞形状已加载: CircleShape2D
+🏗️ 障碍物设置完成: WALL, 碰撞层: 8
+✅ 障碍物碰撞形状已加载: RectangleShape2D
+🏗️ 障碍物设置完成: WATER, 碰撞层: 16
+✅ 障碍物碰撞形状已加载: CircleShape2D
+🎮 [关卡配置] 初始化关卡配置: 序幕
+📍 [SpawnPointManager] 生成点管理器初始化
+🗺️ [BattleLevelManager] 发现 0 个玩家生成点
+🗺️ [BattleLevelManager] 发现 0 个敌人生成点
+🗺️ [BattleLevelManager] 总共发现 0 个生成点
+🗺️ [BattleLevelManager] 开始触发角色生成
+✅ [BattleLevelManager] 找到角色管理器，开始加载角色
+🔍 [BattleLevelManager] 查找关卡配置节点...
+⚠️ [BattleLevelManager] 所有路径都找不到关卡配置节点
+👥 [BattleCharacterManager] 开始生成队伍成员
+🔍 [BattleCharacterManager] PartyManager状态检查:
+  - PartyManager存在: true
+  - PartyManager成员数量: 0
+  - PartyManager成员ID列表: []
+  - current_party存在: true
+  - current_party成员数量: 0
+👥 [GamePartyManager] 当前队伍状态:
+  队伍大小: 0/4
+📋 [BattleCharacterManager] 队伍成员ID列表: []
+⚠️ [BattleCharacterManager] PartyManager为空，使用默认角色列表
+🎯 [BattleCharacterManager] 开始生成角色ID: 1
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+📊 [BattleCharacterManager] 开始为角色ID 2 加载数据
+🎯 [GameCharacter] 开始加载角色数据，角色ID: 2
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 2
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+🔍 [DataManager] 在数据存储中查找ID: 2, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+🔍 [DataManager] load_data被调用，数据类型: character_passive_skills
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据类型 character_passive_skills 已加载，跳过
+🎯 [DataManager] get_data被调用，数据类型: character_passive_skills, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character_passive_skills
+📦 [DataManager] 返回整个数据集，数据类型: character_passive_skills, 记录数: 10
+🎯 [DataManager] get_data被调用，数据类型: passive_skills, ID: 铁布衫
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: passive_skills
+🔍 [DataManager] 在数据存储中查找ID: 铁布衫, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+✅ [BattleCharacterManager] 角色ID 2 数据加载完成
+⚡ [BattleCharacterManager] 角色 柳生 轻功值(来自CSV): 280
+设置基准位置: (700.0, 1000.0), 当前高度级别: 0.00, 高度像素: 0.0, 实际位置: (700.0, 956.0)
+🔧 [GameCharacter] 角色 柳生 高度设置为: 0.0级 (0.0像素)
+🚶 [BattleCharacterManager] 角色 柳生 没有飞行技能，设置在地面
+🎛️ [BattleCharacterManager] 发现角色 柳生 的专属缩放配置，将应用场景设置
+⚠️ [BattleCharacterManager] 角色 柳生 没有health_depleted信号
+🎉 [BattleCharacterManager] 角色生成完成: 柳生 (ID: 2)
+🔮 [BattleCharacterManager] 角色 柳生 被动技能: ["铁布衫"]
+✈️ [BattleCharacterManager] 角色 柳生 飞行能力: 不能飞行
+==================================================
+🎯 [BattleCharacterManager] 开始生成角色ID: 3
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+📦 [DataManager] 返回整个数据集，数据类型: character, 记录数: 6
+🎬 [BattleCharacterManager] 找到角色 3 的场景路径: res://Scenes/Characters/Party/Lancelot.tscn
+🎬 [BattleCharacterManager] 使用专属场景: res://Scenes/Characters/Party/Lancelot.tscn
+🎨 [CharacterScaleConfig] 已缩放视觉组件 2.0 倍
+🎨 [CharacterScaleConfig] 已缩放碰撞体组件 2.0 倍
+🎨 [CharacterScaleConfig] 已调整GroundAnchor位置 2.0 倍
+✅ [CharacterScaleConfig] 已为角色 @Node2D@30 应用 2.0 倍缩放
+开始初始化组件...
+🔧 [PlayerMovementComponent] 开始设置玩家移动组件
+✅ [PlayerMovementComponent] 玩家节点设置完成: @Node2D@30
+✅ [PlayerMovementComponent] 角色数据获取成功: Unnamed
+ℹ️ [PlayerMovementComponent] 当前场景(Main)不是战斗场景，跳过PositionCollisionManager查找
+连接组件信号...
+信号连接完成
+组件初始化完成（使用场景节点结构）
+碰撞区域设置完成
+🔍 开始扫描现有障碍物...
+📂 父节点: TheLevel, 子节点数量: 2
+🏁 扫描完成，总障碍物数量: 0
+📋 已注册的障碍物列表:
+✅ [BattleSystemInitializer] 障碍物管理器初始化完成
+🚀 [BattleSystemInitializer] 显示游戏操作提示
+游戏已启动 - 按F11开始战斗，F10切换碰撞体积显示
+✅ [BattleSystemInitializer] 所有系统初始化完成
+🚀 [BattleSignalRouter] 开始建立所有信号连接
+🔗 [BattleSignalRouter] 连接BattleManager信号
+✅ [BattleSignalRouter] BattleManager信号连接完成
+🔗 [BattleSignalRouter] 连接障碍物管理器信号
+✅ [BattleSignalRouter] 障碍物管理器信号连接完成
+🔗 [BattleSignalRouter] 连接BattleFlowManager信号
+✅ [BattleSignalRouter] BattleFlowManager信号处理已迁移，跳过连接
+🔗 [BattleSignalRouter] 连接BattleInputHandler信号
+✅ [BattleSignalRouter] BattleInputHandler信号处理已迁移，跳过连接
+🔗 [BattleSignalRouter] 连接BattleCombatManager信号
+✅ [BattleSignalRouter] BattleCombatManager信号处理已迁移，跳过连接
+🔗 [BattleSignalRouter] 连接BattleAIManager信号
+✅ [BattleSignalRouter] BattleAIManager信号处理已迁移，跳过连接
+✅ [BattleSignalRouter] 所有信号连接建立完成
+✅ [BattleScene] 初始化完成
+📊 [BattleCharacterManager] 开始为角色ID 3 加载数据
+🎯 [GameCharacter] 开始加载角色数据，角色ID: 3
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 3
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+🔍 [DataManager] 在数据存储中查找ID: 3, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+🔍 [DataManager] load_data被调用，数据类型: character_passive_skills
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据类型 character_passive_skills 已加载，跳过
+🎯 [DataManager] get_data被调用，数据类型: character_passive_skills, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character_passive_skills
+📦 [DataManager] 返回整个数据集，数据类型: character_passive_skills, 记录数: 10
+🎯 [DataManager] get_data被调用，数据类型: passive_skills, ID: 轻功大师
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: passive_skills
+🔍 [DataManager] 在数据存储中查找ID: 轻功大师, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+✅ [BattleCharacterManager] 角色ID 3 数据加载完成
+⚡ [BattleCharacterManager] 角色 兰斯洛特 轻功值(来自CSV): 120
+设置基准位置: (800.0, 1000.0), 当前高度级别: 0.00, 高度像素: 0.0, 实际位置: (800.0, 956.0)
+🔧 [GameCharacter] 角色 兰斯洛特 高度设置为: 0.0级 (0.0像素)
+🚶 [BattleCharacterManager] 角色 兰斯洛特 没有飞行技能，设置在地面
+🎛️ [BattleCharacterManager] 发现角色 兰斯洛特 的专属缩放配置，将应用场景设置
+⚠️ [BattleCharacterManager] 角色 兰斯洛特 没有health_depleted信号
+🎉 [BattleCharacterManager] 角色生成完成: 兰斯洛特 (ID: 3)
+🔮 [BattleCharacterManager] 角色 兰斯洛特 被动技能: ["轻功大师"]
+✈️ [BattleCharacterManager] 角色 兰斯洛特 飞行能力: 不能飞行
+==================================================
+🎯 [BattleLevelManager] 使用传统方式生成玩家角色
+🤖 [BattleCharacterManager] 开始生成敌人
+🎯 [BattleCharacterManager] 从关卡配置获取敌人ID
+🎯 [DataManager] get_data被调用，数据类型: level_configuration, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: level_configuration
+📦 [DataManager] 返回整个数据集，数据类型: level_configuration, 记录数: 1
+✅ [BattleCharacterManager] 从DataManager获取敌人ID: ["101", "102", "103"]
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+📦 [DataManager] 返回整个数据集，数据类型: character, 记录数: 6
+🎬 [BattleCharacterManager] 找到角色 101 的场景路径: res://Scenes/Characters/Enemies/Bandit_101.tscn
+🎬 [BattleCharacterManager] 使用敌人专属场景: res://Scenes/Characters/Enemies/Bandit_101.tscn
+开始初始化组件...
+🔧 [PlayerMovementComponent] 开始设置玩家移动组件
+✅ [PlayerMovementComponent] 玩家节点设置完成: 标准人
+✅ [PlayerMovementComponent] 角色数据获取成功: Unnamed
+ℹ️ [PlayerMovementComponent] 当前场景(Main)不是战斗场景，跳过PositionCollisionManager查找
+连接组件信号...
+信号连接完成
+组件初始化完成（使用场景节点结构）
+碰撞区域设置完成
+🎯 [GameCharacter] 开始加载角色数据，角色ID: 101
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 101
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+🔍 [DataManager] 在数据存储中查找ID: 101, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+🔍 [DataManager] load_data被调用，数据类型: character_passive_skills
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据类型 character_passive_skills 已加载，跳过
+🎯 [DataManager] get_data被调用，数据类型: character_passive_skills, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character_passive_skills
+📦 [DataManager] 返回整个数据集，数据类型: character_passive_skills, 记录数: 10
+🎯 [DataManager] get_data被调用，数据类型: passive_skills, ID: 内力深厚
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: passive_skills
+🔍 [DataManager] 在数据存储中查找ID: 内力深厚, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+设置基准位置: (1000.0, 1000.0), 当前高度级别: 0.00, 高度像素: 0.0, 实际位置: (1000.0, 978.0)
+🎨 [GameSettings] 已缩放视觉组件 1.0 倍
+🎨 [GameSettings] 已缩放碰撞体组件 1.0 倍
+🎨 [GameSettings] 已调整GroundAnchor位置 1.0 倍
+🎨 [GameSettings] 已应用分离式缩放到 标准人（保持碰撞检测一致性）
+⚠️ [BattleCharacterManager] 敌人 山贼头目 没有health_depleted信号
+✅ [BattleCharacterManager] 生成敌人: 山贼头目 (ID: 101)
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+📦 [DataManager] 返回整个数据集，数据类型: character, 记录数: 6
+🎬 [BattleCharacterManager] 找到角色 102 的场景路径: res://Scenes/Characters/Enemies/Wolf_102.tscn
+🎬 [BattleCharacterManager] 使用敌人专属场景: res://Scenes/Characters/Enemies/Wolf_102.tscn
+开始初始化组件...
+🔧 [PlayerMovementComponent] 开始设置玩家移动组件
+✅ [PlayerMovementComponent] 玩家节点设置完成: @Node2D@37
+✅ [PlayerMovementComponent] 角色数据获取成功: Unnamed
+ℹ️ [PlayerMovementComponent] 当前场景(Main)不是战斗场景，跳过PositionCollisionManager查找
+连接组件信号...
+信号连接完成
+组件初始化完成（使用场景节点结构）
+碰撞区域设置完成
+🎯 [GameCharacter] 开始加载角色数据，角色ID: 102
+🎯 [DataManager] get_data被调用，数据类型: character, ID: 102
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character
+🔍 [DataManager] 在数据存储中查找ID: 102, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+🔍 [DataManager] load_data被调用，数据类型: character_passive_skills
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据类型 character_passive_skills 已加载，跳过
+🎯 [DataManager] get_data被调用，数据类型: character_passive_skills, ID: 
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: character_passive_skills
+📦 [DataManager] 返回整个数据集，数据类型: character_passive_skills, 记录数: 10
+🎯 [DataManager] get_data被调用，数据类型: passive_skills, ID: 御剑飞行
+📋 [DataManager] 当前加载状态: true
+✅ [DataManager] 数据已加载，直接返回数据类型: passive_skills
+🔍 [DataManager] 在数据存储中查找ID: 御剑飞行, 数据存储类型: Dictionary
+📋 [DataManager] 字典查找结果: 找到数据
+设置基准位置: (1100.0, 1000.0), 当前高度级别: 0.00, 高[...]
+
+=== 🔥 [BattleUIManager] 战斗按钮被点击！===
+🎮 [BattleUIManager] 战斗按钮被点击
+🎨 [BattleUICoordinator] 战斗按钮按下
+🔍 [BattleManager] is_battle_in_progress被调用
+🔍 [BattleManager] state_manager存在: false
+🔍 [BattleManager] is_battle_active值: false
+🔍 [BattleManager] 使用回退状态 is_battle_active: false
+🎮 [战斗UI] 通过BattleUIManager按钮开始战斗
+🚀 [BattleManager] 开始战斗协调
+✅ [BattleManager] 战斗状态已激活: is_battle_active = true
+🔍 [BattleManager] 调用 BattleScene.get_all_characters() 获取所有角色
+🔍 [BattleManager] 最终参战者数量: 6
+  1. 觉远 (友方) - HP: 150/150
+  2. 柳生 (友方) - HP: 40/40
+  3. 兰斯洛特 (友方) - HP: 120/120
+  4. 山贼头目 (敌方) - HP: 80/80
+  5. 野狼 (敌方) - HP: 60/60
+  6. 骷髅战士 (敌方) - HP: 70/70
+🔍 [BattleManager] 获取到参战者数量: 6
+  参战者 1: 觉远 (友方) - 控制类型: 0
+  参战者 2: 柳生 (友方) - 控制类型: 0
+  参战者 3: 兰斯洛特 (友方) - 控制类型: 0
+  参战者 4: 山贼头目 (敌方) - 控制类型: 1
+  参战者 5: 野狼 (敌方) - 控制类型: 1
+  参战者 6: 骷髅战士 (敌方) - 控制类型: 1
+🔧 [BattleManager] 委托ParticipantManager设置参战者
+🔧 [BattleManager] 委托TurnManager开始回合管理
+🔄 [TurnManager] 开始新战斗的回合管理
+📋 [TurnManager] 计算回合顺序，存活参战者数量: 6/6
+  顺序 1: 觉远 - 友方，速度: 5，控制类型: 0，HP: 150/150
+  顺序 2: 柳生 - 友方，速度: 5，控制类型: 0，HP: 40/40
+  顺序 3: 兰斯洛特 - 友方，速度: 5，控制类型: 0，HP: 120/120
+  顺序 4: 山贼头目 - 敌方，速度: 5，控制类型: 1，HP: 80/80
+  顺序 5: 野狼 - 敌方，速度: 5，控制类型: 1，HP: 60/60
+  顺序 6: 骷髅战士 - 敌方，速度: 5，控制类型: 1，HP: 70/70
+📋 [TurnManager] 回合顺序: ["觉远(友方)", "柳生(友方)", "兰斯洛特(友方)", "山贼头目(敌方)", "野狼(敌方)", "骷髅战士(敌方)"]
+📡 [TurnManager] _EMIT_TURN_CHANGE被调用
+🔍 [TurnManager] 当前角色: 觉远
+🎯 [TurnManager] 回合1，轮到: 觉远 (控制类型: 0)
+📊 [TurnManager] 当前回合队列状态:
+📊 [TurnManager] 👉 0. 觉远 (友方) - HP: 150/150
+📊 [TurnManager]    1. 柳生 (友方) - HP: 40/40
+📊 [TurnManager]    2. 兰斯洛特 (友方) - HP: 120/120
+📊 [TurnManager]    3. 山贼头目 (敌方) - HP: 80/80
+📊 [TurnManager]    4. 野狼 (敌方) - HP: 60/60
+📊 [TurnManager]    5. 骷髅战士 (敌方) - HP: 70/70
+📡 [TurnManager] 发出turn_changed信号
+🎯 [BattleManager] 回合变更: 1
+🔍 [BattleManager] 当前战斗状态 is_battle_active: true
+🎯 [BattleManager] 当前回合角色: 觉远 (控制类型: 0)
+👤 [BattleManager] 检测到玩家角色，发出player_turn_started信号
+📡 [BattleManager] 即将发出turn_started信号: 回合1
+🎯 [ActionSystem] start_new_turn_for_character被调用
+🔍 [ActionSystem] 传入角色: 觉远
+🔍 [ActionSystem] 当前状态: 0
+🔧 [ActionSystem] 重置角色行动点数
+🎯 [行动系统] 初始化角色 觉远 的行动点数：移动1，攻击1
+🔄 [行动系统] 重置角色 觉远 的行动点数
+🎯 [ActionSystem] 开始角色 觉远 的新回合，状态设置为: 2
+✅ [BattleManager] turn_started信号已发出
+✅ [TurnManager] turn_changed信号已发出
+🔍 [BattleManager] is_battle_in_progress被调用
+🔍 [BattleManager] state_manager存在: false
+🔍 [BattleManager] is_battle_active值: true
+🔍 [BattleManager] 使用回退状态 is_battle_active: true
+🔍 [BattleManager] is_battle_in_progress被调用
+🔍 [BattleManager] state_manager存在: false
+🔍 [BattleManager] is_battle_active值: true
+🔍 [BattleManager] 使用回退状态 is_battle_active: true
+🚀 [BattleUIManager] battle_button_pressed信号已发射
+
+=== 🎯 [BattleActionCoordinator] open_character_action_menu被调用 ===
+🔍 [BattleActionCoordinator] 传入的character_node: 标准人
+🔍 [BattleActionCoordinator] 这是菜单自动打开的关键方法！
+✅ [BattleActionCoordinator] 当前回合角色请求打开行动菜单：觉远
+🔧 [BattleActionCoordinator] 设置ActionSystem选中角色: 觉远
+🔍 [BattleActionCoordinator] 查找UI组件: ComponentContainer/UIComponent
+🔍 [BattleActionCoordinator] UI组件查找结果: UIComponent
+📞 [BattleActionCoordinator] 调用ui_component.open_action_menu()
+
+=== 🎯 [PlayerUIComponent] open_action_menu被调用 ===
+🔥 [PlayerUIComponent] 这是菜单创建的关键方法！
+🔍 [PlayerUIComponent] 角色: 觉远
+🔍 [PlayerUIComponent] 当前打开的菜单: 无
+🔍 [PlayerUIComponent] 检查action_menu_scene: 已加载
+🔧 [PlayerUIComponent] 实例化行动菜单
+🔧 [PlayerUIComponent] 将菜单添加到场景
+检测到行动菜单创建，添加移动选项
+🚀 [ActionMenu] _ready 被调用
+🔗 [ActionMenu] 开始连接按钮信号
+✅ [ActionMenu] MoveButton 信号已连接
+✅ [ActionMenu] SkillButton 信号已连接
+✅ [ActionMenu] ItemButton 信号已连接
+✅ [ActionMenu] SpecialButton 信号已连接
+✅ [ActionMenu] RestButton 信号已连接
+✅ [ActionMenu] CancelButton 信号已连接
+✅ [ActionMenu] _ready 完成，菜单已隐藏
+✅ [PlayerUIComponent] 菜单已设置为current_open_menu: ActionMenu
+📞 [PlayerUIComponent] 调用current_menu.open_menu()
+
+=== 🎯 [ActionMenu] open_menu被调用 ===
+🔥 [ActionMenu] 菜单正在被打开！
+🔍 [ActionMenu] 传入角色: 标准人
+🔍 [ActionMenu] 角色数据: 觉远
+🔧 [ActionMenu] 设置标题: 行动菜单 - 觉远
+🔧 [ActionMenu] 更新按钮状态
+🔧 [ActionMenu] 显示菜单并定位
+✅ [ActionMenu] 菜单已显示，位置: (684.0, 734.0)
+✅ [PlayerUIComponent] current_menu.open_menu()调用完成
+🔗 [PlayerUIComponent] 连接菜单信号
+✅ [PlayerUIComponent] 行动菜单打开流程完成
+✅ [BattleActionCoordinator] UI组件的open_action_menu()调用完成
+菜单已存在移动选项，不再重复添加
+🎨 [Tooltip] 调整大小 - 内容大小: (97.0, 185.0), Panel大小: (117.0, 205.0)
+🎨 [Tooltip] 调整大小 - 内容大小: (97.0, 185.0), Panel大小: (117.0, 205.0)
+🔍 [输入组件] 角色 兰斯洛特 被点击，开始检查
+🎯 [DEBUG] PlayerInputComponent._handle_click() 被调用
+✅ [输入组件] 角色 兰斯洛特 是玩家控制，继续检查回合
+🔍 [输入组件] 获取战斗场景：战斗场景
+🔍 [输入组件] 获取战斗管理器：BattleManager
+🔍 [输入组件] 当前回合角色：觉远，点击角色：兰斯洛特
+🚫 [输入组件] 非当前回合角色不响应点击：兰斯洛特 (当前回合：觉远)
+角色 [觉远] 选择了 [休息] 行动
+选择行动: rest
+📋 [行动系统] 选择行动类型 [rest]，当前状态: SELECTING_ACTION
+😴 [行动系统] 执行休息行动
+😴 [行动系统] 觉远 选择休息，结束回合
+
+=== 🔍 [休息行动完成] 回合状态调试信息 ===
+📊 [调试] 当前回合: 1
+📊 [调试] 当前角色索引: 0
+📊 [调试] 回合队列大小: 6
+📊 [调试] 当前角色: 觉远 (控制类型: 0)
+📊 [调试] 行动点数：移动0，攻击0
+📊 [调试] 回合队列:
+📊 [调试] 👉 0. 觉远 (友方) - HP: 150/150
+📊 [调试]    1. 柳生 (友方) - HP: 40/40
+📊 [调试]    2. 兰斯洛特 (友方) - HP: 120/120
+📊 [调试]    3. 山贼头目 (敌方) - HP: 80/80
+📊 [调试]    4. 野狼 (敌方) - HP: 60/60
+📊 [调试]    5. 骷髅战士 (敌方) - HP: 70/70
+📊 [调试] 战斗状态: is_battle_active = true
+📊 [调试] ActionSystem状态: EXECUTING_ACTION
+=== [休息行动完成] 调试信息结束 ===
+
+😴 [行动系统] 通知BattleManager休息行动完成
+😴 [行动系统] 角色: 觉远, 休息结束回合
+🕐 [信号接收] 时间戳: 2025-06-09T20:37:39
+📡 [BattleEventManager] 收到character_action_completed信号
+🔍 [信号分析] 角色: 觉远
+🔍 [信号分析] 行动类型: rest
+🔍 [信号分析] 行动消息: 选择了休息，回合结束
+🎯 [信号分析] 这是休息信号，来源可能是: ActionSystemNew
+✅ [回合判断] 这个行动会结束回合，应该切换到下一个角色
+🎯 [BattleEventManager] 即将调用request_next_character()
+🔄 [TurnManager] NEXT_TURN被调用，当前索引: 0, 队列大小: 6
+🔄 [TurnManager] 切换前角色: 觉远 (索引: 0)
+🎯 [TurnManager] 索引从0 -> 1，下一个角色: 柳生
+📡 [TurnManager] _EMIT_TURN_CHANGE被调用
+🔍 [TurnManager] 当前角色: 柳生
+🎯 [TurnManager] 回合1，轮到: 柳生 (控制类型: 0)
+📊 [TurnManager] 当前回合队列状态:
+📊 [TurnManager]    0. 觉远 (友方) - HP: 150/150
+📊 [TurnManager] 👉 1. 柳生 (友方) - HP: 40/40
+📊 [TurnManager]    2. 兰斯洛特 (友方) - HP: 120/120
+📊 [TurnManager]    3. 山贼头目 (敌方) - HP: 80/80
+📊 [TurnManager]    4. 野狼 (敌方) - HP: 60/60
+📊 [TurnManager]    5. 骷髅战士 (敌方) - HP: 70/70
+📡 [TurnManager] 发出turn_changed信号
+🎯 [BattleManager] 回合变更: 1
+🔍 [BattleManager] 当前战斗状态 is_battle_active: true
+🎯 [BattleManager] 当前回合角色: 柳生 (控制类型: 0)
+👤 [BattleManager] 检测到玩家角色，发出player_turn_started信号
+📡 [BattleManager] 即将发出turn_started信号: 回合1
+🎯 [ActionSystem] start_new_turn_for_character被调用
+🔍 [ActionSystem] 传入角色: 柳生
+🔍 [ActionSystem] 当前状态: 5
+🔧 [ActionSystem] 重置角色行动点数
+🎯 [行动系统] 初始化角色 柳生 的行动点数：移动1，攻击1
+🔄 [行动系统] 重置角色 柳生 的行动点数
+🎯 [ActionSystem] 开始角色 柳生 的新回合，状态设置为: 2
+✅ [BattleManager] turn_started信号已发出
+✅ [TurnManager] turn_changed信号已发出
+✅ [行动系统] character_action_completed信号已发出（休息）
+🔄 [行动系统] 行动系统已重置，等待下一次行动
+菜单关闭
+
+=== 🎯 [BattleActionCoordinator] open_character_action_menu被调用 ===
+🔍 [BattleActionCoordinator] 传入的character_node: @Node2D@26
+🔍 [BattleActionCoordinator] 这是菜单自动打开的关键方法！
+✅ [BattleActionCoordinator] 当前回合角色请求打开行动菜单：柳生
+🔧 [BattleActionCoordinator] 设置ActionSystem选中角色: 柳生
+🔍 [BattleActionCoordinator] 查找UI组件: ComponentContainer/UIComponent
+🔍 [BattleActionCoordinator] UI组件查找结果: UIComponent
+📞 [BattleActionCoordinator] 调用ui_component.open_action_menu()
+
+=== 🎯 [PlayerUIComponent] open_action_menu被调用 ===
+🔥 [PlayerUIComponent] 这是菜单创建的关键方法！
+🔍 [PlayerUIComponent] 角色: 柳生
+🔍 [PlayerUIComponent] 当前打开的菜单: 无
+🔍 [PlayerUIComponent] 检查action_menu_scene: 已加载
+🔧 [PlayerUIComponent] 实例化行动菜单
+🔧 [PlayerUIComponent] 将菜单添加到场景
+检测到行动菜单创建，添加移动选项
+🚀 [ActionMenu] _ready 被调用
+🔗 [ActionMenu] 开始连接按钮信号
+✅ [ActionMenu] MoveButton 信号已连接
+✅ [ActionMenu] SkillButton 信号已连接
+✅ [ActionMenu] ItemButton 信号已连接
+✅ [ActionMenu] SpecialButton 信号已连接
+✅ [ActionMenu] RestButton 信号已连接
+✅ [ActionMenu] CancelButton 信号已连接
+✅ [ActionMenu] _ready 完成，菜单已隐藏
+✅ [PlayerUIComponent] 菜单已设置为current_open_menu: @Panel@45
+📞 [PlayerUIComponent] 调用current_menu.open_menu()
+
+=== 🎯 [ActionMenu] open_menu被调用 ===
+🔥 [ActionMenu] 菜单正在被打开！
+🔍 [ActionMenu] 传入角色: @Node2D@26
+🔍 [ActionMenu] 角色数据: 柳生
+🔧 [ActionMenu] 设置标题: 行动菜单 - 柳生
+🔧 [ActionMenu] 更新按钮状态
+🔧 [ActionMenu] 显示菜单并定位
+✅ [ActionMenu] 菜单已显示，位置: (784.0, 756.0)
+✅ [PlayerUIComponent] current_menu.open_menu()调用完成
+🔗 [PlayerUIComponent] 连接菜单信号
+✅ [PlayerUIComponent] 行动菜单打开流程完成
+✅ [BattleActionCoordinator] UI组件的open_action_menu()调用完成
+菜单已存在移动选项，不再重复添加
+角色 [柳生] 选择了 [休息] 行动
+选择行动: rest
+📋 [行动系统] 选择行动类型 [rest]，当前状态: SELECTING_ACTION
+😴 [行动系统] 执行休息行动
+😴 [行动系统] 柳生 选择休息，结束回合
+
+=== 🔍 [休息行动完成] 回合状态调试信息 ===
+📊 [调试] 当前回合: 1
+📊 [调试] 当前角色索引: 1
+📊 [调试] 回合队列大小: 6
+📊 [调试] 当前角色: 柳生 (控制类型: 0)
+📊 [调试] 行动点数：移动0，攻击0
+📊 [调试] 回合队列:
+📊 [调试]    0. 觉远 (友方) - HP: 150/150
+📊 [调试] 👉 1. 柳生 (友方) - HP: 40/40
+📊 [调试]    2. 兰斯洛特 (友方) - HP: 120/120
+📊 [调试]    3. 山贼头目 (敌方) - HP: 80/80
+📊 [调试]    4. 野狼 (敌方) - HP: 60/60
+📊 [调试]    5. 骷髅战士 (敌方) - HP: 70/70
+📊 [调试] 战斗状态: is_battle_active = true
+📊 [调试] ActionSystem状态: EXECUTING_ACTION
+=== [休息行动完成] 调试信息结束 ===
+
+😴 [行动系统] 通知BattleManager休息行动完成
+😴 [行动系统] 角色: 柳生, 休息结束回合
+🕐 [信号接收] 时间戳: 2025-06-09T20:37:39
+📡 [BattleEventManager] 收到character_action_completed信号
+🔍 [信号分析] 角色: 柳生
+🔍 [信号分析] 行动类型: rest
+🔍 [信号分析] 行动消息: 选择了休息，回合结束
+🎯 [信号分析] 这是休息信号，来源可能是: ActionSystemNew
+✅ [回合判断] 这个行动会结束回合，应该切换到下一个角色
+🎯 [BattleEventManager] 即将调用request_next_character()
+🔄 [TurnManager] NEXT_TURN被调用，当前索引: 1, 队列大小: 6
+🔄 [TurnManager] 切换前角色: 柳生 (索引: 1)
+🎯 [TurnManager] 索引从1 -> 2，下一个角色: 兰斯洛特
+📡 [TurnManager] _EMIT_TURN_CHANGE被调用
+🔍 [TurnManager] 当前角色: 兰斯洛特
+🎯 [TurnManager] 回合1，轮到: 兰斯洛特 (控制类型: 0)
+📊 [TurnManager] 当前回合队列状态:
+📊 [TurnManager]    0. 觉远 (友方) - HP: 150/150
+📊 [TurnManager]    1. 柳生 (友方) - HP: 40/40
+📊 [TurnManager] 👉 2. 兰斯洛特 (友方) - HP: 120/120
+📊 [TurnManager]    3. 山贼头目 (敌方) - HP: 80/80
+📊 [TurnManager]    4. 野狼 (敌方) - HP: 60/60
+📊 [TurnManager]    5. 骷髅战士 (敌方) - HP: 70/70
+📡 [TurnManager] 发出turn_changed信号
+🎯 [BattleManager] 回合变更: 1
+🔍 [BattleManager] 当前战斗状态 is_battle_active: true
+🎯 [BattleManager] 当前回合角色: 兰斯洛特 (控制类型: 0)
+👤 [BattleManager] 检测到玩家角色，发出player_turn_started信号
+📡 [BattleManager] 即将发出turn_started信号: 回合1
+🎯 [ActionSystem] start_new_turn_for_character被调用
+🔍 [ActionSystem] 传入角色: 兰斯洛特
+🔍 [ActionSystem] 当前状态: 5
+🔧 [ActionSystem] 重置角色行动点数
+🎯 [行动系统] 初始化角色 兰斯洛特 的行动点数：移动1，攻击1
+🔄 [行动系统] 重置角色 兰斯洛特 的行动点数
+🎯 [ActionSystem] 开始角色 兰斯洛特 的新回合，状态设置为: 2
+✅ [BattleManager] turn_started信号已发出
+✅ [TurnManager] turn_changed信号已发出
+✅ [行动系统] character_action_completed信号已发出（休息）
+🔄 [行动系统] 行动系统已重置，等待下一次行动
+菜单关闭
+
+=== 🎯 [BattleActionCoordinator] open_character_action_menu被调用 ===
+🔍 [BattleActionCoordinator] 传入的character_node: @Node2D@30
+🔍 [BattleActionCoordinator] 这是菜单自动打开的关键方法！
+✅ [BattleActionCoordinator] 当前回合角色请求打开行动菜单：兰斯洛特
+🔧 [BattleActionCoordinator] 设置ActionSystem选中角色: 兰斯洛特
+🔍 [BattleActionCoordinator] 查找UI组件: ComponentContainer/UIComponent
+🔍 [BattleActionCoordinator] UI组件查找结果: UIComponent
+📞 [BattleActionCoordinator] 调用ui_component.open_action_menu()
+
+=== 🎯 [PlayerUIComponent] open_action_menu被调用 ===
+🔥 [PlayerUIComponent] 这是菜单创建的关键方法！
+🔍 [PlayerUIComponent] 角色: 兰斯洛特
+🔍 [PlayerUIComponent] 当前打开的菜单: 无
+🔍 [PlayerUIComponent] 检查action_menu_scene: 已加载
+🔧 [PlayerUIComponent] 实例化行动菜单
+🔧 [PlayerUIComponent] 将菜单添加到场景
+检测到行动菜单创建，添加移动选项
+🚀 [ActionMenu] _ready 被调用
+🔗 [ActionMenu] 开始连接按钮信号
+✅ [ActionMenu] MoveButton 信号已连接
+✅ [ActionMenu] SkillButton 信号已连接
+✅ [ActionMenu] ItemButton 信号已连接
+✅ [ActionMenu] SpecialButton 信号已连接
+✅ [ActionMenu] RestButton 信号已连接
+✅ [ActionMenu] CancelButton 信号已连接
+✅ [ActionMenu] _ready 完成，菜单已隐藏
+✅ [PlayerUIComponent] 菜单已设置为current_open_menu: @Panel@46
+📞 [PlayerUIComponent] 调用current_menu.open_menu()
+
+=== 🎯 [ActionMenu] open_menu被调用 ===
+🔥 [ActionMenu] 菜单正在被打开！
+🔍 [ActionMenu] 传入角色: @Node2D@30
+🔍 [ActionMenu] 角色数据: 兰斯洛特
+🔧 [ActionMenu] 设置标题: 行动菜单 - 兰斯洛特
+🔧 [ActionMenu] 更新按钮状态
+🔧 [ActionMenu] 显示菜单并定位
+✅ [ActionMenu] 菜单已显示，位置: (884.0, 756.0)
+✅ [PlayerUIComponent] current_menu.open_menu()调用完成
+🔗 [PlayerUIComponent] 连接菜单信号
+✅ [PlayerUIComponent] 行动菜单打开流程完成
+✅ [BattleActionCoordinator] UI组件的open_action_menu()调用完成
+菜单已存在移动选项，不再重复添加
+角色 [兰斯洛特] 选择了 [休息] 行动
+选择行动: rest
+📋 [行动系统] 选择行动类型 [rest]，当前状态: SELECTING_ACTION
+😴 [行动系统] 执行休息行动
+😴 [行动系统] 兰斯洛特 选择休息，结束回合
+
+=== 🔍 [休息行动完成] 回合状态调试信息 ===
+📊 [调试] 当前回合: 1
+📊 [调试] 当前角色索引: 2
+📊 [调试] 回合队列大小: 6
+📊 [调试] 当前角色: 兰斯洛特 (控制类型: 0)
+📊 [调试] 行动点数：移动0，攻击0
+📊 [调试] 回合队列:
+📊 [调试]    0. 觉远 (友方) - HP: 150/150
+📊 [调试]    1. 柳生 (友方) - HP: 40/40
+📊 [调试] 👉 2. 兰斯洛特 (友方) - HP: 120/120
+📊 [调试]    3. 山贼头目 (敌方) - HP: 80/80
+📊 [调试]    4. 野狼 (敌方) - HP: 60/60
+📊 [调试]    5. 骷髅战士 (敌方) - HP: 70/70
+📊 [调试] 战斗状态: is_battle_active = true
+📊 [调试] ActionSystem状态: EXECUTING_ACTION
+=== [休息行动完成] 调试信息结束 ===
+
+😴 [行动系统] 通知BattleManager休息行动完成
+😴 [行动系统] 角色: 兰斯洛特, 休息结束回合
+🕐 [信号接收] 时间戳: 2025-06-09T20:37:40
+📡 [BattleEventManager] 收到character_action_completed信号
+🔍 [信号分析] 角色: 兰斯洛特
+🔍 [信号分析] 行动类型: rest
+🔍 [信号分析] 行动消息: 选择了休息，回合结束
+🎯 [信号分析] 这是休息信号，来源可能是: ActionSystemNew
+✅ [回合判断] 这个行动会结束回合，应该切换到下一个角色
+🎯 [BattleEventManager] 即将调用request_next_character()
+🔄 [TurnManager] NEXT_TURN被调用，当前索引: 2, 队列大小: 6
+🔄 [TurnManager] 切换前角色: 兰斯洛特 (索引: 2)
+🎯 [TurnManager] 索引从2 -> 3，下一个角色: 山贼头目
+📡 [TurnManager] _EMIT_TURN_CHANGE被调用
+🔍 [TurnManager] 当前角色: 山贼头目
+🎯 [TurnManager] 回合1，轮到: 山贼头目 (控制类型: 1)
+📊 [TurnManager] 当前回合队列状态:
+📊 [TurnManager]    0. 觉远 (友方) - HP: 150/150
+📊 [TurnManager]    1. 柳生 (友方) - HP: 40/40
+📊 [TurnManager]    2. 兰斯洛特 (友方) - HP: 120/120
+📊 [TurnManager] 👉 3. 山贼头目 (敌方) - HP: 80/80
+📊 [TurnManager]    4. 野狼 (敌方) - HP: 60/60
+📊 [TurnManager]    5. 骷髅战士 (敌方) - HP: 70/70
+📡 [TurnManager] 发出turn_changed信号
+🎯 [BattleManager] 回合变更: 1
+🔍 [BattleManager] 当前战斗状态 is_battle_active: true
+🎯 [BattleManager] 当前回合角色: 山贼头目 (控制类型: 1)
+🤖 [BattleManager] 检测到AI角色，发出ai_turn_started信号
+📡 [BattleManager] 即将发出turn_started信号: 回合1
+🎯 [ActionSystem] start_new_turn_for_character被调用
+🔍 [ActionSystem] 传入角色: 山贼头目
+🔍 [ActionSystem] 当前状态: 5
+🔧 [ActionSystem] 重置角色行动点数
+🎯 [行动系统] 初始化角色 山贼头目 的行动点数：移动1，攻击1
+🔄 [行动系统] 重置角色 山贼头目 的行动点数
+🎯 [ActionSystem] 开始角色 山贼头目 的新回合，状态设置为: 2
+✅ [BattleManager] turn_started信号已发出
+✅ [TurnManager] turn_changed信号已发出
+✅ [行动系统] character_action_completed信号已发出（休息）
+🔄 [行动系统] 行动系统已重置，等待下一次行动
+菜单关闭
+🤖 [AI管理器] 开始执行 山贼头目 的回合
+🧠 [AI管理器] 山贼头目 开始制定决策...
+🔍 [AI管理器] 山贼头目 行动能力 - 移动: true, 攻击: true
+🧠 [AI管理器] 山贼头目 的决策: 平衡策略
+🎯 [AI管理器] 执行决策: 平衡策略
+📋 [AI管理器] 计划行动顺序: ["move", "attack"]
+🎬 [AI管理器] 执行第1个行动: move
+🚶 [AI管理器] 开始执行移动行动
+🚶 [AI管理器] 山贼头目 移动到: (899.4005, 989.066)
+📉 [行动系统] 山贼头目 消耗移动点数，剩余：0
+🎬 [AI管理器] 开始移动动画...
+🤖 [MovementCoordinator] 直接移动角色: 山贼头目 -> (899.4005, 989.066)
+✅ [查找节点] 在敌人节点中找到: 山贼头目
+🔍 [MovementCoordinator] 检查目标位置 (899.4005, 989.066) 的碰撞，排除角色: 101
+✅ [MovementCoordinator] 物理查询验证结果: 有碰撞
+❌ [MovementCoordinator] 目标位置被其他角色占用，AI移动取消
+❌ [AI管理器] 山贼头目 移动失败
+❌ [AI管理器] 移动行动失败
+🎬 [AI管理器] 执行第2个行动: attack
+⚔️ [AI管理器] 开始执行攻击行动
+⚔️ [AI管理器] 山贼头目 攻击 兰斯洛特
+📉 [行动系统] 山贼头目 消耗攻击点数，剩余：0
+⚔️ [战斗管理器] 山贼头目 攻击 兰斯洛特
+🎬 [战斗管理器] 播放AI攻击动画
+✅ [查找节点] 在敌人节点中找到: 山贼头目
+🎬 [AI攻击动画] 山贼头目 攻击 兰斯洛特
+🚀 [攻击弹道] 创建攻击弹道效果
+💥 [命中效果] 创建命中爆炸效果
+✅ [AI攻击动画] 攻击动画播放完成
+💥 [战斗管理器] 伤害计算: 山贼头目(20攻击) -> 兰斯洛特(12防御) = 9伤害
+🎬 [战斗管理器] 显示伤害跳字
+🎬 [AI伤害跳字] 为目标 兰斯洛特 创建伤害数字: 9
+🎬 [AI伤害跳字] 伤害类型: 暴击!
+💥 [伤害数字] 为 兰斯洛特 创建伤害数字: 9 (暴击!)
+💥 [SkillEffects] 创建伤害数字: 兰斯洛特 受到 9 点伤害 (暴击!)
+🔍 [SkillEffects] 目标角色信息: 名称=兰斯洛特, ID=3, 类型=0
+🔍 [SkillEffects] 查找角色节点: 兰斯洛特 (ID: 3)
+🔍 [SkillEffects] 当前场景: 战斗场景
+🔍 [SkillEffects] 调用BattleScene.get_character_node_by_data
+✅ [SkillEffects] 找到角色节点: 兰斯洛特 -> @Node2D@30 (位置: (800.0, 956.0))
+🔍 [伤害数字] 在 (800.0, 956.0) 位置显示伤害
+🔍 [伤害数字] 目标节点详细信息: 名称=@Node2D@30, 类型=Node2D, 可见=true
+🔍 [伤害数字] 目标节点位置: (800.0, 956.0)
+🔍 [伤害数字] 伤害标签位置: (725.0, 876.0)
+🔍 [伤害数字] 伤害文本: 暴击! -9
+✅ [伤害数字] 伤害数字已创建: 暴击! -9
+💥 [伤害效果] 显示伤害数字: 9 暴击!
+✅ [AI伤害跳字] 伤害跳字创建完成
+✅ [AI管理器] 攻击行动完成
+✅ [AI管理器] 山贼头目 回合完成: 完成了攻击，造成了9点伤害
+🧹 [缓存清理] 清理了 1 个过期缓存条目

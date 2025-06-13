@@ -28,6 +28,7 @@ var movement_coordinator: Node
 var battle_combat_manager: Node
 var character_manager: Node
 var battle_flow_manager: Node
+var battle_ai_manager: Node
 
 # 🚀 事件处理状态
 var is_processing_event: bool = false
@@ -63,6 +64,7 @@ func _find_component_references() -> void:
 	battle_combat_manager = get_node_or_null("../BattleCombatManager")
 	character_manager = get_node_or_null("../CharacterManager")
 	battle_flow_manager = get_node_or_null("../BattleFlowManager")
+	battle_ai_manager = get_node_or_null("../BattleAIManager")
 
 func _connect_signals() -> void:
 	"""连接信号"""
@@ -102,6 +104,16 @@ func _connect_signals() -> void:
 		print("🔧 [事件管理器] battle_flow_manager找到，但不连接next_character_requested信号")
 	else:
 		print("❌ [事件管理器] battle_flow_manager节点未找到")
+	
+	# 🚀 连接AI管理器信号
+	if battle_ai_manager:
+		if battle_ai_manager.has_signal("ai_action_completed"):
+			battle_ai_manager.ai_action_completed.connect(_on_ai_action_completed)
+			print("✅ [事件管理器] ai_action_completed信号连接成功")
+		else:
+			print("❌ [事件管理器] ai_action_completed信号不存在")
+	else:
+		print("❌ [事件管理器] battle_ai_manager节点未找到")
 
 # 🚀 事件处理函数
 # 注意：已移除_on_next_character_requested_from_flow_manager函数，避免重复触发
@@ -141,12 +153,58 @@ func _on_visual_skill_selection_cancelled() -> void:
 	_queue_event(EventType.VISUAL_SKILL_SELECTION_CANCELLED, event_data)
 
 func _on_character_action_completed(character: GameCharacter, action_result: Dictionary) -> void:
-	"""角色行动完成事件处理"""
-	var event_data = {
-		"character": character,
-		"action_result": action_result
-	}
-	_queue_event(EventType.CHARACTER_ACTION_COMPLETED, event_data)
+	print("🕐 [信号接收] 时间戳: %s" % Time.get_datetime_string_from_system())
+	print("📡 [BattleEventManager] 收到character_action_completed信号")
+	print("🔍 [信号分析] 角色: %s" % (character.name if character else "null"))
+	print("🔍 [信号分析] 行动类型: %s" % action_result.get("type", "unknown"))
+	print("🔍 [信号分析] 行动消息: %s" % action_result.get("message", "无消息"))
+	
+	# 🚀 分析可能的信号来源
+	var action_type = action_result.get("type", "")
+	match action_type:
+		"skill":
+			print("🎯 [信号分析] 这是技能完成信号，来源可能是: BattleCombatManager")
+		"move_and_turn_end":
+			print("🎯 [信号分析] 这是移动+回合结束信号，来源可能是: ActionSystemNew")
+		"move_only":
+			print("🎯 [信号分析] 这是仅移动信号，来源可能是: ActionSystemNew")
+		"rest":
+			print("🎯 [信号分析] 这是休息信号，来源可能是: ActionSystemNew")
+		_:
+			print("🎯 [信号分析] 未知的行动类型: %s" % action_type)
+	
+	# 🚀 检查是否应该切换回合
+	var should_switch_turn = false
+	match action_type:
+		"skill", "rest", "move_and_turn_end":
+			should_switch_turn = true
+			print("✅ [回合判断] 这个行动会结束回合，应该切换到下一个角色")
+		"move_only":
+			should_switch_turn = false
+			print("🔄 [回合判断] 这是移动行动，回合不结束，不切换角色")
+		_:
+			should_switch_turn = true
+			print("❓ [回合判断] 未知类型，默认切换回合")
+	
+	if should_switch_turn:
+		print("🎯 [BattleEventManager] 即将调用request_next_character()")
+		request_next_character()
+	else:
+		print("⏸️ [BattleEventManager] 回合不结束，不调用request_next_character()")
+
+# 🚀 AI行动完成处理
+func _on_ai_action_completed(ai_character: GameCharacter, result: Dictionary) -> void:
+	print("🕐 [AI信号接收] 时间戳: %s" % Time.get_datetime_string_from_system())
+	print("📡 [BattleEventManager] 收到ai_action_completed信号")
+	print("🔍 [AI信号分析] 角色: %s" % (ai_character.name if ai_character else "null"))
+	print("🔍 [AI信号分析] 行动类型: %s" % result.get("type", "unknown"))
+	print("🔍 [AI信号分析] 行动消息: %s" % result.get("message", "无消息"))
+	print("🔍 [AI信号分析] 执行的行动: %s" % str(result.get("actions", [])))
+	
+	# AI回合完成，总是切换到下一个角色
+	print("✅ [AI回合判断] AI回合完成，切换到下一个角色")
+	print("🎯 [BattleEventManager] AI回合结束，即将调用request_next_character()")
+	request_next_character()
 
 func _on_move_animation_completed(character_node: Node2D, character_id: String, final_position: Vector2) -> void:
 	"""移动动画完成事件处理"""
@@ -233,14 +291,22 @@ func _handle_skill_execution_completed(event_data: Dictionary) -> void:
 	
 	if debug_enabled:
 		print("🎯 [BattleEventManager] 处理技能执行完成事件")
+		print("🔧 [BattleEventManager] 技能: %s, 施法者: %s" % [skill.name if skill else "null", caster.name if caster else "null"])
 	
-	# 修复：移除委托给BattleCombatManager的调用，避免重复处理
-	# BattleCombatManager.handle_skill_execution_completed会发出character_action_completed信号
-	# 这会导致request_next_character()被调用两次
-	# 现在只执行默认处理：请求下一个角色
+	# 🚀 修复：通知BattleCombatManager技能执行完成
+	# 这将触发character_action_completed信号，由_handle_character_action_completed统一处理回合切换
+	if battle_combat_manager and battle_combat_manager.has_method("on_skill_executed"):
+		if debug_enabled:
+			print("🎯 [BattleEventManager] 通知BattleCombatManager技能执行完成")
+		battle_combat_manager.on_skill_executed(caster, skill, [], [results])
+	else:
+		if debug_enabled:
+			print("⚠️ [BattleEventManager] BattleCombatManager不可用，直接处理回合切换")
+		# 备用方案：直接切换回合
+		request_next_character()
+	
 	if debug_enabled:
-		print("🔄 [BattleEventManager] 执行默认处理：请求下一个角色")
-	request_next_character()
+		print("✅ [BattleEventManager] 技能执行完成处理结束")
 
 func _handle_skill_cancelled(event_data: Dictionary) -> void:
 	"""处理技能取消"""
@@ -254,48 +320,25 @@ func _handle_visual_skill_cast_completed(event_data: Dictionary) -> void:
 	var caster = event_data.get("caster")
 	var targets = event_data.get("targets", [])
 	
-	print("🎯 [事件管理器] 接收到视觉技能施放完成事件")
-	print("🔧 [调试] 调用堆栈: %s" % str(get_stack()))
-	print("  - 技能: %s" % (skill.name if skill else "null"))
-	print("  - 施法者: %s" % (caster.name if caster else "null"))
-	print("  - 目标数量: %d" % targets.size())
-	print("🔧 [调试] skill_manager存在: %s" % (skill_manager != null))
-	
 	# 检查技能管理器是否可用
 	if skill_manager and skill_manager.has_method("execute_skill"):
-		print("✅ [事件管理器] 调用技能管理器执行技能")
 		skill_manager.execute_skill(skill, caster, targets)
-		print("🔧 [调试] skill_manager.execute_skill调用完成")
-	else:
-		print("⚠️ [事件管理器] 技能管理器不可用或没有execute_skill方法")
-		if skill_manager:
-			print("🔧 [调试] skill_manager存在但没有execute_skill方法")
-		else:
-			print("🔧 [调试] skill_manager为null")
 
 func _handle_visual_skill_selection_cancelled(event_data: Dictionary) -> void:
 	"""处理视觉技能选择取消"""
-	print("❌ [事件管理器] 处理视觉技能选择取消")
-	
 	# 重置技能管理器状态
 	if skill_manager and skill_manager.has_method("reset_state"):
-		print("🔄 [事件管理器] 重置技能管理器状态")
 		skill_manager.reset_state()
-	else:
-		print("⚠️ [事件管理器] 技能管理器不可用或没有reset_state方法")
 	
-	# 🚀 修复：查找技能选择协调器 (根据新的启动方式调整路径)
+	# 查找技能选择协调器
 	var skill_selection_coordinator_node = null
 	
 	# 尝试多种路径查找 SkillSelectionCoordinator
 	if battle_scene:
-		# 尝试直接子节点
 		skill_selection_coordinator_node = battle_scene.get_node_or_null("SkillSelectionCoordinator")
 		if not skill_selection_coordinator_node:
-			# 尝试在UI层查找
 			skill_selection_coordinator_node = battle_scene.get_node_or_null("UI/SkillSelectionCoordinator")
 		if not skill_selection_coordinator_node:
-			# 尝试在Manager层查找
 			skill_selection_coordinator_node = battle_scene.get_node_or_null("Managers/SkillSelectionCoordinator")
 	
 	# 如果还是找不到，尝试通过已有的引用
@@ -303,18 +346,13 @@ func _handle_visual_skill_selection_cancelled(event_data: Dictionary) -> void:
 		skill_selection_coordinator_node = skill_selection_coordinator
 	
 	if skill_selection_coordinator_node and skill_selection_coordinator_node.has_method("restore_action_menu"):
-		print("🔙 [事件管理器] 通过技能选择协调器恢复行动菜单")
 		skill_selection_coordinator_node.restore_action_menu()
 	else:
-		print("⚠️ [事件管理器] 技能选择协调器不可用或没有restore_action_menu方法")
-		
-		# 🚀 备选方案：直接实现恢复逻辑，避免循环调用
+		# 备选方案：直接实现恢复逻辑
 		_restore_action_menu_directly()
 
 func _restore_action_menu_directly() -> void:
-	"""直接恢复行动菜单，避免循环调用"""
-	print("🔙 [事件管理器] 直接恢复行动菜单")
-	
+	"""直接恢复行动菜单"""
 	# 获取当前角色
 	var current_character_node = null
 	
@@ -323,7 +361,6 @@ func _restore_action_menu_directly() -> void:
 		var action_system = battle_scene.action_system
 		if action_system and action_system.selected_character:
 			current_character_node = action_system.selected_character
-			print("🔙 [事件管理器] 从ActionSystem获取角色节点")
 	
 	# 如果没有找到，尝试从 battle_manager 获取当前回合角色
 	if not current_character_node and battle_manager and battle_manager.has_method("get") and battle_manager.get("turn_manager"):
@@ -332,24 +369,18 @@ func _restore_action_menu_directly() -> void:
 			var current_character = turn_manager.get_current_character()
 			if current_character and battle_scene and battle_scene.has_method("_find_character_node_by_character_data"):
 				current_character_node = battle_scene._find_character_node_by_character_data(current_character)
-				print("🔙 [事件管理器] 从BattleManager获取当前回合角色: %s" % current_character.name)
 	
 	# 如果找到了角色节点，尝试恢复行动菜单
 	if current_character_node:
 		var ui_component = current_character_node.get_node_or_null("ComponentContainer/UIComponent")
 		if ui_component and ui_component.has_method("open_action_menu"):
-			print("✅ [事件管理器] 重新打开行动菜单")
 			ui_component.open_action_menu()
 		else:
-			print("⚠️ [事件管理器] 无法找到UI组件或open_action_menu方法")
 			# 最后的备选方案：重置行动系统
 			if battle_scene and battle_scene.has_method("get") and battle_scene.get("action_system"):
 				var action_system = battle_scene.action_system
 				if action_system and action_system.has_method("reset_action_system"):
-					print("🔄 [事件管理器] 重置行动系统")
 					action_system.reset_action_system()
-	else:
-		print("⚠️ [事件管理器] 无法找到当前角色节点")
 
 func _handle_character_action_completed(event_data: Dictionary) -> void:
 	"""处理角色行动完成"""
@@ -392,19 +423,10 @@ func _handle_animation_completed(event_data: Dictionary) -> void:
 # 🚀 辅助函数
 func request_next_character() -> void:
 	"""请求下一个角色"""
-	print("🔄 [BattleEventManager] 请求下一个角色")
-	
 	if battle_manager and battle_manager.has_method("proceed_to_next_character"):
-		print("🔄 [BattleEventManager] 调用battle_manager.proceed_to_next_character()")
 		battle_manager.proceed_to_next_character()
 	elif battle_manager and battle_manager.turn_manager and battle_manager.turn_manager.has_method("next_turn"):
-		print("🔄 [BattleEventManager] 调用battle_manager.turn_manager.next_turn()")
 		battle_manager.turn_manager.next_turn()
-	else:
-		print("⚠️ [BattleEventManager] 无法找到有效的回合管理器")
-		print("🔍 [BattleEventManager] battle_manager存在: %s" % (battle_manager != null))
-		if battle_manager:
-			print("🔍 [BattleEventManager] turn_manager存在: %s" % (battle_manager.turn_manager != null))
 
 func _proceed_to_next_character() -> void:
 	"""处理下一个角色的回合 - 从BattleScene迁移的方法"""

@@ -208,24 +208,18 @@ func select_action(action: String):
 			print("⚔️ [行动系统] 委托给SkillManager处理技能")
 			
 			if character_data:
-				# 委托给BattleScene处理技能选择
+				# 委托给BattleScene处理技能选择，但保持ActionSystem状态等待技能选择结果
 				var battle_scene = AutoLoad.get_battle_scene()
-				# if battle_scene and battle_scene.has_method("show_skill_selection_menu"):  # 已移除SkillSelectionMenu
-				#	var skill_manager = battle_scene.get_node_or_null("SkillManager")
-				#	if skill_manager:
-				#		print("🎯 [行动系统] 获取角色可用技能")
-				#		var available_skills = skill_manager.get_available_skills(character_data)
-				#		print("🎯 [行动系统] 委托BattleScene处理技能选择")
-				#		battle_scene.show_skill_selection_menu(character_data, available_skills)
-				#	else:
-				#		print("❌ [行动系统] SkillManager不存在")
-				#		reset_action_system()
-				# else:
-				#	print("❌ [行动系统] 无法找到BattleScene或show_skill_selection_menu方法")
-				#	reset_action_system()
-				
-				# 已移除SkillSelectionMenu，现在使用VisualSkillSelector进行技能选择
-				print("⚠️ [行动系统] SkillSelectionMenu已移除，请使用VisualSkillSelector进行技能选择")
+				if battle_scene and battle_scene.has_method("show_skill_menu"):
+					print("🎯 [行动系统] 委托BattleScene处理技能选择")
+					print("🔧 [行动系统] 调用参数: character_data=%s" % character_data.name)
+					# 实际调用show_skill_menu方法
+					battle_scene.show_skill_menu(character_data)
+					print("✅ [行动系统] show_skill_menu调用完成")
+					# 不要重置状态，等待技能选择的结果
+					return
+				else:
+					print("❌ [行动系统] 无法找到BattleScene或show_skill_menu方法")
 				reset_action_system()
 			else:
 				print("⚠️ [行动系统] 无法获取角色数据")
@@ -247,6 +241,39 @@ func select_action(action: String):
 			# 🚀 为非移动行动发出完成信号
 			_execute_non_move_action(action)
 
+# 🚀 新增：输出回合状态调试信息的辅助函数
+func _print_turn_debug_info(context: String):
+	print("\n=== 🔍 [%s] 回合状态调试信息 ===" % context)
+	var battle_scene = AutoLoad.get_battle_scene()
+	var battle_manager = battle_scene.get_node_or_null("BattleManager") if battle_scene else null
+	if battle_manager and battle_manager.turn_manager:
+		var turn_manager = battle_manager.turn_manager
+		print("📊 [调试] 当前回合: %d" % turn_manager.get_current_turn())
+		print("📊 [调试] 当前角色索引: %d" % turn_manager.current_character_index)
+		print("📊 [调试] 回合队列大小: %d" % turn_manager.turn_queue.size())
+		
+		var current_character = turn_manager.get_current_character()
+		if current_character:
+			print("📊 [调试] 当前角色: %s (控制类型: %d)" % [current_character.name, current_character.control_type])
+			var points = get_character_action_points(current_character)
+			print("📊 [调试] 行动点数：移动%d，攻击%d" % [points.move_points, points.attack_points])
+		else:
+			print("📊 [调试] 当前角色: null")
+		
+		print("📊 [调试] 回合队列:")
+		for i in range(turn_manager.turn_queue.size()):
+			var char = turn_manager.turn_queue[i]
+			var is_current = (i == turn_manager.current_character_index)
+			var char_type = "友方" if char.is_player_controlled() else "敌方"
+			var marker = "👉 " if is_current else "   "
+			print("📊 [调试] %s%d. %s (%s) - HP: %d/%d" % [marker, i, char.name, char_type, char.current_hp, char.max_hp])
+		
+		print("📊 [调试] 战斗状态: is_battle_active = %s" % battle_manager.is_battle_active)
+		print("📊 [调试] ActionSystem状态: %s" % ActionSystem.SystemState.keys()[current_state])
+	else:
+		print("⚠️ [调试] BattleManager或TurnManager未找到")
+	print("=== [%s] 调试信息结束 ===\n" % context)
+
 # 🚀 新增：执行休息行动
 func _execute_rest_action():
 	# 获取当前角色数据
@@ -258,6 +285,9 @@ func _execute_rest_action():
 		# 消耗所有剩余行动点数
 		consume_action_points(character_data, "rest")
 		
+		# 🚀 添加调试信息
+		_print_turn_debug_info("休息行动完成")
+		
 		# 创建行动结果
 		var action_result = {
 			"type": "rest",
@@ -268,9 +298,11 @@ func _execute_rest_action():
 		# 🚀 通知BattleManager行动完成
 		var battle_scene = AutoLoad.get_battle_scene()
 		var battle_manager = battle_scene.get_node_or_null("BattleManager") if battle_scene else null
-		if battle_manager:
+		if battle_manager and character_data:
 			print("😴 [行动系统] 通知BattleManager休息行动完成")
+			print("😴 [行动系统] 角色: %s, 休息结束回合" % character_data.name)
 			battle_manager.character_action_completed.emit(character_data, action_result)
+			print("✅ [行动系统] character_action_completed信号已发出（休息）")
 		else:
 			print("⚠️ [行动系统] 无法通知BattleManager：管理器不存在")
 	
@@ -313,14 +345,13 @@ func _execute_non_move_action(action: String):
 	var battle_scene = AutoLoad.get_battle_scene()
 	var battle_manager = battle_scene.get_node_or_null("BattleManager") if battle_scene else null
 	if battle_manager and character_data:
-		print("🎯 [行动系统] 通知BattleManager行动完成: %s" % action_result.message)
-		battle_manager.character_action_completed.emit(character_data, action_result)
-	else:
-		print("⚠️ [行动系统] 无法通知BattleManager：管理器或角色数据不存在")
-	
 	# 🚀 检查角色回合是否结束
-	if character_data and is_character_turn_finished(character_data):
-		print("✅ [行动系统] 角色 %s 行动点数耗尽，回合结束" % character_data.name)
+		if is_character_turn_finished(character_data):
+			print("🕐 [信号追踪] 时间戳: %s" % Time.get_datetime_string_from_system())
+			print("🎯 [信号追踪] 来源: ACTION_SYSTEM_NON_MOVE")
+			print("✅ [行动系统] 角色 %s 行动点数耗尽，回合结束" % character_data.name)
+			print("🎯 [行动系统] 这应该会触发下一个角色的回合")
+			battle_manager.character_action_completed.emit(character_data, action_result)
 		reset_action_system()
 	else:
 		# 如果还有行动点数，继续显示行动菜单
@@ -331,6 +362,9 @@ func _execute_non_move_action(action: String):
 			])
 			# 重置状态但保持选中角色
 			current_state = SystemState.SELECTING_ACTION
+	
+	# 🚀 新增：自动输出回合状态调试信息
+	_print_turn_debug_info("非移动行动完成后")
 
 # 🚀 新的移动确认处理 - 适配新架构的信号格式
 func _on_move_confirmed_new(character: GameCharacter, target_position: Vector2, target_height: float, movement_cost: float):
@@ -354,28 +388,124 @@ func _on_move_confirmed_new(character: GameCharacter, target_position: Vector2, 
 	
 	# 🚀 修复：移除重复的移动处理，让BattleScene统一处理移动动画
 	# 原来的代码会导致双重移动处理，产生残影问题
-	# selected_character.move_to(target_position, target_height) # 已删除
-	print("🚶 [行动系统] 移动处理已委托给BattleScene")
+	# selected_character.move_to(target_position)
 	
-	# 🚀 移动完成后，检查是否还有行动点数
-	if is_character_turn_finished(character):
-		print("✅ [行动系统] 角色 %s 行动点数耗尽，回合结束" % character.name)
-		current_state = SystemState.IDLE
-		selected_character = null
-		current_action = null
+	# 🚀 直接调用MovementCoordinator处理移动动画
+	var battle_scene = AutoLoad.get_battle_scene()
+	if battle_scene:
+		var movement_coordinator = battle_scene.get_node_or_null("BattleSystems/MovementCoordinator")
+		if movement_coordinator and movement_coordinator.has_method("_on_move_confirmed"):
+			print("📞 [ActionSystem] 调用MovementCoordinator处理移动")
+			movement_coordinator._on_move_confirmed(character, target_position, target_height, movement_cost)
+		else:
+			print("❌ [ActionSystem] MovementCoordinator不可用，路径: BattleSystems/MovementCoordinator")
+			print("🔍 [ActionSystem] MovementCoordinator存在检查: %s" % (movement_coordinator != null))
+			if movement_coordinator:
+				print("🔍 [ActionSystem] MovementCoordinator方法检查: %s" % movement_coordinator.has_method("_on_move_confirmed"))
 	else:
-		# 还有行动点数，可以继续行动
-		var points = get_character_action_points(character)
-		print("🔄 [行动系统] 角色 %s 移动完成，剩余行动点数：移动%d，攻击%d" % [
-			character.name, points.move_points, points.attack_points
-		])
-		# 重置状态到行动选择，让玩家可以继续选择其他行动
+		print("❌ [ActionSystem] BattleScene不可用")
+	
+	# 🚀 检查角色回合是否结束
+	if is_character_turn_finished(character):
+		print("🕐 [信号追踪] 时间戳: %s" % Time.get_datetime_string_from_system())
+		print("🎯 [信号追踪] 来源: ACTION_SYSTEM_MOVE")
+		print("✅ [行动系统] 角色 %s 移动后行动点数耗尽，回合结束" % character.name)
+		print("🎯 [行动系统] 发出移动完成+回合结束信号")
+		
+		# 🚀 发出行动完成信号（移动版本）
+		var move_end_result = {
+			"type": "move_and_turn_end",
+			"success": true,
+			"message": "移动完成且回合结束",
+			"final_position": target_position,
+			"final_height": target_height
+		}
+		
+		var battle_manager_scene = AutoLoad.get_battle_scene()
+		var battle_manager = battle_manager_scene.get_node_or_null("BattleManager") if battle_manager_scene else null
+		if battle_manager:
+			battle_manager.character_action_completed.emit(character, move_end_result)
+			
+		reset_action_system()
+	else:
+		# 移动完成但回合未结束，重置到选择行动状态
+		print("🔄 [行动系统] 角色 %s 移动完成但回合未结束，继续选择行动" % character.name)
 		current_state = SystemState.SELECTING_ACTION
+		
+		# 🚀 发出移动完成信号（非回合结束版本）
+		var move_result = {
+			"type": "move_only",
+			"success": true,
+			"message": "移动完成，回合继续",
+			"final_position": target_position,
+			"final_height": target_height
+		}
+		
+		var battle_manager_scene2 = AutoLoad.get_battle_scene()
+		var battle_manager = battle_manager_scene2.get_node_or_null("BattleManager") if battle_manager_scene2 else null
+		if battle_manager:
+			print("🕐 [信号追踪] 时间戳: %s" % Time.get_datetime_string_from_system())
+			print("🎯 [信号追踪] 来源: ACTION_SYSTEM_MOVE_ONLY")
+			battle_manager.character_action_completed.emit(character, move_result)
+	
+	# 🚀 新增：自动输出回合状态调试信息
+	_print_turn_debug_info("移动确认后")
 
 # 取消当前行动
 func cancel_action():
 	print("❌ [行动系统] 取消当前行动")
 	reset_action_system()
+
+# 🚀 新增：技能选择取消处理
+func on_skill_selection_cancelled():
+	print("🔙 [行动系统] 技能选择已取消")
+	
+	# 如果当前状态是EXECUTING_ACTION，恢复到SELECTING_ACTION状态
+	if current_state == SystemState.EXECUTING_ACTION:
+		current_state = SystemState.SELECTING_ACTION
+		print("🔄 [行动系统] 状态从 EXECUTING_ACTION 恢复到 SELECTING_ACTION")
+	
+	# 确保选中角色状态正确
+	if not selected_character:
+		# 尝试从回合管理器获取当前角色
+		var battle_scene = AutoLoad.get_battle_scene()
+		var battle_manager = battle_scene.get_node_or_null("BattleManager") if battle_scene else null
+		if battle_manager and battle_manager.turn_manager:
+			var current_character_data = battle_manager.turn_manager.get_current_character()
+			if current_character_data:
+				# 通过角色数据找到对应的节点
+				var character_node = _find_character_node_by_character_data(current_character_data)
+				if character_node:
+					selected_character = character_node
+					print("🔧 [行动系统] 重新设置选中角色: %s" % current_character_data.name)
+	
+	print("✅ [行动系统] 技能选择取消处理完成，当前状态: %s" % SystemState.keys()[current_state])
+
+# 🚀 辅助方法：通过角色数据查找角色节点
+func _find_character_node_by_character_data(character_data: GameCharacter):
+	var battle_scene = AutoLoad.get_battle_scene()
+	if not battle_scene:
+		return null
+	
+	var character_manager = battle_scene.get_node_or_null("CharacterManager")
+	if not character_manager:
+		return null
+	
+	# 在友方角色中查找
+	var ally_nodes = character_manager.get_party_member_nodes()
+	for ally_id in ally_nodes:
+		var ally_node = ally_nodes[ally_id]
+		if ally_node and ally_node.get_character_data() == character_data:
+			return ally_node
+	
+	# 在敌方角色中查找
+	var enemy_nodes = character_manager.get_enemy_nodes()
+	for enemy_id in enemy_nodes:
+		var enemy_node = enemy_nodes[enemy_id]
+		if enemy_node and enemy_node.get_character_data() == character_data:
+			return enemy_node
+	
+	return null
 
 # 重置系统状态
 func reset_action_system():

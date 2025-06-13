@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bngancl1f4wkl"
+
+[deps]
+
+files=["res://data/PathConfiguration.path.translation", "res://data/PathConfiguration.file.translation", "res://data/PathConfiguration.description.translation"]
+
+source_file="res://data/PathConfiguration.csv"
+dest_files=["res://data/PathConfiguration.path.translation", "res://data/PathConfiguration.file.translation", "res://data/PathConfiguration.description.translation"]
+
+[params]
+
+compress=true
+delimiter=0

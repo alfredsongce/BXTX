@@ -114,26 +114,18 @@ func load_from_id(char_id: String) -> void:
 	
 	id = char_id
 	name = data.get("name", "Unnamed")
-	level = data.get("level", 1)
-	max_hp = data.get("max_hp", 100)
+	level = int(data.get("level", 1))
+	max_hp = int(data.get("max_hp", 100))
 	current_hp = max_hp
-	max_mp = data.get("max_mp", 50)
+	max_mp = int(data.get("max_mp", 50))
 	current_mp = max_mp
-	attack = data.get("attack", 10)
-	defense = data.get("defense", 5)
-	speed = data.get("speed", 5)
-	qinggong_skill = data.get("qinggong_skill", 120)  # 默认设为120像素(3级)
+	attack = int(data.get("attack", 10))
+	defense = int(data.get("defense", 5))
+	speed = int(data.get("speed", 5))
+	qinggong_skill = int(data.get("qinggong_skill", 120))  # 从CSV数据中读取轻功值
 	
-	print("📊 [GameCharacter] 角色基础数据加载完成: %s (等级: %d, 生命: %d, 轻功: %d)" % [name, level, max_hp, qinggong_skill])
-	
-	# 🚀 新增：加载角色被动技能
-	print("🔮 [GameCharacter] 开始加载角色 %s (ID: %s) 的被动技能" % [name, char_id])
+	# 加载角色被动技能
 	_load_passive_skills(char_id)
-	print("✅ [GameCharacter] 角色 %s 被动技能加载完成，共 %d 个技能" % [name, passive_skills.size()])
-	
-	# 🔍 验证飞行能力
-	var can_fly = has_passive_skill("御剑飞行")
-	print("✈️ [GameCharacter] 角色 %s 飞行能力检查: %s" % [name, "可以飞行" if can_fly else "不能飞行"])
 	
 	# 重要：不要重置position和ground_position
 	# 这些应该由调用者通过set_base_position设置
@@ -145,7 +137,6 @@ func load_from_id(char_id: String) -> void:
 	status = STATUS.NORMAL
 	
 	stats_changed.emit()
-	print("🎉 [GameCharacter] 角色 %s (ID: %s) 数据加载完全完成" % [name, char_id])
 
 # 修改函数名称为perform_level_up以避免冲突
 func perform_level_up() -> void:
@@ -290,35 +281,17 @@ func set_position(pos: Vector2) -> void:
 func get_height() -> float:
 	return ground_position.y - position.y
 
-# 设置角色高度 - 返回是否设置成功
-func set_height(height_in_levels: float) -> bool:
-	# 转换高度等级为像素高度
-	var height_pixels = height_in_levels * 40
-	
-	# 检查高度是否在合法范围内
-	if height_pixels < 0 or height_pixels > qinggong_skill:
-		return false
-	
-	# 设置新位置
-	position.y = ground_position.y - height_pixels
-	
-	# 发出高度变化信号 - 向下取整以保持接口兼容
-	var int_height = int(height_in_levels)
-	height_changed.emit(int_height)
-	stats_changed.emit()
-	
-	return true
-
-
-# 根据角色位置获取高度
-func get_height_display() -> String:
-	# 将像素高度转换为游戏中的高度等级(每40像素1级)
-	var height_level = int(get_height() / 40)
-	return str(height_level)
-
 # 获取当前高度等级(每40像素为1级)
 func get_height_level() -> float:
 	return get_height() / 40
+
+# 设置角色高度(以等级为单位，每级40像素)
+func set_height(height_level: float) -> void:
+	var height_pixels = height_level * 40
+	position.y = ground_position.y - height_pixels
+	height_changed.emit(height_pixels)
+	stats_changed.emit()
+	print("🔧 [GameCharacter] 角色 %s 高度设置为: %.1f级 (%.1f像素)" % [name, height_level, height_pixels])
 
 # 检查是否在地面
 func is_on_ground() -> bool:
@@ -335,52 +308,29 @@ func set_to_ground() -> void:
 # 🚀 新增：从数据库加载角色被动技能
 func _load_passive_skills(character_id: String) -> void:
 	"""加载角色的被动技能"""
-	print("🔍 [GameCharacter] 开始加载角色 %s (ID: %s) 的被动技能" % [name, character_id])
-	
 	if not DataManager:
-		printerr("❌ [GameCharacter] DataManager 未找到，无法加载被动技能")
 		return
 	
 	# 从DataManager获取角色的被动技能配置
 	var passive_skill_records = DataManager.get_character_passive_skills(character_id)
-	print("📋 [GameCharacter] 从数据库获取到的被动技能数据:", passive_skill_records)
-	print("📊 [GameCharacter] 获取到 %d 条被动技能记录" % passive_skill_records.size())
 	
 	# 清空现有的被动技能列表
 	passive_skills.clear()
-	print("🧹 [GameCharacter] 已清空现有被动技能列表")
 	
 	if passive_skill_records.is_empty():
-		print("⚠️ [GameCharacter] 角色 %s 没有配置任何被动技能" % name)
 		return
 	
 	# 处理每个被动技能记录
-	for i in range(passive_skill_records.size()):
-		var record = passive_skill_records[i]
+	for record in passive_skill_records:
 		var passive_skill_id = record.get("passive_skill_id", "")
 		var required_level = int(record.get("learn_level", "1"))
 		
-		print("🔍 [GameCharacter] 处理第 %d 个被动技能: %s, 需要等级: %d, 角色当前等级: %d" % [i+1, passive_skill_id, required_level, level])
-		
 		# 检查角色等级是否满足学习条件
 		if level >= required_level:
-			print("✅ [GameCharacter] 等级检查通过，开始验证技能数据")
 			# 从被动技能数据库获取技能详细信息
 			var skill_data = DataManager.get_data("passive_skills", passive_skill_id)
 			if skill_data and not skill_data.is_empty():
 				passive_skills.append(passive_skill_id)
-				print("🎉 [GameCharacter] 成功学习被动技能: %s (技能数据: %s)" % [passive_skill_id, skill_data])
-			else:
-				printerr("❌ [GameCharacter] 未找到被动技能数据: %s" % passive_skill_id)
-		else:
-			print("⏳ [GameCharacter] 角色 %s 等级不足，无法学习被动技能: %s (需要等级: %d, 当前等级: %d)" % [name, passive_skill_id, required_level, level])
-	
-	print("📊 [GameCharacter] 角色 %s 最终拥有的被动技能列表: %s" % [name, passive_skills])
-	print("🔢 [GameCharacter] 角色 %s 总共拥有 %d 个被动技能" % [name, passive_skills.size()])
-	
-	# 特别检查飞行技能
-	var has_flight = has_passive_skill("御剑飞行")
-	print("✈️ [GameCharacter] 角色 %s 飞行技能检查: %s" % [name, "拥有御剑飞行" if has_flight else "没有御剑飞行"])
 
 # 🚀 新增：检查是否拥有指定被动技能
 func has_passive_skill(skill_id: String) -> bool:

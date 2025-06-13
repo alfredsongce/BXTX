@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c2w2guxju7bxp"
+
+[deps]
+
+files=["res://data/SpawnConfiguration.spawn.translation", "res://data/SpawnConfiguration.spawn.translation", "res://data/SpawnConfiguration.position.translation", "res://data/SpawnConfiguration.position.translation", "res://data/SpawnConfiguration.pattern.translation", "res://data/SpawnConfiguration.spacing.translation", "res://data/SpawnConfiguration.description.translation"]
+
+source_file="res://data/SpawnConfiguration.csv"
+dest_files=["res://data/SpawnConfiguration.spawn.translation", "res://data/SpawnConfiguration.spawn.translation", "res://data/SpawnConfiguration.position.translation", "res://data/SpawnConfiguration.position.translation", "res://data/SpawnConfiguration.pattern.translation", "res://data/SpawnConfiguration.spacing.translation", "res://data/SpawnConfiguration.description.translation"]
+
+[params]
+
+compress=true
+delimiter=0

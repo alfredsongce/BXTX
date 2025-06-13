@@ -535,7 +535,7 @@ func _apply_ground_snap():
 	# 动态检测最近的平台上边缘
 	var platform_top_y = _find_nearest_platform_top()
 	if platform_top_y == null:
-		print("🧲 [Input] 吸附失败: 没有找到平台")
+		# print("🧲 [Input] 吸附失败: 没有找到平台")
 		return  # 没有找到平台，不进行吸附
 	
 	# 获取实际的GroundAnchor偏移量

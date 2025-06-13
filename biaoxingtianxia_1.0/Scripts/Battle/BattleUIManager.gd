@@ -20,6 +20,8 @@ func _ready() -> void:
 	name = "BattleUIManager"
 	print("✅ [BattleUIManager] 战斗UI管理器初始化")
 	_setup_battle_ui()
+	# 延迟连接战斗管理器信号
+	call_deferred("_connect_battle_signals")
 
 # 🚀 设置战斗UI
 func _setup_battle_ui() -> void:
@@ -323,6 +325,104 @@ func _process(_delta: float) -> void:
 	if mouse_coordinate_label and mouse_coordinate_label.is_inside_tree():
 		var mouse_pos = get_global_mouse_position()
 		mouse_coordinate_label.text = "X: %.0f, Y: %.0f" % [mouse_pos.x, mouse_pos.y]
+
+# 🚀 连接战斗管理器信号（简化版，避免重试循环）
+func _connect_battle_signals() -> void:
+	print("🔍 [BattleUIManager] 尝试连接战斗管理器信号...")
+	# 尝试通过实际场景实例查找BattleManager
+	var battle_scene = get_tree().current_scene.get_node_or_null("战斗场景")
+	if not battle_scene:
+		battle_scene = AutoLoad.get_battle_scene()
+	if not battle_scene:
+		print("⚠️ [BattleUIManager] BattleScene不可用，跳过信号连接")
+		return
+	
+	var battle_manager = battle_scene.get_node_or_null("BattleManager")
+	if battle_manager:
+		print("✅ [BattleUIManager] 找到BattleManager，开始连接信号")
+		if battle_manager.has_signal("battle_started"):
+			if not battle_manager.battle_started.is_connected(_on_battle_started):
+				battle_manager.battle_started.connect(_on_battle_started)
+				print("✅ [BattleUIManager] 已连接battle_started信号")
+		if battle_manager.has_signal("turn_started"):
+			if not battle_manager.turn_started.is_connected(_on_turn_started):
+				battle_manager.turn_started.connect(_on_turn_started)
+				print("✅ [BattleUIManager] 已连接turn_started信号")
+		if battle_manager.has_signal("player_turn_started"):
+			if not battle_manager.player_turn_started.is_connected(_on_player_turn_started):
+				battle_manager.player_turn_started.connect(_on_player_turn_started)
+				print("✅ [BattleUIManager] 已连接player_turn_started信号")
+		if battle_manager.has_signal("ai_turn_started"):
+			if not battle_manager.ai_turn_started.is_connected(_on_ai_turn_started):
+				battle_manager.ai_turn_started.connect(_on_ai_turn_started)
+				print("✅ [BattleUIManager] 已连接ai_turn_started信号")
+		if battle_manager.has_signal("battle_ended"):
+			if not battle_manager.battle_ended.is_connected(_on_battle_ended):
+				battle_manager.battle_ended.connect(_on_battle_ended)
+				print("✅ [BattleUIManager] 已连接battle_ended信号")
+		print("✅ [BattleUIManager] 所有信号连接完成")
+	else:
+		print("⚠️ [BattleUIManager] 无法找到BattleManager，这是正常的（可能BattleManager还未初始化）")
+
+# 🚀 战斗开始处理
+func _on_battle_started() -> void:
+	print("📢 [BattleUIManager] 收到战斗开始信号")
+	update_battle_ui("战斗开始", "准备进入战斗状态...", "battle_start")
+	update_battle_button_state(true)
+
+# 🚀 回合开始处理
+func _on_turn_started(turn_number: int) -> void:
+	print("📢 [BattleUIManager] 收到回合开始信号: 回合%d" % turn_number)
+	# 只更新回合数，不清空当前角色信息
+	if turn_label:
+		turn_label.text = "回合 %d" % turn_number
+		_animate_ui_update(turn_label)
+	# 不调用update_battle_ui，避免清空current_character_label
+
+# 🚀 玩家回合开始处理
+func _on_player_turn_started(character) -> void:
+	print("📢 [BattleUIManager] 收到玩家回合开始信号: %s" % character.name)
+	print("🔧 [BattleUIManager] 更新UI显示当前角色: %s" % character.name)
+	# 直接更新当前角色标签，确保信息显示
+	if current_character_label:
+		current_character_label.text = "当前角色: %s" % character.name
+		_animate_ui_update(current_character_label)
+		print("✅ [BattleUIManager] 角色标签已更新: %s" % current_character_label.text)
+
+# 🚀 AI回合开始处理
+func _on_ai_turn_started(character) -> void:
+	print("📢 [BattleUIManager] 收到AI回合开始信号: %s" % character.name)
+	print("🔧 [BattleUIManager] 更新UI显示AI角色: %s" % character.name)
+	# 直接更新当前角色标签，确保信息显示
+	if current_character_label:
+		current_character_label.text = "敌方行动: %s" % character.name
+		_animate_ui_update(current_character_label)
+		print("✅ [BattleUIManager] AI角色标签已更新: %s" % current_character_label.text)
+
+# 🚀 战斗结束处理
+func _on_battle_ended(result) -> void:
+	print("📢 [BattleUIManager] 收到战斗结束信号: %s" % result)
+	if result is Dictionary:
+		var winner = result.get("winner", "unknown")
+		match winner:
+			"player":
+				update_battle_ui("战斗胜利！", "恭喜取得胜利", "battle_end")
+			"enemy":
+				update_battle_ui("战斗失败", "战斗已失败", "battle_end")
+			_:
+				update_battle_ui("战斗结束", "战斗已结束", "battle_end")
+	else:
+		update_battle_ui("战斗结束", "战斗已结束", "battle_end")
+	update_battle_button_state(false)
+
+# 🚀 强制更新战斗状态显示（用于战斗开始时调用）
+func force_update_battle_status() -> void:
+	print("🔧 [BattleUIManager] 强制更新战斗状态显示")
+	# 只更新回合信息，不覆盖角色信息
+	if turn_label:
+		turn_label.text = "战斗进行中"
+		_animate_ui_update(turn_label)
+	update_battle_button_state(true)
 
 # 获取UI容器（供其他组件使用）
 func get_ui_container() -> Control:

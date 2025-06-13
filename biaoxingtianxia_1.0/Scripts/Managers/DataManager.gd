@@ -2,16 +2,21 @@
 extends Node
 
 # 数据路径配置（常量字典，便于集中管理）
-const DATA_PATHS := {
-	"character": "res://data/CharacterData.csv",
-	"skills": "res://data/skill_database.csv",
-	"skill_learning": "res://data/skill_learning.csv",  # 🚀 新增：技能学习配置
-	"passive_skills": "res://data/passive_skills.csv",  # 🚀 新增：被动技能配置
-	"character_passive_skills": "res://data/character_passive_skills.csv",  # 🚀 新增：角色被动技能配置
-	"items": "res://data/Items.csv",
-	# 未来可扩展添加：
-	# "item": "res://data/ItemData.json",
-}
+# 🚀 新增：路径配置管理
+const PATH_CONFIG_FILE := "res://data/PathConfiguration.csv"
+var _path_cache := {}  # 缓存路径配置
+
+# 动态获取数据路径（从路径配置文件读取）
+func get_data_path(data_type: String) -> String:
+	if _path_cache.is_empty():
+		_load_path_configuration()
+	
+	var path_key = "data." + data_type
+	if _path_cache.has(path_key):
+		return _path_cache[path_key]
+	else:
+		printerr("⚠️ [DataManager] 未找到数据类型 '%s' 的路径配置" % data_type)
+		return ""
 
 # 数据存储字典（动态加载的数据会存储在这里）
 var _data_stores := {}
@@ -37,27 +42,33 @@ func load_data(data_type: String) -> void:
 		print("✅ [DataManager] 数据类型 %s 已加载，跳过" % data_type)
 		return
 
-	print("🔍 [DataManager] 检查DATA_PATHS是否包含 %s: %s" % [data_type, DATA_PATHS.has(data_type)])
-	print("📋 [DataManager] 可用的数据类型: %s" % str(DATA_PATHS.keys()))
+	print("🔍 [DataManager] 开始处理数据类型: %s" % data_type)
+	print("📋 [DataManager] 请检查路径配置文件: %s" % PATH_CONFIG_FILE)
 	
-	if not DATA_PATHS.has(data_type):
+	# 获取数据文件路径
+	var data_path = get_data_path(data_type)
+	if data_path.is_empty():
 		push_error("未知数据类型: %s" % data_type)
 		return
 	
 	match data_type:
 		"character":
-			_data_stores[data_type] = _load_character_data(DATA_PATHS[data_type])
+			_data_stores[data_type] = _load_character_data(data_path)
 		"skills":
-			_data_stores[data_type] = _load_skills_data(DATA_PATHS[data_type])
+			_data_stores[data_type] = _load_skills_data(data_path)
 		"skill_learning":  # 🚀 新增：技能学习数据加载
-			_data_stores[data_type] = _load_skill_learning_data(DATA_PATHS[data_type])
+			_data_stores[data_type] = _load_skill_learning_data(data_path)
 		"passive_skills":  # 🚀 新增：被动技能数据加载
-			_data_stores[data_type] = _load_passive_skills_data(DATA_PATHS[data_type])
+			_data_stores[data_type] = _load_passive_skills_data(data_path)
 		"character_passive_skills":  # 🚀 新增：角色被动技能数据加载
-			_data_stores[data_type] = _load_character_passive_skills_data(DATA_PATHS[data_type])
+			_data_stores[data_type] = _load_character_passive_skills_data(data_path)
+		"level_configuration":  # 🚀 新增：关卡配置数据加载
+			_data_stores[data_type] = _load_level_configuration_data(data_path)
+		"spawn_configuration":  # 🚀 新增：生成点配置数据加载
+			_data_stores[data_type] = _load_spawn_configuration_data(data_path)
 		# 未来扩展其他数据类型：
 		# "item":
-		#     _data_stores[data_type] = _load_item_data(DATA_PATHS[data_type])
+		#     _data_stores[data_type] = _load_item_data(data_path)
 		_:
 			push_error("未实现的数据加载器: %s" % data_type)
 			return
@@ -102,7 +113,9 @@ func get_data(data_type: String, id: String = ""):
 
 # 公开方法：强制重载数据
 func reload_data(data_type: String) -> void:
-	if not DATA_PATHS.has(data_type):
+	# 检查数据类型是否有效（通过尝试获取路径）
+	var data_path = get_data_path(data_type)
+	if data_path.is_empty():
 		push_error("尝试重载未知数据类型: %s" % data_type)
 		return
 	
@@ -173,10 +186,12 @@ func _load_character_data(path: String) -> Dictionary:
 			"max_hp": int(row_data.get("max_hp", "100")),
 			"attack": int(row_data.get("attack", "10")),
 			"defense": int(row_data.get("defense", "5")),
-			"level": level_value
+			"level": level_value,
+			"qinggong_skill": int(row_data.get("qinggong_skill", "120")),
+			"scene_path": row_data.get("scene_path", "")  # 🎯 新增：保存场景路径字段
 		}
 		
-		print("📋 [DataManager] 加载角色数据: ID=%s, 名称=%s, 等级=%d" % [id, result[id]["name"], result[id]["level"]])
+		print("📋 [DataManager] 加载角色数据: ID=%s, 名称=%s, 等级=%d, 轻功=%d" % [id, result[id]["name"], result[id]["level"], result[id]["qinggong_skill"]])
 	
 	print("✅ [DataManager] 角色数据加载完成，共加载 %d 个角色" % result.size())
 	print("📝 [DataManager] 已加载的角色ID列表: %s" % str(result.keys()))
@@ -229,11 +244,11 @@ func _load_passive_skills_data(path: String) -> Dictionary:
 			continue
 		
 		# 获取技能名称
-		var name: String = ""
+		var skill_name: String = ""
 		if row_data.has("技能名称"):
-			name = str(row_data["技能名称"]).strip_edges()
+			skill_name = str(row_data["技能名称"]).strip_edges()
 		elif row_data.has("name"):
-			name = str(row_data["name"]).strip_edges()
+			skill_name = str(row_data["name"]).strip_edges()
 		
 		# 获取技能描述
 		var description: String = ""
@@ -251,7 +266,7 @@ func _load_passive_skills_data(path: String) -> Dictionary:
 		
 		result[id] = {
 			"id": id,
-			"name": name,
+			"name": skill_name,
 			"description": description,
 			"effect_type": effect_type
 		}
@@ -262,55 +277,142 @@ func _load_passive_skills_data(path: String) -> Dictionary:
 
 # 🚀 新增：角色被动技能数据加载
 func _load_character_passive_skills_data(path: String) -> Array:
-	print("👤 [DataManager] 加载角色被动技能配置: %s" % path)
 	var csv_data := _load_csv_with_comments(path)
-	print("✅ [DataManager] 角色被动技能配置加载完成，共 %d 条记录" % csv_data.size())
-	
-	# 打印前几条记录用于调试
-	for i in range(min(5, csv_data.size())):
-		print("📋 [DataManager] 记录 %d: %s" % [i, csv_data[i]])
-	
 	return csv_data
 
 # 🚀 新增：获取角色的被动技能列表
 func get_character_passive_skills(character_id: String) -> Array:
-	print("🔍 [DataManager] 开始查找角色 %s 的被动技能" % character_id)
-	
-	# 强制重载数据以确保获取最新的CSV内容
-	reload_data("character_passive_skills")
-	print("🔄 [DataManager] 已强制重载被动技能数据")
+	# 确保数据已加载（但不强制重载）
+	load_data("character_passive_skills")
 	
 	var passive_skills_data = get_data("character_passive_skills")
 	if passive_skills_data.is_empty():
-		printerr("❌ [DataManager] 被动技能数据为空")
 		return []
-	
-	print("📋 [DataManager] 被动技能数据总数: %d" % passive_skills_data.size())
-	print("📝 [DataManager] CSV文件路径: %s" % DATA_PATHS["character_passive_skills"])
-	
-	# 显示前3条记录作为样本
-	for i in range(min(3, passive_skills_data.size())):
-		print("📄 [DataManager] 样本记录 %d: %s" % [i, passive_skills_data[i]])
 	
 	var matching_skills = []
 	for skill_record in passive_skills_data:
-		# 🚀 修复：使用正确的英文列名
 		var record_character_id = str(skill_record.get("character_id", ""))
-		var passive_skill_id = str(skill_record.get("passive_skill_id", ""))
-		var learn_level = str(skill_record.get("learn_level", ""))
 		
 		if record_character_id == character_id:
-			print("✅ [DataManager] 找到匹配的被动技能记录: character_id=%s, passive_skill_id=%s, learn_level=%s" % [record_character_id, passive_skill_id, learn_level])
 			matching_skills.append(skill_record)
 	
-	print("📊 [DataManager] 角色 %s 的被动技能记录总数: %d" % [character_id, matching_skills.size()])
-	print("🎯 [DataManager] 匹配的技能列表: %s" % [matching_skills])
 	return matching_skills
 
 # 🚀 新增：获取被动技能数据
 func get_passive_skill_data(skill_id: String) -> Dictionary:
 	var passive_skills_data = get_data("passive_skills")
 	return passive_skills_data.get(skill_id, {})
+
+# 🚀 新增：关卡配置数据加载
+func _load_level_configuration_data(path: String) -> Dictionary:
+	print("🏟️ [DataManager] 加载关卡配置: %s" % path)
+	var result := {}
+	var csv_data := _load_csv_with_comments(path)
+	
+	for row_data in csv_data:
+		var level_id = row_data.get("level_id", "")
+		if level_id.is_empty():
+			continue
+			
+		# 解析角色ID列表（处理CSV中的逗号分隔字符串）
+		var player_ids_str = row_data.get("player_character_ids", "")
+		var enemy_ids_str = row_data.get("enemy_character_ids", "")
+		
+		# 移除引号并分割
+		player_ids_str = player_ids_str.strip_edges().trim_prefix("\"").trim_suffix("\"")
+		enemy_ids_str = enemy_ids_str.strip_edges().trim_prefix("\"").trim_suffix("\"")
+		
+		var player_ids = player_ids_str.split(",") if not player_ids_str.is_empty() else []
+		var enemy_ids = enemy_ids_str.split(",") if not enemy_ids_str.is_empty() else []
+		
+		# 清理数组中的空白字符
+		for i in range(player_ids.size()):
+			player_ids[i] = player_ids[i].strip_edges()
+		for i in range(enemy_ids.size()):
+			enemy_ids[i] = enemy_ids[i].strip_edges()
+		
+		result[level_id] = {
+			"level_id": level_id,
+			"level_name": row_data.get("level_name", ""),
+			"player_character_ids": player_ids,
+			"enemy_character_ids": enemy_ids,
+			"description": row_data.get("description", "")
+		}
+		
+		print("📋 [DataManager] 加载关卡配置: ID=%s, 名称=%s, 玩家=%s, 敌人=%s" % [level_id, result[level_id]["level_name"], str(player_ids), str(enemy_ids)])
+	
+	print("✅ [DataManager] 关卡配置加载完成，共 %d 个关卡" % result.size())
+	return result
+
+# 🚀 新增：获取关卡配置
+func get_level_configuration(level_id: String) -> Dictionary:
+	var level_configs = get_data("level_configuration")
+	return level_configs.get(level_id, {})
+
+# 🚀 新增：获取生成点配置
+func get_spawn_configuration(level_id: String) -> Dictionary:
+	var spawn_configs = get_data("spawn_configuration")
+	return spawn_configs.get(level_id, {})
+
+# 🚀 新增：生成点配置数据加载
+func _load_spawn_configuration_data(path: String) -> Dictionary:
+	print("🎯 [DataManager] 加载生成点配置: %s" % path)
+	var result := {}
+	var csv_data := _load_csv_with_comments(path)
+	
+	for row_data in csv_data:
+		var level_id = row_data.get("level_id", "")
+		if level_id.is_empty():
+			continue
+			
+		# 初始化关卡数据结构
+		if not result.has(level_id):
+			result[level_id] = {
+				"player_spawns": [],
+				"enemy_spawns": []
+			}
+		
+		var spawn_type = row_data.get("spawn_type", "")
+		var spawn_data = {
+			"spawn_index": int(row_data.get("spawn_index", "0")),
+			"position": Vector2(
+				float(row_data.get("position_x", "0")),
+				float(row_data.get("position_y", "0"))
+			),
+			"pattern": row_data.get("pattern", "line"),
+			"spacing": float(row_data.get("spacing", "100")),
+			"description": row_data.get("description", "")
+		}
+		
+		if spawn_type == "player":
+			result[level_id]["player_spawns"].append(spawn_data)
+		elif spawn_type == "enemy":
+			result[level_id]["enemy_spawns"].append(spawn_data)
+		
+		print("📍 [DataManager] 加载生成点: 关卡=%s, 类型=%s, 位置=%s" % [level_id, spawn_type, spawn_data.position])
+	
+	print("✅ [DataManager] 生成点配置加载完成，共 %d 个关卡" % result.size())
+	return result
+
+# 🚀 新增：路径配置加载方法
+func _load_path_configuration():
+	"""加载路径配置文件"""
+	print("🗂️ [DataManager] 加载路径配置: %s" % PATH_CONFIG_FILE)
+	var csv_data := _load_csv_with_comments(PATH_CONFIG_FILE)
+	
+	for row_data in csv_data:
+		var path_type = row_data.get("path_type", "")
+		var path_key = row_data.get("path_key", "")
+		var file_path = row_data.get("file_path", "")
+		
+		if path_type.is_empty() or path_key.is_empty() or file_path.is_empty():
+			continue
+			
+		var cache_key = path_type + "." + path_key
+		_path_cache[cache_key] = file_path
+		print("📁 [DataManager] 注册路径: %s -> %s" % [cache_key, file_path])
+	
+	print("✅ [DataManager] 路径配置加载完成，共 %d 个路径" % _path_cache.size())
 
 # 未来可添加其他数据加载方法：
 # func _load_item_data(path: String) -> Dictionary:

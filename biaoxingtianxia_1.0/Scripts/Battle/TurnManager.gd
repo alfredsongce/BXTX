@@ -9,7 +9,7 @@ signal turn_order_calculated(turn_queue: Array)
 #endregion
 
 #region 调试日志控制
-var debug_logging_enabled: bool = false  # 默认关闭调试日志
+var debug_logging_enabled: bool = true  # 🚀 修改：开启调试日志以帮助定位回合切换问题
 #endregion
 
 #region 状态
@@ -72,19 +72,30 @@ func _start_first_turn() -> void:
 	_emit_turn_change()
 
 func next_turn() -> void:
+	print("🔄 [TurnManager] NEXT_TURN被调用，当前索引: %d, 队列大小: %d" % [current_character_index, turn_queue.size()])
+	
 	if turn_queue.is_empty():
+		print("⚠️ [TurnManager] 回合队列为空，返回")
 		return
+	
+	var old_index = current_character_index
+	var old_character = get_current_character()
+	print("🔄 [TurnManager] 切换前角色: %s (索引: %d)" % [old_character.name if old_character else "null", old_index])
 	
 	current_character_index += 1
 	
 	# 如果一轮结束，开始新的一轮
 	if current_character_index >= turn_queue.size():
+		print("🔄 [TurnManager] 一轮结束，重置索引为0")
 		current_character_index = 0
 		current_turn += 1
-		_debug_print("🔄 [TurnManager] 新的一轮开始")
+		print("🔄 [TurnManager] 新的一轮开始，回合: %d" % current_turn)
 		
 		# 🚀 新的一轮开始时，重新检查存活角色
 		_refresh_turn_queue()
+	
+	var next_character = get_current_character()
+	print("🎯 [TurnManager] 索引从%d -> %d，下一个角色: %s" % [old_index, current_character_index, next_character.name if next_character else "null"])
 	
 	_emit_turn_change()
 
@@ -106,22 +117,34 @@ func _refresh_turn_queue() -> void:
 		_debug_print("💀 [TurnManager] 所有角色都已死亡，战斗应该结束")
 
 func _emit_turn_change() -> void:
+	print("📡 [TurnManager] _EMIT_TURN_CHANGE被调用")
 	# 🚀 再次检查当前角色是否存活
 	var active_character = get_current_character()
+	print("🔍 [TurnManager] 当前角色: %s" % (active_character.name if active_character else "null"))
+	
 	if active_character and not active_character.is_alive():
-		_debug_print("💀 [TurnManager] 当前角色 %s 已死亡，跳过回合" % active_character.name)
+		print("💀 [TurnManager] 角色%s已死亡，跳过" % active_character.name)
 		next_turn()  # 递归调用下一个角色
 		return
 	
-	_debug_print("🎯 [TurnManager] 回合 %d，轮到：%s" % [current_turn, active_character.name if active_character else "无"])
+	print("🎯 [TurnManager] 回合%d，轮到: %s (控制类型: %d)" % [
+		current_turn, 
+		active_character.name if active_character else "null",
+		active_character.control_type if active_character else -1
+	])
 	
-	# 🚀 检查是否是新的一轮开始
-	if current_character_index == 0 and current_turn > 1:
-		_debug_print("🔄 [TurnManager] 第 %d 回合开始，所有角色重新行动" % current_turn)
+	# 🚀 在发出信号前输出回合队列状态
+	print("📊 [TurnManager] 当前回合队列状态:")
+	for i in range(turn_queue.size()):
+		var char = turn_queue[i]
+		var is_current = (i == current_character_index)
+		var char_type = "友方" if char.is_player_controlled() else "敌方"
+		var marker = "👉 " if is_current else "   "
+		print("📊 [TurnManager] %s%d. %s (%s) - HP: %d/%d" % [marker, i, char.name, char_type, char.current_hp, char.max_hp])
 	
-	_debug_print("📡 [TurnManager] 即将发出turn_changed信号: 回合%d, 角色%s" % [current_turn, active_character.name if active_character else "无"])
+	print("📡 [TurnManager] 发出turn_changed信号")
 	turn_changed.emit(current_turn, active_character)
-	_debug_print("✅ [TurnManager] turn_changed信号已发出")
+	print("✅ [TurnManager] turn_changed信号已发出")
 
 func get_current_turn() -> int:
 	return current_turn

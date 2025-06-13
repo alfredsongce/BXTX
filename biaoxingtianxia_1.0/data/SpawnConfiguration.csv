@@ -1,0 +1,8 @@
+level_id,spawn_type,spawn_index,position_x,position_y,pattern,spacing,description
+关卡ID,生成点类型,生成点索引,X坐标,Y坐标,生成模式,间距,描述
+level_1,player,0,600,1000,line,100,玩家生成点1
+level_1,player,1,700,1000,line,100,玩家生成点2
+level_1,player,2,800,1000,line,100,玩家生成点3
+level_1,enemy,0,1000,1000,line,100,敌人生成点1
+level_1,enemy,1,1100,1000,line,100,敌人生成点2
+level_1,enemy,2,1200,1000,line,100,敌人生成点3

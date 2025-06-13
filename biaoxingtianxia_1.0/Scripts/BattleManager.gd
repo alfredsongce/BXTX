@@ -206,13 +206,21 @@ func _on_turn_changed(turn_number: int, active_character = null) -> void:
 	_debug_print("✅ [BattleManager] turn_started信号已发出")
 
 func _on_action_completed(character, action_result: Dictionary) -> void:
+	print("✅ [BattleManager] ========== _ON_ACTION_COMPLETED 被调用 ==========")
 	_debug_print("✅ [BattleManager] 行动完成协调")
+	print("🔍 [BattleManager] 角色: %s, 行动结果: %s" % [
+		character.name if character else "null", 
+		action_result.get("message", "无消息")
+	])
 	
 	# 转发信号
+	print("📡 [BattleManager] 准备发出character_action_completed信号")
 	character_action_completed.emit(character, action_result)
+	print("✅ [BattleManager] character_action_completed信号已发出")
 	
 	# 检查战斗是否结束
 	_check_battle_end_condition()
+	print("========== _ON_ACTION_COMPLETED 结束 ==========")
 #endregion
 
 #region 辅助方法

@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b1bd6rrcr3gu"
+
+[deps]
+
+files=["res://data/LevelConfiguration.level.translation", "res://data/LevelConfiguration.player.translation", "res://data/LevelConfiguration.enemy.translation", "res://data/LevelConfiguration.description.translation"]
+
+source_file="res://data/LevelConfiguration.csv"
+dest_files=["res://data/LevelConfiguration.level.translation", "res://data/LevelConfiguration.player.translation", "res://data/LevelConfiguration.enemy.translation", "res://data/LevelConfiguration.description.translation"]
+
+[params]
+
+compress=true
+delimiter=0

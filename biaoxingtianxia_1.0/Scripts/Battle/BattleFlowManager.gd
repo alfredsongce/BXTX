@@ -92,12 +92,26 @@ func _find_component_references() -> void:
 	# 查找BattleManager
 	battle_manager = get_node_or_null("../BattleManager")
 	if not battle_manager:
-		battle_manager = AutoLoad.get_battle_scene().get_node_or_null("BattleSystems/BattleManager") if AutoLoad.get_battle_scene() else null
+		# 尝试通过场景实例查找
+		var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+		if not battle_scene:
+			battle_scene = get_tree().current_scene.get_node_or_null("战斗场景")
+		if battle_scene:
+			battle_manager = battle_scene.get_node_or_null("BattleManager")
+	
+	print("🔍 [BattleFlowManager] BattleManager查找结果: %s" % ("找到" if battle_manager else "未找到"))
+	if battle_manager:
+		print("🔍 [BattleFlowManager] BattleManager路径: %s" % battle_manager.get_path())
 	
 	# 查找BattleUIManager
 	battle_ui_manager = get_node_or_null("../BattleUIManager")
 	if not battle_ui_manager:
-		battle_ui_manager = AutoLoad.get_battle_scene().get_node_or_null("UI/BattleUIManager") if AutoLoad.get_battle_scene() else null
+		# 尝试通过场景实例查找
+		var battle_scene = get_tree().get_first_node_in_group("battle_scene")
+		if not battle_scene:
+			battle_scene = get_tree().current_scene.get_node_or_null("战斗场景")
+		if battle_scene:
+			battle_ui_manager = battle_scene.get_node_or_null("UI/BattleUIManager")
 	
 	# 查找CharacterManager
 	character_manager = get_node_or_null("../CharacterManager")
@@ -162,16 +176,20 @@ func _connect_signals() -> void:
 	
 	# 连接SkillManager信号
 	if skill_manager:
-		if skill_manager.has_signal("skill_execution_completed"):
-			skill_manager.skill_execution_completed.connect(_on_skill_execution_completed)
-			print("✅ [BattleFlowManager] skill_execution_completed信号连接成功")
+		# 🚀 修复：注释掉skill_execution_completed信号连接，避免与BattleEventManager重复处理
+		# if skill_manager.has_signal("skill_execution_completed"):
+		#	skill_manager.skill_execution_completed.connect(_on_skill_execution_completed)
+		#	print("✅ [BattleFlowManager] skill_execution_completed信号连接成功")
+		print("🔧 [BattleFlowManager] 跳过skill_execution_completed信号连接，由BattleEventManager统一处理")
 		if skill_manager.has_signal("skill_cancelled"):
 			skill_manager.skill_cancelled.connect(_on_skill_cancelled)
 	
 	# 连接SkillSelectionCoordinator信号
 	if skill_selection_coordinator:
-		if skill_selection_coordinator.has_signal("visual_skill_cast_completed"):
-			skill_selection_coordinator.visual_skill_cast_completed.connect(_on_visual_skill_cast_completed)
+		# 🚀 修复：移除重复的visual_skill_cast_completed连接，由BattleEventManager统一处理
+		# if skill_selection_coordinator.has_signal("visual_skill_cast_completed"):
+		#	skill_selection_coordinator.visual_skill_cast_completed.connect(_on_visual_skill_cast_completed)
+		print("🚀 [BattleFlowManager] 跳过visual_skill_cast_completed连接，避免重复处理")
 		if skill_selection_coordinator.has_signal("visual_skill_selection_cancelled"):
 			skill_selection_coordinator.visual_skill_selection_cancelled.connect(_on_visual_skill_selection_cancelled)
 	
@@ -221,7 +239,15 @@ func _execute_input_action(action: String) -> void:
 
 # 🚀 具体的输入处理方法
 func _handle_start_battle() -> void:
-	
+	print("🚀 [BattleFlowManager] 开始战斗流程")
+	# 在战斗开始前，尝试让BattleUIManager重新连接信号
+	if battle_ui_manager and battle_ui_manager.has_method("_connect_battle_signals"):
+		print("🔗 [BattleFlowManager] 尝试重新连接BattleUIManager信号")
+		battle_ui_manager._connect_battle_signals()
+	# 强制更新UI状态显示
+	if battle_ui_manager and battle_ui_manager.has_method("force_update_battle_status"):
+		print("🔧 [BattleFlowManager] 强制更新BattleUIManager状态显示")
+		battle_ui_manager.force_update_battle_status()
 	start_battle_flow()
 
 func _handle_toggle_collision_display() -> void:
@@ -263,14 +289,22 @@ func start_battle_flow() -> void:
 	
 	_set_state(BattleFlowState.PREPARING)
 	
+	# 重新查找BattleManager确保引用有效
+	if not battle_manager:
+		_find_component_references()
+	
 	# 通过BattleManager开始战斗
 	if battle_manager and battle_manager.has_method("start_battle"):
+		print("✅ [BattleFlowManager] 找到BattleManager，开始战斗")
 		battle_manager.start_battle()
 		_set_state(BattleFlowState.ACTIVE)
 		battle_flow_started.emit()
 		print("✅ [BattleFlowManager] 战斗流程启动成功")
 	else:
 		print("❌ [BattleFlowManager] 无法启动战斗 - BattleManager不可用")
+		print("🔍 [BattleFlowManager] battle_manager状态: %s" % battle_manager)
+		if battle_manager:
+			print("🔍 [BattleFlowManager] BattleManager有start_battle方法: %s" % battle_manager.has_method("start_battle"))
 		_set_state(BattleFlowState.IDLE)
 
 func end_battle_flow(reason: String = "normal") -> void:
@@ -421,18 +455,14 @@ func _on_skill_cancelled() -> void:
 			print("[BattleFlowManager] BattleCombatManager不可用，使用默认处理")
 
 func _on_visual_skill_cast_completed(skill: SkillData, caster: GameCharacter, targets: Array) -> void:
-	if debug_logging_enabled:
-		print("[BattleFlowManager] 视觉技能施放完成: %s" % (skill.name if skill else "未知技能"))
+	# 🚀 修复：此函数不再被调用，技能执行统一由BattleEventManager处理
+	print("🚨 [BattleFlowManager] 警告：_on_visual_skill_cast_completed被调用，但应该由BattleEventManager处理！")
+	print("🚨 [BattleFlowManager] 技能: %s, 施法者: %s" % [skill.name if skill else "null", caster.name if caster else "null"])
+	print("🚨 [BattleFlowManager] 这表明仍有重复的信号连接！")
 	
-	# 发出信号供其他系统监听
+	# 不再执行技能，避免重复处理
+	# 发出信号供其他系统监听（保留用于日志和监控）
 	visual_skill_cast_completed.emit(skill, caster, targets)
-	
-	# 直接执行技能
-	if skill_manager and skill_manager.has_method("execute_skill"):
-		skill_manager.execute_skill(skill, caster, targets)
-	else:
-		if debug_logging_enabled:
-			print("[BattleFlowManager] SkillManager不可用")
 
 func _on_visual_skill_selection_cancelled() -> void:
 	if debug_logging_enabled:
@@ -459,8 +489,9 @@ func _on_character_action_completed(character: GameCharacter, action_result: Dic
 	if debug_logging_enabled:
 		print("[BattleFlowManager] 角色行动完成: %s" % (character.name if character else "未知角色"))
 	
-	# 发出信号供其他系统监听
-	character_action_completed.emit(character, action_result)
+	# 🚀 修复：移除重复的character_action_completed信号发送，避免双重处理
+	# character_action_completed.emit(character, action_result)
+	print("🔧 [BattleFlowManager] 跳过重复的character_action_completed信号发送")
 	
 	# 更新UI
 	if battle_ui_manager and battle_ui_manager.has_method("update_character_info"):

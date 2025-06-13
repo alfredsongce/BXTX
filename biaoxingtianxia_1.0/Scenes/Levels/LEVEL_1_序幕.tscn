@@ -1,0 +1,218 @@
+[gd_scene load_steps=17 format=3 uid="uid://bvkxqwj8hn2ys"]
+
+[ext_resource type="PackedScene" uid="uid://cav4d0frquyw3" path="res://Scenes/Obstacles/PlatformObstacle.tscn" id="1_platform"]
+[ext_resource type="Texture2D" uid="uid://bcx3segvtgqpy" path="res://assets/sky_level_1.png" id="1_wveoq"]
+[ext_resource type="PackedScene" uid="uid://bqxvw8y7x8qkr" path="res://Scenes/Obstacles/RockObstacle.tscn" id="2_rock"]
+[ext_resource type="PackedScene" uid="uid://c2yvxa080arlr" path="res://Scenes/Obstacles/WallObstacle.tscn" id="3_wall"]
+[ext_resource type="PackedScene" uid="uid://d30wx0ba00sms" path="res://Scenes/Obstacles/WaterObstacle.tscn" id="4_water"]
+[ext_resource type="Script" uid="uid://bb2hnob8tyw1p" path="res://Scripts/Level/LevelConfiguration.gd" id="5_level_config"]
+[ext_resource type="Script" uid="uid://bo8rjvei2phtn" path="res://Scripts/Level/EnemyConfig.gd" id="6_enemy_config"]
+[ext_resource type="Script" uid="uid://ldjk8xikkmrd" path="res://Scripts/Level/SpawnSettings.gd" id="7_spawn_settings"]
+[ext_resource type="Script" uid="uid://btg6m6rigb6ff" path="res://Scripts/Level/EnvironmentSettings.gd" id="8_environment_settings"]
+[ext_resource type="Script" uid="uid://dvql34nx2tukq" path="res://Scripts/Level/GameplaySettings.gd" id="9_gameplay_settings"]
+[ext_resource type="Script" uid="uid://b1isimqri8a34" path="res://Scripts/Level/SpawnPoint.gd" id="10_spawn_point"]
+[ext_resource type="Script" uid="uid://d2w1ht2flecgj" path="res://Scripts/Level/SpawnPointManager.gd" id="11_spawn_manager"]
+[ext_resource type="Script" uid="uid://d078b34i38vil" path="res://Scripts/Level/SkyLayerController.gd" id="12_sky_controller"]
+
+[sub_resource type="Resource" id="EnemyConfig_1"]
+script = ExtResource("6_enemy_config")
+enemy_id = "101"
+spawn_index = 0
+level_override = -1
+custom_ai_behavior = ""
+special_abilities = Array[String]([])
+
+[sub_resource type="Resource" id="EnemyConfig_2"]
+script = ExtResource("6_enemy_config")
+enemy_id = "102"
+spawn_index = 1
+level_override = -1
+custom_ai_behavior = ""
+special_abilities = Array[String]([])
+
+[sub_resource type="Resource" id="EnemyConfig_3"]
+script = ExtResource("6_enemy_config")
+enemy_id = "103"
+spawn_index = 2
+level_override = -1
+custom_ai_behavior = ""
+special_abilities = Array[String]([])
+
+[node name="LevelRoot" type="Node2D"]
+
+[node name="BackgroundLayers" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="BackgroundLayers"]
+
+[node name="SkyLayer" type="ParallaxLayer" parent="BackgroundLayers/ParallaxBackground"]
+motion_scale = Vector2(0.1, 0.1)
+script = ExtResource("12_sky_controller")
+sky_move_speed = 240.0
+
+[node name="SkySprites" type="Node2D" parent="BackgroundLayers/ParallaxBackground/SkyLayer"]
+
+[node name="Sky" type="Sprite2D" parent="BackgroundLayers/ParallaxBackground/SkyLayer/SkySprites"]
+position = Vector2(1027, 10)
+texture = ExtResource("1_wveoq")
+
+[node name="DistantLayer" type="ParallaxLayer" parent="BackgroundLayers/ParallaxBackground"]
+motion_scale = Vector2(0.3, 0.3)
+
+[node name="DistantSprites" type="Node2D" parent="BackgroundLayers/ParallaxBackground/DistantLayer"]
+
+[node name="MidgroundLayer" type="ParallaxLayer" parent="BackgroundLayers/ParallaxBackground"]
+motion_scale = Vector2(0.6, 0.6)
+
+[node name="MidgroundSprites" type="Node2D" parent="BackgroundLayers/ParallaxBackground/MidgroundLayer"]
+
+[node name="GameplayLayers" type="Node2D" parent="."]
+
+[node name="GroundLayer" type="Node2D" parent="GameplayLayers"]
+
+[node name="FloorTiles" type="Node2D" parent="GameplayLayers/GroundLayer"]
+
+[node name="GroundDecoration" type="Node2D" parent="GameplayLayers/GroundLayer"]
+
+[node name="ObstacleLayer" type="Node2D" parent="GameplayLayers"]
+z_index = 5
+
+[node name="Obstacles" type="Node2D" parent="GameplayLayers/ObstacleLayer"]
+
+[node name="PlatformObstacle" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("1_platform")]
+position = Vector2(1000, 1005)
+scale = Vector2(10, 1)
+
+[node name="TestPlatformObstacle" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("1_platform")]
+position = Vector2(500, 905)
+scale = Vector2(3, 1)
+obstacle_color = Color(0.501961, 0.137255, 0.501961, 1)
+
+[node name="RockObstacle1" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(400, 980)
+
+[node name="RockObstacle2" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(600, 950)
+
+[node name="RockObstacle3" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(800, 970)
+
+[node name="RockObstacle4" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(1200, 960)
+
+[node name="RockObstacle5" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("2_rock")]
+position = Vector2(1400, 980)
+
+[node name="WallObstacle1" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("3_wall")]
+position = Vector2(900, 980)
+
+[node name="WaterObstacle1" parent="GameplayLayers/ObstacleLayer/Obstacles" instance=ExtResource("4_water")]
+position = Vector2(1050, 980)
+
+[node name="CharacterSpawns" type="Node2D" parent="GameplayLayers"]
+z_index = 10
+
+[node name="PlayerSpawns" type="Node2D" parent="GameplayLayers/CharacterSpawns"]
+
+[node name="PlayerSpawn1" type="Marker2D" parent="GameplayLayers/CharacterSpawns/PlayerSpawns"]
+position = Vector2(600, 1000)
+gizmo_extents = 50.0
+script = ExtResource("10_spawn_point")
+character_id = "1"
+description = "觉远生成点"
+
+[node name="PlayerSpawn2" type="Marker2D" parent="GameplayLayers/CharacterSpawns/PlayerSpawns"]
+position = Vector2(700, 1000)
+gizmo_extents = 50.0
+script = ExtResource("10_spawn_point")
+character_id = "2"
+spawn_index = 1
+description = "柳生生成点"
+
+[node name="PlayerSpawn3" type="Marker2D" parent="GameplayLayers/CharacterSpawns/PlayerSpawns"]
+position = Vector2(800, 1000)
+gizmo_extents = 50.0
+script = ExtResource("10_spawn_point")
+character_id = "3"
+spawn_index = 2
+description = "兰斯洛特生成点"
+
+[node name="EnemySpawns" type="Node2D" parent="GameplayLayers/CharacterSpawns"]
+
+[node name="EnemySpawn1" type="Marker2D" parent="GameplayLayers/CharacterSpawns/EnemySpawns"]
+position = Vector2(1000, 1000)
+gizmo_extents = 50.0
+script = ExtResource("10_spawn_point")
+spawn_type = 1
+character_id = "101"
+description = "山贼头目生成点"
+
+[node name="EnemySpawn2" type="Marker2D" parent="GameplayLayers/CharacterSpawns/EnemySpawns"]
+position = Vector2(1100, 1000)
+gizmo_extents = 50.0
+script = ExtResource("10_spawn_point")
+spawn_type = 1
+character_id = "102"
+spawn_index = 1
+description = "野狼生成点"
+
+[node name="EnemySpawn3" type="Marker2D" parent="GameplayLayers/CharacterSpawns/EnemySpawns"]
+position = Vector2(1200, 1000)
+gizmo_extents = 50.0
+script = ExtResource("10_spawn_point")
+spawn_type = 1
+character_id = "103"
+spawn_index = 2
+description = "骷髅战士生成点"
+
+[node name="InteractiveProps" type="Node2D" parent="GameplayLayers"]
+z_index = 15
+
+[node name="Breakables" type="Node2D" parent="GameplayLayers/InteractiveProps"]
+
+[node name="Collectibles" type="Node2D" parent="GameplayLayers/InteractiveProps"]
+
+[node name="ForegroundLayers" type="CanvasLayer" parent="."]
+
+[node name="NearForeground" type="Node2D" parent="ForegroundLayers"]
+z_index = 100
+
+[node name="ForegroundPillars" type="Node2D" parent="ForegroundLayers/NearForeground"]
+
+[node name="ForegroundRocks" type="Node2D" parent="ForegroundLayers/NearForeground"]
+
+[node name="HangingObjects" type="Node2D" parent="ForegroundLayers"]
+z_index = 110
+
+[node name="Lanterns" type="Node2D" parent="ForegroundLayers/HangingObjects"]
+
+[node name="Banners" type="Node2D" parent="ForegroundLayers/HangingObjects"]
+
+[node name="Chains" type="Node2D" parent="ForegroundLayers/HangingObjects"]
+
+[node name="CoverLayer" type="Node2D" parent="ForegroundLayers"]
+z_index = 120
+
+[node name="Fog" type="Node2D" parent="ForegroundLayers/CoverLayer"]
+
+[node name="RainDrops" type="Node2D" parent="ForegroundLayers/CoverLayer"]
+
+[node name="LightEffects" type="Node2D" parent="ForegroundLayers/CoverLayer"]
+
+[node name="Config" type="Node" parent="."]
+
+[node name="LevelConfiguration" type="Node" parent="Config"]
+script = ExtResource("5_level_config")
+enemy_configurations = [SubResource("EnemyConfig_1"), SubResource("EnemyConfig_2"), SubResource("EnemyConfig_3")]
+
+[node name="SpawnSettings" type="Node" parent="Config"]
+script = ExtResource("7_spawn_settings")
+
+[node name="EnvironmentSettings" type="Node" parent="Config"]
+script = ExtResource("8_environment_settings")
+
+[node name="GameplaySettings" type="Node" parent="Config"]
+script = ExtResource("9_gameplay_settings")
+
+[node name="SpawnPointManager" type="Node" parent="Config"]
+script = ExtResource("11_spawn_manager")

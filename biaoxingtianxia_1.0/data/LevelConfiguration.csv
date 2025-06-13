@@ -1,0 +1,3 @@
+level_id,level_name,player_character_ids,enemy_character_ids,description
+关卡ID,关卡名称,玩家角色ID列表,敌人角色ID列表,描述
+level_1,序幕,"1,2,3","101,102,103",游戏开始的序幕关卡

@@ -1,8 +1,8 @@
-id,name,max_hp,attack,defense,level
-角色ID,角色名称,最大生命值,攻击力,防御力,等级
-1,觉远,150,25,15,1
-2,柳生,40,8,1,
-3,兰斯洛特,120,30,12,1
-101,山贼头目,80,20,8,2
-102,野狼,60,15,5,1
-103,骷髅战士,70,18,10,1
+id,name,max_hp,attack,defense,level,qinggong_skill,scene_path
+角色ID,角色名称,最大生命值,攻击力,防御力,等级,轻功值,场景文件路径
+1,觉远,150,25,15,1,280,res://Scenes/Characters/Party/JueYuan.tscn
+2,柳生,40,8,1,,280,res://Scenes/Characters/Party/LiuSheng.tscn
+3,兰斯洛特,120,30,12,1,120,res://Scenes/Characters/Party/Lancelot.tscn
+101,山贼头目,80,20,8,2,400,res://Scenes/Characters/Enemies/Bandit_101.tscn
+102,野狼,60,15,5,1,400,res://Scenes/Characters/Enemies/Wolf_102.tscn
+103,骷髅战士,70,18,10,1,400,res://Scenes/Characters/Enemies/Skeleton_103.tscn

@@ -237,14 +237,24 @@ func _setup_visual_skill_selector() -> void:
 
 # 显示可视化技能选择界面
 func show_visual_skill_selection(character: GameCharacter, available_skills: Array) -> void:
+	print("🔍 [技能选择协调器] show_visual_skill_selection被调用")
+	print("🔍 [技能选择协调器] 传入参数: 角色=%s, 技能数量=%d" % [character.name, available_skills.size()])
+	print("🔍 [技能选择协调器] visual_skill_selector存在: %s" % (visual_skill_selector != null))
+	
 	if not visual_skill_selector:
 		print("⚠️ [技能选择协调器] 可视化技能选择器未初始化")
-		return
+		print("🔧 [技能选择协调器] 尝试重新初始化可视化技能选择器")
+		_setup_visual_skill_selector()
+		if not visual_skill_selector:
+			print("❌ [技能选择协调器] 重新初始化失败")
+			return
 	
 	current_character = character
 	print("🎯 [技能选择协调器] 显示可视化技能选择界面，角色: %s，技能数量: %d" % [character.name, available_skills.size()])
+	print("🔧 [技能选择协调器] 即将调用visual_skill_selector.start_skill_selection")
 	
 	visual_skill_selector.start_skill_selection(character, available_skills)
+	print("✅ [技能选择协调器] visual_skill_selector.start_skill_selection调用完成")
 
 # 可视化技能释放完成回调
 func _on_visual_skill_cast_completed(skill: SkillData, caster: GameCharacter, targets: Array) -> void:
@@ -317,7 +327,7 @@ func _find_character_node_by_character_data(character_data: GameCharacter):
 		_setup_dependencies()
 		if not character_manager:
 			print("❌ [技能选择协调器] 无法获取character_manager")
-			return null
+		return null
 	
 	print("✅ [技能选择协调器] character_manager可用")
 	
@@ -363,8 +373,6 @@ func restore_action_menu() -> void:
 	# 获取当前角色节点
 	var character_node = null
 	
-	# 🚀 修复：增强节点查找逻辑，适应从Main场景启动的情况
-	
 	# 首先尝试从ActionSystem获取选中的角色
 	if action_system and action_system.selected_character:
 		character_node = action_system.selected_character
@@ -384,17 +392,20 @@ func restore_action_menu() -> void:
 				# 重新设置ActionSystem的状态
 				if action_system and character_node:
 					action_system.selected_character = character_node
-					action_system.current_state = ActionSystemScript.SystemState.SELECTING_ACTION
+					if action_system.has_method("on_skill_selection_cancelled"):
+						action_system.on_skill_selection_cancelled()
+					else:
+						action_system.current_state = ActionSystemScript.SystemState.SELECTING_ACTION
 					print("🔧 [技能选择协调器] 重新设置ActionSystem状态")
 	
-	# 🚀 如果还是找不到，尝试通过current_character（可能在初始化时设置过）
+	# 如果还是找不到，尝试通过current_character
 	if not character_node and current_character:
 		print("🔍 [技能选择协调器] 尝试通过current_character查找节点: %s" % current_character.name)
 		character_node = _find_character_node_by_character_data(current_character)
 		if character_node:
 			print("✅ [技能选择协调器] 通过current_character找到角色节点")
 	
-	# 🚀 最后的备选方案：尝试通过BattleScene直接查找
+	# 最后的备选方案：尝试通过BattleScene直接查找
 	if not character_node:
 		print("🔍 [技能选择协调器] 尝试通过BattleScene查找角色节点")
 		var battle_scene = get_tree().get_first_node_in_group("battle_scene")
@@ -402,6 +413,11 @@ func restore_action_menu() -> void:
 			character_node = battle_scene.get_current_turn_character_node()
 			if character_node:
 				print("✅ [技能选择协调器] 通过BattleScene找到当前回合角色节点")
+	
+	# 无论是否找到角色节点，都确保ActionSystem状态正确
+	if action_system and action_system.has_method("on_skill_selection_cancelled"):
+		action_system.on_skill_selection_cancelled()
+		print("🔧 [技能选择协调器] 已调用ActionSystem.on_skill_selection_cancelled()")
 	
 	if character_node:
 		print("🔙 [技能选择协调器] 技能选择取消，重新显示行动菜单")

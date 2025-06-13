@@ -1304,7 +1304,7 @@ func _perform_physical_validation_with_exclusion(target_position: Vector2, exclu
 	
 	# 🚀 关键：排除吸附的障碍物（使用已验证的obstacle_collider）
 	exclude_rids.append(obstacle_collider.get_rid())
-	print("🚫 [物理验证] 排除吸附障碍物: %s (RID: %s)" % [obstacle_collider.name, obstacle_collider.get_rid()])
+	# print("🚫 [物理验证] 排除吸附障碍物: %s (RID: %s)" % [obstacle_collider.name, obstacle_collider.get_rid()])
 	
 	query.exclude = exclude_rids
 	
@@ -1312,7 +1312,7 @@ func _perform_physical_validation_with_exclusion(target_position: Vector2, exclu
 	var result = space_state.intersect_shape(query)
 	physics_check_count += 1
 	
-	print("🔍 [物理验证] 位置: %s, 排除RID数量: %d, 碰撞结果: %d" % [target_position, exclude_rids.size(), result.size()])
+	# print("🔍 [物理验证] 位置: %s, 排除RID数量: %d, 碰撞结果: %d" % [target_position, exclude_rids.size(), result.size()])
 	
 	# 返回结果（true表示无碰撞，false表示有碰撞）
 	return result.size() == 0

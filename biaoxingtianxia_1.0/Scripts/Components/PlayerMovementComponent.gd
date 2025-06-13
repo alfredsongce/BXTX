@@ -47,7 +47,7 @@ func _try_find_position_collision_manager() -> void:
 		else:
 			print("❌ [PlayerMovementComponent] 错误: 未找到PositionCollisionManager")
 	else:
-		print("ℹ️ [PlayerMovementComponent] 当前场景(", current_scene.name if current_scene else "未知", ")不是战斗场景，跳过PositionCollisionManager查找")
+		print("ℹ️ [PlayerMovementComponent] 当前场景(", current_scene.name if current_scene else "未知", ")不是战斗场景，跳过PositionCollisionManager查找 - 这是正常的")
 
 
 # 处理移动到指定位置

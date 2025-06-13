@@ -18,6 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 DataManager="*res://Scripts/Managers/DataManager.gd"
+GameSettings="*res://Scripts/Managers/GameSettings.gd"
+PartyManager="*res://Scripts/Managers/GamePartyManager.gd"
 AutoLoad="*res://Scripts/AutoLoad.gd"
 
 [display]

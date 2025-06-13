@@ -6,10 +6,10 @@ uid="uid://fwuokx3sf4da"
 
 [deps]
 
-files=["res://data/CharacterData.name.translation", "res://data/CharacterData.max.translation", "res://data/CharacterData.attack.translation", "res://data/CharacterData.defense.translation", "res://data/CharacterData.level.translation"]
+files=["res://data/CharacterData.name.translation", "res://data/CharacterData.max.translation", "res://data/CharacterData.attack.translation", "res://data/CharacterData.defense.translation", "res://data/CharacterData.level.translation", "res://data/CharacterData.qinggong.translation", "res://data/CharacterData.scene.translation"]
 
 source_file="res://data/CharacterData.csv"
-dest_files=["res://data/CharacterData.name.translation", "res://data/CharacterData.max.translation", "res://data/CharacterData.attack.translation", "res://data/CharacterData.defense.translation", "res://data/CharacterData.level.translation"]
+dest_files=["res://data/CharacterData.name.translation", "res://data/CharacterData.max.translation", "res://data/CharacterData.attack.translation", "res://data/CharacterData.defense.translation", "res://data/CharacterData.level.translation", "res://data/CharacterData.qinggong.translation", "res://data/CharacterData.scene.translation"]
 
 [params]
 

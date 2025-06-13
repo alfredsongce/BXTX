@@ -103,21 +103,13 @@ func _spawn_party_members() -> void:
 			continue
 		char_data_node.load_from_id(character_id)
 		
-		if character_id == "3":
-			character.qinggong_skill = 120
-		else:
-			character.qinggong_skill = 280
-		char_data_node.qinggong_skill = character.qinggong_skill
+		# 轻功值现在从CSV数据中读取，不再需要硬编码设置
+		# char_data_node中的qinggong_skill已经从CSV数据中正确加载
 		
 		if SPAWN_POSITIONS.has(character_id):
 			instance.set_base_position(SPAWN_POSITIONS[character_id])
 		else:
 			instance.set_base_position(Vector2(300, 200))
-		
-		if character_id == "1":
-			character.set_height(3.5)
-		elif character_id == "2":
-			character.set_height(2.5)
 		
 		if character.has_signal("stats_changed"):
 			character.stats_changed.connect(_on_character_updated.bind(character_id))
@@ -136,7 +128,13 @@ func _spawn_party_members() -> void:
 # 生成敌人
 func _spawn_enemies() -> void:
 	print("🤖 [CharacterManager] 开始生成敌人")
-	var enemy_ids = ["101", "102", "103"]
+	
+	# 从关卡配置获取敌人ID列表
+	var enemy_ids = _get_enemy_ids_from_level_config()
+	
+	if enemy_ids.is_empty():
+		printerr("⚠️ [CharacterManager] 无法获取敌人ID列表，使用默认配置")
+		enemy_ids = ["101", "102", "103"]  # 回退方案
 	
 	for enemy_id in enemy_ids:
 		var instance = player_scene.instantiate()
@@ -158,7 +156,7 @@ func _spawn_enemies() -> void:
 		character_data_script.load_from_id(enemy_id)
 		
 		character_data_script.set_as_enemy()
-		character_data_script.qinggong_skill = 400
+		# 轻功值现在从CSV数据中读取，不再需要硬编码设置
 		
 		if ENEMY_SPAWN_POSITIONS.has(enemy_id):
 			var spawn_pos = ENEMY_SPAWN_POSITIONS[enemy_id]
@@ -194,6 +192,24 @@ func _setup_enemy_appearance(enemy_instance: Node2D, enemy_id: String) -> void:
 	var sprite = enemy_instance.get_node_or_null("Graphic/Sprite2D")
 	if sprite:
 		sprite.modulate = Color.RED  # 敌人显示为红色
+
+# ===========================================
+# 配置管理方法
+# ===========================================
+
+func _get_enemy_ids_from_level_config() -> Array:
+	"""从关卡配置获取敌人ID列表"""
+	print("🎯 [CharacterManager] 从关卡配置获取敌人ID")
+	
+	# 回退：从DataManager获取关卡配置
+	var level_config_data = DataManager.get_level_configuration("level_1")
+	if not level_config_data.is_empty():
+		var enemy_ids = level_config_data.get("enemy_character_ids", [])
+		print("✅ [CharacterManager] 从DataManager获取敌人ID: %s" % str(enemy_ids))
+		return enemy_ids
+	
+	printerr("⚠️ [CharacterManager] 无法从任何来源获取敌人ID配置")
+	return []
 
 # ===========================================
 # 角色查找和管理方法

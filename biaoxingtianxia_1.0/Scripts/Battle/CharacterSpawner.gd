@@ -69,14 +69,8 @@ func _spawn_party_members():
 		var character = game_party.get_member(character_id)
 		instance.get_character_data().load_from_id(character_id)
 		
-		# 设置轻功值
-		if character_id == "3":
-			character.qinggong_skill = 120 # 3级轻功
-		else:
-			character.qinggong_skill = 280 # 7级轻功
-		
-		# 确保节点的角色数据也被更新
-		instance.get_character_data().qinggong_skill = character.qinggong_skill
+		# 轻功值现在从CSV数据中读取，不再需要硬编码设置
+		# instance.get_character_data()中的qinggong_skill已经从CSV数据中正确加载
 		
 		# 设置位置 - 使用BattleScene中的SPAWN_POSITIONS
 		var battle_scene = AutoLoad.get_battle_scene()
@@ -85,12 +79,6 @@ func _spawn_party_members():
 			instance.set_base_position(spawn_pos)
 		else:
 			instance.set_base_position(Vector2(300, 200))
-		
-		# 设置初始高度
-		if character_id == "1":
-			character.set_height(3.5)  # 角色1初始高度3.5级
-		elif character_id == "2":
-			character.set_height(2.5)  # 角色2初始高度2.5级
 		
 		# 保存角色节点引用
 		party_member_nodes[character_id] = instance
@@ -103,7 +91,12 @@ func _spawn_party_members():
 func _spawn_enemies():
 	print("👹 [角色生成器] 生成敌人...")
 	
-	var enemy_ids = ["101", "102", "103"]
+	# 从关卡配置获取敌人ID列表
+	var enemy_ids = _get_enemy_ids_from_level_config()
+	
+	if enemy_ids.is_empty():
+		printerr("⚠️ [角色生成器] 无法获取敌人ID列表，使用默认配置")
+		enemy_ids = ["101", "102", "103"]  # 回退方案
 	
 	for enemy_id in enemy_ids:
 		# 创建敌人实例
@@ -117,8 +110,7 @@ func _spawn_enemies():
 		# 设置为敌人控制类型
 		character_data.set_as_enemy()
 		
-		# 设置敌人属性
-		character_data.qinggong_skill = 400  # 敌人轻功值10级
+		# 轻功值现在从CSV数据中读取，不再需要硬编码设置
 		
 		# 设置敌人位置 - 使用BattleScene中的ENEMY_SPAWN_POSITIONS
 		var battle_scene = AutoLoad.get_battle_scene()
@@ -149,6 +141,24 @@ func _setup_enemy_appearance(enemy_instance: Node2D, enemy_id: String):
 	var sprite = enemy_instance.get_node_or_null("Sprite2D")
 	if sprite:
 		sprite.modulate = Color.RED  # 敌人显示为红色
+
+# ===========================================
+# 配置管理方法
+# ===========================================
+
+func _get_enemy_ids_from_level_config() -> Array:
+	"""从关卡配置获取敌人ID列表"""
+	print("🎯 [角色生成器] 从关卡配置获取敌人ID")
+	
+	# 从DataManager获取关卡配置
+	var level_config_data = DataManager.get_level_configuration("level_1")
+	if not level_config_data.is_empty():
+		var enemy_ids = level_config_data.get("enemy_character_ids", [])
+		print("✅ [角色生成器] 从DataManager获取敌人ID: %s" % str(enemy_ids))
+		return enemy_ids
+	
+	printerr("⚠️ [角色生成器] 无法从任何来源获取敌人ID配置")
+	return []
 
 # 获取角色节点引用
 func get_party_member_nodes() -> Dictionary:

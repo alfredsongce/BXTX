@@ -372,8 +372,6 @@ func check_victory_condition_extended() -> void:
 
 # 🚀 SkillManager信号回调
 func on_skill_executed(caster: GameCharacter, skill: SkillData, targets: Array, results: Array):
-	print("⚡ [技能系统] 技能执行完成: %s，施法者: %s" % [skill.name, caster.name])
-	
 	# 创建行动结果
 	var action_result = {
 		"type": "skill",
@@ -382,9 +380,8 @@ func on_skill_executed(caster: GameCharacter, skill: SkillData, targets: Array, 
 		"skill_results": results
 	}
 	
-	# 🚀 修复：直接使用传递的caster参数
+	# 通知BattleManager技能行动完成
 	if battle_manager:
-		print("🎯 [技能系统] 通知BattleManager技能行动完成")
 		battle_manager.character_action_completed.emit(caster, action_result)
 
 func on_skill_cancelled():
